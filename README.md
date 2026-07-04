@@ -1,1 +1,0 @@
-# ceny-app-granzing

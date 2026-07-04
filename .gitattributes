@@ -1,0 +1,8 @@
+# Normalizar line endings: LF en el repo, CRLF en Windows al checkout
+* text=auto eol=lf
+
+# Binarios
+*.png binary
+*.jpg binary
+*.pdf binary
+*.pem binary
