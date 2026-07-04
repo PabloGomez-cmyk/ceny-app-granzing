@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+.env
+.env.local
+.env.*.local
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+.pnpm-store/
+*.tsbuildinfo
+next-env.d.ts
+.vercel/
+
+# Archivos subidos en dev con LocalObjectStorage (nunca en prod, ahí es R2)
+media/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+*.pem
+*.key
+jwt_private.pem
+jwt_public.pem
+
+# Instrucciones locales(no van al repo)
+CLAUDE.md
+
+# Claude Code (configuración local del agente)
+.claude/
+
+credgoolge.txt

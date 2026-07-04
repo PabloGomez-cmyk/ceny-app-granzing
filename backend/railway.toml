@@ -1,0 +1,14 @@
+"$schema" = "https://railway.com/railway.schema.json"
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+# Corre una sola vez por deploy, antes de que el nuevo release reciba tráfico.
+# Cada elemento es un comando de shell completo (no argv tokenizado).
+preDeployCommand = ["alembic upgrade head"]
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
