@@ -20,10 +20,10 @@ function StatCard({ value, label, sub, accent }: { value: string | number; label
 
 export default function WarrantiesPage() {
   const { data: session, status } = useSession();
-  const role = (session as any)?.role as string | undefined;
+  const role = session?.role;
   const email = session?.user?.email ?? "";
   const name = session?.user?.name ?? null;
-  const userId = (session as any)?.userId as string | undefined;
+  const userId = session?.userId;
 
   const { data: warranties = [], isLoading } = useWarranties();
 

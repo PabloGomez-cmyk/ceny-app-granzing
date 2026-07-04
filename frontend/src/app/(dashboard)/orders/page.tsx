@@ -111,10 +111,10 @@ function OrderRow({
 
 export default function OrdersPage() {
   const { data: session, status } = useSession();
-  const role = (session as any)?.role as string | undefined;
+  const role = session?.role;
   const email = session?.user?.email ?? "";
   const name = session?.user?.name ?? null;
-  const userId = (session as any)?.userId as string | undefined;
+  const userId = session?.userId;
 
   const { data: orders = [], isLoading: loadingOrders } = useQuotes();
   const deleteQuote = useDeleteQuote();

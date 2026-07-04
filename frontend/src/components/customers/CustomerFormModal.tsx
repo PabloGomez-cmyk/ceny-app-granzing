@@ -397,7 +397,7 @@ export default function CustomerFormModal({ mode, customer, onClose }: Props) {
 
             {error && (
               <p className="rounded-[8px] bg-red-50 px-3 py-2 text-[12px] text-red-600">
-                {(error as any).message}
+                {error.message}
               </p>
             )}
           </div>

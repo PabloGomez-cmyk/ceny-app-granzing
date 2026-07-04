@@ -134,7 +134,7 @@ function PasswordSection({ userId }: { userId: string }) {
 
 function CompanySection({ userId }: { userId: string }) {
   const { data: session } = useSession();
-  const token = (session as any)?.accessToken as string;
+  const token = session?.accessToken ?? "";
   const { data: userData } = useUser(userId);
   const { mutateAsync, isPending, error } = useUpdateUser();
   const [saved, setSaved] = useState(false);

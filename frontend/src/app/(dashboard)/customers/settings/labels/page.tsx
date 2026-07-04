@@ -282,10 +282,10 @@ function NewLabelRow({
 
 export default function LabelsSettingsPage() {
   const { data: session } = useSession();
-  const role = (session as any)?.role as string | undefined;
+  const role = session?.role;
   const email = session?.user?.email ?? "";
   const name = session?.user?.name ?? null;
-  const userId = (session as any)?.userId as string | undefined;
+  const userId = session?.userId;
 
   const { data: labels = [], isLoading } = useCustomerLabels();
   const { mutate: createLabel, isPending: isCreating } = useCreateCustomerLabel();

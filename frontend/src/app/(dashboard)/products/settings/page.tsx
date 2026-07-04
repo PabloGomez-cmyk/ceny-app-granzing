@@ -543,11 +543,11 @@ function Section({
 export default function ProductSettingsPage() {
   const { data: session } = useSession();
   const router = useRouter();
-  const role = (session as any)?.role as string | undefined;
-  const token = (session as any)?.accessToken as string | undefined;
+  const role = session?.role;
+  const token = session?.accessToken;
   const email = session?.user?.email ?? "";
   const name = session?.user?.name ?? null;
-  const userId = (session as any)?.userId as string | undefined;
+  const userId = session?.userId;
   const [profileOpen, setProfileOpen] = useState(false);
 
   useEffect(() => {

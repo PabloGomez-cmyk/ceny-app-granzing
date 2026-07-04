@@ -142,7 +142,7 @@ function SecuritySection({ userId }: { userId: string }) {
 
 function CompanySection({ userId }: { userId: string }) {
   const { data: session } = useSession();
-  const token = (session as any)?.accessToken as string;
+  const token = session?.accessToken ?? "";
   const { data: userData } = useUser(userId);
   const { mutateAsync, isPending, error } = useUpdateUser();
   const [saved, setSaved] = useState(false);
@@ -299,7 +299,7 @@ function CompanySection({ userId }: { userId: string }) {
 
 function EmailSection() {
   const { data: session } = useSession();
-  const token = (session as any)?.accessToken as string;
+  const token = session?.accessToken ?? "";
   const { data: status, isLoading } = useGmailStatus();
   const { mutateAsync: disconnect, isPending: disconnecting } = useDisconnectGmail();
   const [connecting, setConnecting] = useState(false);
@@ -641,10 +641,10 @@ export default function SettingsPage() {
   const [section, setSection] = useState<Section>("account");
   const [tab, setTab] = useState<AccountTab>("security");
 
-  const userId = (session as any)?.userId as string | undefined;
+  const userId = session?.userId;
   const email = session?.user?.email ?? "";
   const name = session?.user?.name ?? null;
-  const role = (session as any)?.role as string | undefined;
+  const role = session?.role;
   const isAdmin = role === "ADMIN";
 
   const accountTabs: { id: AccountTab; label: string; icon: typeof Lock }[] = [

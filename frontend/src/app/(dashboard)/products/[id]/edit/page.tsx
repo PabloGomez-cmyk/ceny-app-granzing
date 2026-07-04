@@ -188,8 +188,8 @@ export default function EditProductPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { data: session } = useSession();
-  const token = (session as any)?.accessToken as string | undefined;
-  const role = (session as any)?.role as string | undefined;
+  const token = session?.accessToken;
+  const role = session?.role;
 
   const { data: product, isPending: loadingProduct } = useProduct(id);
   const { data: brands = [] } = useBrands();
@@ -310,8 +310,8 @@ export default function EditProductPage() {
         },
       });
       router.push(`/products/${id}`);
-    } catch (err: any) {
-      setSubmitError(err.message ?? "Error al guardar los cambios");
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Error al guardar los cambios");
     }
   }
 
@@ -319,7 +319,7 @@ export default function EditProductPage() {
     if (!token) return;
     setUploadingLogo(true);
     try { const url = await uploadImage(token, file); setLogoUrl(url); }
-    catch (err: any) { setSubmitError(err.message); }
+    catch (err) { setSubmitError(err instanceof Error ? err.message : "Error al subir el logo"); }
     finally { setUploadingLogo(false); }
   }
 
@@ -327,7 +327,7 @@ export default function EditProductPage() {
     if (!token) return;
     setUploadingSheet(true);
     try { const url = await uploadDocument(token, file); setTechSheetUrl(url); }
-    catch (err: any) { setSubmitError(err.message); }
+    catch (err) { setSubmitError(err instanceof Error ? err.message : "Error al subir la ficha técnica"); }
     finally { setUploadingSheet(false); }
   }
 

@@ -36,7 +36,7 @@ function SpecItem({ label, value, icon: Icon }: { label: string; value: string; 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { data: session } = useSession();
-  const role = (session as any)?.role as string | undefined;
+  const role = session?.role;
   const isAdmin = role === "ADMIN";
 
   const { data: product, isPending, error } = useProduct(id);

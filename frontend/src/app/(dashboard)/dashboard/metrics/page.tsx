@@ -244,7 +244,15 @@ function MonthlyChart({ quotes }: { quotes: Quote[] }) {
     return `$${v}`;
   };
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({
+    active,
+    payload,
+    label,
+  }: {
+    active?: boolean;
+    payload?: Array<{ value: number; payload: { count: number } }>;
+    label?: string;
+  }) => {
     if (!active || !payload?.length) return null;
     return (
       <div className="rounded-[10px] border border-[#e2e8f0] bg-white px-4 py-3 shadow-lg">
@@ -523,7 +531,7 @@ export default function MetricsDashboardPage() {
   const { data: session } = useSession();
   const email = session?.user?.email ?? "";
   const name = session?.user?.name ?? null;
-  const role = (session as any)?.role as string | undefined;
+  const role = session?.role;
   const isAdmin = role === "ADMIN";
 
   const { data: quotes = [], isLoading: loadingQuotes } = useQuotes();

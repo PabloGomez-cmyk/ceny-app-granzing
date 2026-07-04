@@ -10,7 +10,7 @@ import {
 
 function useToken(): string | undefined {
   const { data: session } = useSession();
-  return (session as any)?.accessToken as string | undefined;
+  return session?.accessToken;
 }
 
 // ── Customers ─────────────────────────────────────────────────────────────────
