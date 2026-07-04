@@ -46,12 +46,12 @@ const authConfig: NextAuthConfig = {
       if (user) {
         return {
           ...token,
-          accessToken: (user as any).access_token,
-          refreshToken: (user as any).refresh_token,
+          accessToken: user.access_token,
+          refreshToken: user.refresh_token,
           accessTokenExpires: Date.now() + 14 * 60 * 1000,
-          role: (user as any).role,
-          userId: (user as any).user_id,
-          fullName: (user as any).full_name ?? null,
+          role: user.role,
+          userId: user.user_id,
+          fullName: user.full_name ?? null,
         };
       }
 
@@ -64,11 +64,11 @@ const authConfig: NextAuthConfig = {
       return refreshAccessToken(token);
     },
     session({ session, token }) {
-      (session as any).accessToken = token.accessToken;
-      (session as any).role = token.role;
-      (session as any).userId = token.userId;
-      (session as any).error = token.error;
-      if (token.fullName) session.user.name = token.fullName as string;
+      session.accessToken = token.accessToken;
+      session.role = token.role;
+      session.userId = token.userId ?? "";
+      session.error = token.error;
+      if (token.fullName) session.user.name = token.fullName;
       return session;
     },
     authorized({ auth }) {

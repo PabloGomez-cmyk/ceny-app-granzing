@@ -74,7 +74,7 @@ export default function QuoteDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { data: session } = useSession();
-  const userId = (session as any)?.userId as string | undefined;
+  const userId = session?.userId;
   const { data: quote, isPending } = useQuote(id);
   const { data: companyUser = null } = useUser(userId ?? "");
   const updateStatus = useUpdateQuoteStatus();

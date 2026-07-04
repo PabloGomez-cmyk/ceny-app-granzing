@@ -306,10 +306,10 @@ type FilterTab = "active" | "all";
 
 export default function UsersPage() {
   const { data: session, status } = useSession();
-  const role = (session as any)?.role as string | undefined;
+  const role = session?.role;
   const email = session?.user?.email ?? "";
   const name = session?.user?.name ?? null;
-  const userId = (session as any)?.userId as string | undefined;
+  const userId = session?.userId;
   const router = useRouter();
 
   // Todos los hooks deben ir ANTES de cualquier return condicional

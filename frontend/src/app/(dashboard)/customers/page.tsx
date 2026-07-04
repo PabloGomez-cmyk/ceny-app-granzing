@@ -319,10 +319,10 @@ type FilterTab = "active" | "all";
 
 export default function CustomersPage() {
   const { data: session, status } = useSession();
-  const role = (session as any)?.role as string | undefined;
+  const role = session?.role;
   const email = session?.user?.email ?? "";
   const name = session?.user?.name ?? null;
-  const userId = (session as any)?.userId as string | undefined;
+  const userId = session?.userId;
 
   const { data: customers = [], isLoading, error } = useCustomers();
   const { data: labels = [] } = useCustomerLabels();
@@ -563,7 +563,7 @@ export default function CustomersPage() {
         )}
         {error && (
           <p className="py-12 text-center text-[13px] text-red-500">
-            {(error as any).message}
+            {error.message}
           </p>
         )}
 

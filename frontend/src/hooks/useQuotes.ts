@@ -4,7 +4,7 @@ import { type CreateQuoteInput, type QuoteStatus, quotesApi } from "@/lib/api/qu
 
 function useToken(): string | undefined {
   const { data: session } = useSession();
-  return (session as any)?.accessToken as string | undefined;
+  return session?.accessToken;
 }
 
 const KEYS = {

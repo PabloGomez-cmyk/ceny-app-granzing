@@ -4,7 +4,7 @@ import { usersApi, type CreateUserInput, type UpdateUserInput } from "@/lib/api/
 
 function useToken(): string | undefined {
   const { data: session } = useSession();
-  return (session as any)?.accessToken as string | undefined;
+  return session?.accessToken;
 }
 
 export function useUsers() {

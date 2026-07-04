@@ -285,8 +285,8 @@ interface FormErrors {
 export default function NewProductPage() {
   const router = useRouter();
   const { data: session } = useSession();
-  const token = (session as any)?.accessToken as string | undefined;
-  const role = (session as any)?.role as string | undefined;
+  const token = session?.accessToken;
+  const role = session?.role;
 
   const { data: brands = [] } = useBrands();
   const { data: categories = [] } = useCategories();
@@ -368,8 +368,8 @@ export default function NewProductPage() {
         technical_sheet_url: techSheetUrl,
       });
       router.push("/products");
-    } catch (err: any) {
-      setSubmitError(err.message ?? "Error al crear el producto");
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Error al crear el producto");
     }
   }
 
@@ -379,8 +379,8 @@ export default function NewProductPage() {
     try {
       const url = await uploadImage(token, file);
       setLogoUrl(url);
-    } catch (err: any) {
-      setSubmitError(err.message);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Error al subir el logo");
     } finally {
       setUploadingLogo(false);
     }
@@ -392,8 +392,8 @@ export default function NewProductPage() {
     try {
       const url = await uploadDocument(token, file);
       setTechSheetUrl(url);
-    } catch (err: any) {
-      setSubmitError(err.message);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Error al subir la ficha técnica");
     } finally {
       setUploadingSheet(false);
     }

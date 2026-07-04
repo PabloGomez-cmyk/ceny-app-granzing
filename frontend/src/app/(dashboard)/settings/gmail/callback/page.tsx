@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
@@ -9,10 +9,24 @@ import { gmailApi } from "@/lib/api/gmail";
 type State = "loading" | "success" | "error";
 
 export default function GmailCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-[#f0f4f8]">
+          <Loader2 size={40} className="animate-spin text-[#0f6e50]" />
+        </div>
+      }
+    >
+      <GmailCallbackContent />
+    </Suspense>
+  );
+}
+
+function GmailCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
-  const token = (session as any)?.accessToken as string | undefined;
+  const token = session?.accessToken;
   const [state, setState] = useState<State>("loading");
   const [errorMsg, setErrorMsg] = useState("");
   const ran = useRef(false);

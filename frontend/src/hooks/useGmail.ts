@@ -6,7 +6,7 @@ import { gmailApi, type SendQuoteEmailPayload } from "@/lib/api/gmail";
 
 function useToken(): string {
   const { data: session } = useSession();
-  return (session as any)?.accessToken as string ?? "";
+  return session?.accessToken ?? "";
 }
 
 export function useGmailStatus() {

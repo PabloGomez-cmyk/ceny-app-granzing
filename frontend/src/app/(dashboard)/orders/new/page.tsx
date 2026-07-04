@@ -1540,7 +1540,7 @@ function Step3({
 export default function NewQuotePage() {
   const router = useRouter();
   const { data: session } = useSession();
-  const userId = (session as any)?.userId as string | undefined;
+  const userId = session?.userId;
   const { data: userData } = useUser(userId ?? "");
   const { data: customers = [] } = useCustomers();
   const { data: products = [] } = useProducts();

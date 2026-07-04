@@ -8,7 +8,7 @@ function SessionGuard({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession();
 
   useEffect(() => {
-    if ((session as any)?.error === "RefreshAccessTokenError") {
+    if (session?.error === "RefreshAccessTokenError") {
       signOut({ callbackUrl: "/login" });
     }
   }, [session]);
