@@ -3,7 +3,7 @@
 Usa repositorios en memoria — sin DB, sin FastAPI.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from types import TracebackType
 from typing import Self
@@ -45,8 +45,8 @@ from centy.domain.shared.value_objects import TenantId
 from centy.domain.warranties.entities import Warranty
 from tests.conftest import FakeBrandRepository, FakeProductRepository
 
-
 # ── Fakes ─────────────────────────────────────────────────────────────────────
+
 
 class FakeQuoteRepository(IQuoteRepository):
     def __init__(self) -> None:
@@ -64,7 +64,8 @@ class FakeQuoteRepository(IQuoteRepository):
 
     async def list_by_user(self, user_id: UUID, tenant_id: TenantId) -> list[Quote]:
         return [
-            q for q in self._store.values()
+            q
+            for q in self._store.values()
             if q.tenant_id == tenant_id and q.created_by_user_id == user_id
         ]
 
@@ -79,7 +80,9 @@ class FakeWarrantyRepository(IWarrantyRepository):
     def __init__(self) -> None:
         self._store: dict[UUID, Warranty] = {}
 
-    async def get_by_id(self, warranty_id: UUID, tenant_id: TenantId) -> Warranty | None:
+    async def get_by_id(
+        self, warranty_id: UUID, tenant_id: TenantId
+    ) -> Warranty | None:
         w = self._store.get(warranty_id)
         return w if w and w.tenant_id == tenant_id else None
 
@@ -91,13 +94,17 @@ class FakeWarrantyRepository(IWarrantyRepository):
 
     async def list_by_user(self, user_id: UUID, tenant_id: TenantId) -> list[Warranty]:
         return [
-            w for w in self._store.values()
+            w
+            for w in self._store.values()
             if w.tenant_id == tenant_id and w.created_by_user_id == user_id
         ]
 
-    async def list_by_quote(self, quote_id: UUID, tenant_id: TenantId) -> list[Warranty]:
+    async def list_by_quote(
+        self, quote_id: UUID, tenant_id: TenantId
+    ) -> list[Warranty]:
         return [
-            w for w in self._store.values()
+            w
+            for w in self._store.values()
             if w.tenant_id == tenant_id and w.quote_id == quote_id
         ]
 
@@ -120,6 +127,7 @@ class FakeWarrantyUnitOfWork(IUnitOfWork):
             FakeProductCategoryRepository,
             FakeUserRepository,
         )
+
         self.users = FakeUserRepository()
         self.customers = FakeCustomerRepository()
         self.customer_labels = FakeCustomerLabelRepository()
@@ -153,7 +161,9 @@ class FakeEmailConfigRepository(IEmailConfigRepository):
     def __init__(self, config: UserEmailConfig | None = None) -> None:
         self._config = config
 
-    async def get_by_user_id(self, user_id: UUID, tenant_id: str) -> UserEmailConfig | None:
+    async def get_by_user_id(
+        self, user_id: UUID, tenant_id: str
+    ) -> UserEmailConfig | None:
         return self._config
 
     async def save(self, config: UserEmailConfig) -> None:
@@ -190,7 +200,10 @@ class FakeEmailSender(IEmailSender):
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-def make_product(tenant_id: TenantId, brand_id: UUID, warranty_years: int = 5) -> Product:
+
+def make_product(
+    tenant_id: TenantId, brand_id: UUID, warranty_years: int = 5
+) -> Product:
     return Product.create(
         tenant_id=tenant_id,
         name="Black Silver",
@@ -259,6 +272,7 @@ def make_quote(
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
+
 @pytest.fixture
 def tenant_id() -> TenantId:
     return TenantId(uuid4())
@@ -295,6 +309,7 @@ def uow(
 
 
 # ── GenerateWarrantiesHandler ─────────────────────────────────────────────────
+
 
 class TestGenerateWarrantiesHandler:
     @pytest.mark.asyncio
@@ -401,6 +416,7 @@ class TestGenerateWarrantiesHandler:
 
 # ── ListWarrantiesHandler / GetWarrantyHandler ────────────────────────────────
 
+
 class TestListAndGetWarrantyHandler:
     @pytest.mark.asyncio
     async def test_operator_solo_ve_las_suyas(
@@ -428,10 +444,18 @@ class TestListAndGetWarrantyHandler:
         )
 
         as_owner = await ListWarrantiesHandler(warranty_repo).handle(
-            ListWarrantiesQuery(tenant_id=tenant_id, requester_user_id=owner_id, requester_role="OPERATOR")
+            ListWarrantiesQuery(
+                tenant_id=tenant_id,
+                requester_user_id=owner_id,
+                requester_role="OPERATOR",
+            )
         )
         as_other = await ListWarrantiesHandler(warranty_repo).handle(
-            ListWarrantiesQuery(tenant_id=tenant_id, requester_user_id=other_id, requester_role="OPERATOR")
+            ListWarrantiesQuery(
+                tenant_id=tenant_id,
+                requester_user_id=other_id,
+                requester_role="OPERATOR",
+            )
         )
         assert len(as_owner) == 1
         assert len(as_other) == 0
@@ -452,6 +476,7 @@ class TestListAndGetWarrantyHandler:
 
 
 # ── SendWarrantiesEmailHandler ────────────────────────────────────────────────
+
 
 class TestSendWarrantiesEmailHandler:
     @pytest.mark.asyncio
@@ -481,7 +506,7 @@ class TestSendWarrantiesEmailHandler:
             )
         )
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         email_config = UserEmailConfig(
             user_id=user_id,
             tenant_id=str(tenant_id),

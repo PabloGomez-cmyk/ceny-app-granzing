@@ -8,13 +8,12 @@ from centy.application.users.commands import (
     AssignRoleCommand,
     CreateUserCommand,
     DeactivateUserCommand,
-    ReactivateUserCommand,
     UpdateUserCommand,
 )
 from centy.application.users.queries import GetUserByIdQuery, ListUsersQuery
 from centy.domain.shared.exceptions import ConflictError, NotFoundError
 from centy.domain.shared.value_objects import Email
-from centy.domain.users.entities import Role, User
+from centy.domain.users.entities import User
 
 
 @dataclass(frozen=True)
@@ -179,9 +178,13 @@ class UpdateUserHandler:
             if command.email is not None:
                 new_email = Email(command.email)
                 if new_email.value != user.email.value:
-                    conflict = await uow.users.get_by_email(new_email, command.tenant_id)
+                    conflict = await uow.users.get_by_email(
+                        new_email, command.tenant_id
+                    )
                     if conflict is not None:
-                        raise ConflictError(f"El email '{command.email}' ya está en uso")
+                        raise ConflictError(
+                            f"El email '{command.email}' ya está en uso"
+                        )
                     user.email = new_email
 
             if command.role is not None:

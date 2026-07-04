@@ -48,4 +48,6 @@ class R2ObjectStorage(IObjectStorage):
 
     async def delete(self, url: str) -> None:
         key = url.rsplit("/", 1)[-1]
-        await asyncio.to_thread(self._client.delete_object, Bucket=self._bucket, Key=key)
+        await asyncio.to_thread(
+            self._client.delete_object, Bucket=self._bucket, Key=key
+        )

@@ -55,6 +55,20 @@ src = ["src", "tests"]
 select = ["E", "F", "I", "N", "B", "UP", "RUF"]
 ignore = ["E501"]
 
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI usa Depends(...)/Query(...) como default de parámetro por diseño
+# (inyección de dependencias) — B008 los marca como "función mutable en
+# default arg" sin este whitelist, que es el fix recomendado por bugbear.
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Query",
+    "fastapi.Header",
+    "fastapi.Path",
+    "fastapi.Body",
+    "fastapi.Cookie",
+    "fastapi.Security",
+]
+
 [tool.ruff.lint.isort]
 known-first-party = ["centy"]
 

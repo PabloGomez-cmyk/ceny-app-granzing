@@ -2,7 +2,7 @@ import uuid
 from decimal import Decimal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel, Field
 
 from centy.application.catalog.commands import (
@@ -29,8 +29,6 @@ from centy.application.catalog.handlers import (
     DeleteGlassTypeHandler,
     DeleteProductHandler,
     GetBrandHandler,
-    GetCategoryHandler,
-    GetGlassTypeHandler,
     GetProductHandler,
     ListBrandsHandler,
     ListCategoriesHandler,
@@ -43,8 +41,6 @@ from centy.application.catalog.handlers import (
 )
 from centy.application.catalog.queries import (
     GetBrandQuery,
-    GetCategoryQuery,
-    GetGlassTypeQuery,
     GetProductQuery,
     ListBrandsQuery,
     ListCategoriesQuery,
@@ -55,7 +51,6 @@ from centy.domain.shared.value_objects import TenantId
 from centy.infrastructure.api.dependencies import (
     CurrentUser,
     get_brand_handler,
-    get_category_handler,
     get_create_brand_handler,
     get_create_category_handler,
     get_create_glass_type_handler,
@@ -65,7 +60,6 @@ from centy.infrastructure.api.dependencies import (
     get_delete_category_handler,
     get_delete_glass_type_handler,
     get_delete_product_handler,
-    get_glass_type_handler,
     get_list_brands_handler,
     get_list_categories_handler,
     get_list_glass_types_handler,
@@ -90,6 +84,7 @@ def _resolve_tenant(settings_tenant: str) -> TenantId:
 
 
 # ── Schemas ───────────────────────────────────────────────────────────────────
+
 
 class BrandResponse(BaseModel):
     id: str
@@ -199,30 +194,52 @@ class UpdateProductBody(BaseModel):
 
 # ── Brand routes ──────────────────────────────────────────────────────────────
 
+
 @router.get("/brands", response_model=list[BrandResponse])
 async def list_brands(
     current_user: CurrentUser = Depends(get_current_user),
     handler: ListBrandsHandler = Depends(get_list_brands_handler),
 ) -> list[BrandResponse]:
-    results = await handler.handle(ListBrandsQuery(
-        tenant_id=_resolve_tenant(get_settings().tenant_id_default)
-    ))
-    return [BrandResponse(id=str(r.brand_id), name=r.name, color=r.color, logo_url=r.logo_url, is_active=r.is_active, created_at=r.created_at) for r in results]
+    results = await handler.handle(
+        ListBrandsQuery(tenant_id=_resolve_tenant(get_settings().tenant_id_default))
+    )
+    return [
+        BrandResponse(
+            id=str(r.brand_id),
+            name=r.name,
+            color=r.color,
+            logo_url=r.logo_url,
+            is_active=r.is_active,
+            created_at=r.created_at,
+        )
+        for r in results
+    ]
 
 
-@router.post("/brands", response_model=BrandResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/brands", response_model=BrandResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_brand(
     body: CreateBrandBody,
     _admin: CurrentUser = Depends(require_admin),
     handler: CreateBrandHandler = Depends(get_create_brand_handler),
 ) -> BrandResponse:
-    result = await handler.handle(CreateBrandCommand(
-        tenant_id=_resolve_tenant(get_settings().tenant_id_default),
-        name=body.name,
-        color=body.color,
-        logo_url=body.logo_url,
-    ))
-    return BrandResponse(id=str(result.brand_id), name=result.name, color=result.color, logo_url=result.logo_url, is_active=result.is_active, created_at=result.created_at)
+    result = await handler.handle(
+        CreateBrandCommand(
+            tenant_id=_resolve_tenant(get_settings().tenant_id_default),
+            name=body.name,
+            color=body.color,
+            logo_url=body.logo_url,
+        )
+    )
+    return BrandResponse(
+        id=str(result.brand_id),
+        name=result.name,
+        color=result.color,
+        logo_url=result.logo_url,
+        is_active=result.is_active,
+        created_at=result.created_at,
+    )
 
 
 @router.get("/brands/{brand_id}", response_model=BrandResponse)
@@ -231,11 +248,20 @@ async def get_brand(
     current_user: CurrentUser = Depends(get_current_user),
     handler: GetBrandHandler = Depends(get_brand_handler),
 ) -> BrandResponse:
-    result = await handler.handle(GetBrandQuery(
-        brand_id=brand_id,
-        tenant_id=_resolve_tenant(get_settings().tenant_id_default),
-    ))
-    return BrandResponse(id=str(result.brand_id), name=result.name, color=result.color, logo_url=result.logo_url, is_active=result.is_active, created_at=result.created_at)
+    result = await handler.handle(
+        GetBrandQuery(
+            brand_id=brand_id,
+            tenant_id=_resolve_tenant(get_settings().tenant_id_default),
+        )
+    )
+    return BrandResponse(
+        id=str(result.brand_id),
+        name=result.name,
+        color=result.color,
+        logo_url=result.logo_url,
+        is_active=result.is_active,
+        created_at=result.created_at,
+    )
 
 
 @router.patch("/brands/{brand_id}", response_model=BrandResponse)
@@ -245,15 +271,24 @@ async def update_brand(
     _admin: CurrentUser = Depends(require_admin),
     handler: UpdateBrandHandler = Depends(get_update_brand_handler),
 ) -> BrandResponse:
-    result = await handler.handle(UpdateBrandCommand(
-        brand_id=brand_id,
-        tenant_id=_resolve_tenant(get_settings().tenant_id_default),
-        name=body.name,
-        color=body.color,
-        logo_url=body.logo_url,
-        clear_logo=body.clear_logo,
-    ))
-    return BrandResponse(id=str(result.brand_id), name=result.name, color=result.color, logo_url=result.logo_url, is_active=result.is_active, created_at=result.created_at)
+    result = await handler.handle(
+        UpdateBrandCommand(
+            brand_id=brand_id,
+            tenant_id=_resolve_tenant(get_settings().tenant_id_default),
+            name=body.name,
+            color=body.color,
+            logo_url=body.logo_url,
+            clear_logo=body.clear_logo,
+        )
+    )
+    return BrandResponse(
+        id=str(result.brand_id),
+        name=result.name,
+        color=result.color,
+        logo_url=result.logo_url,
+        is_active=result.is_active,
+        created_at=result.created_at,
+    )
 
 
 @router.delete("/brands/{brand_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -262,36 +297,56 @@ async def delete_brand(
     _admin: CurrentUser = Depends(require_admin),
     handler: DeleteBrandHandler = Depends(get_delete_brand_handler),
 ) -> None:
-    await handler.handle(DeleteBrandCommand(
-        brand_id=brand_id,
-        tenant_id=_resolve_tenant(get_settings().tenant_id_default),
-    ))
+    await handler.handle(
+        DeleteBrandCommand(
+            brand_id=brand_id,
+            tenant_id=_resolve_tenant(get_settings().tenant_id_default),
+        )
+    )
 
 
 # ── Category routes ───────────────────────────────────────────────────────────
+
 
 @router.get("/categories", response_model=list[CategoryResponse])
 async def list_categories(
     current_user: CurrentUser = Depends(get_current_user),
     handler: ListCategoriesHandler = Depends(get_list_categories_handler),
 ) -> list[CategoryResponse]:
-    results = await handler.handle(ListCategoriesQuery(
-        tenant_id=_resolve_tenant(get_settings().tenant_id_default)
-    ))
-    return [CategoryResponse(id=str(r.category_id), name=r.name, is_active=r.is_active, created_at=r.created_at) for r in results]
+    results = await handler.handle(
+        ListCategoriesQuery(tenant_id=_resolve_tenant(get_settings().tenant_id_default))
+    )
+    return [
+        CategoryResponse(
+            id=str(r.category_id),
+            name=r.name,
+            is_active=r.is_active,
+            created_at=r.created_at,
+        )
+        for r in results
+    ]
 
 
-@router.post("/categories", response_model=CategoryResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/categories", response_model=CategoryResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_category(
     body: CreateCategoryBody,
     _admin: CurrentUser = Depends(require_admin),
     handler: CreateCategoryHandler = Depends(get_create_category_handler),
 ) -> CategoryResponse:
-    result = await handler.handle(CreateCategoryCommand(
-        tenant_id=_resolve_tenant(get_settings().tenant_id_default),
-        name=body.name,
-    ))
-    return CategoryResponse(id=str(result.category_id), name=result.name, is_active=result.is_active, created_at=result.created_at)
+    result = await handler.handle(
+        CreateCategoryCommand(
+            tenant_id=_resolve_tenant(get_settings().tenant_id_default),
+            name=body.name,
+        )
+    )
+    return CategoryResponse(
+        id=str(result.category_id),
+        name=result.name,
+        is_active=result.is_active,
+        created_at=result.created_at,
+    )
 
 
 @router.patch("/categories/{category_id}", response_model=CategoryResponse)
@@ -301,12 +356,19 @@ async def update_category(
     _admin: CurrentUser = Depends(require_admin),
     handler: UpdateCategoryHandler = Depends(get_update_category_handler),
 ) -> CategoryResponse:
-    result = await handler.handle(UpdateCategoryCommand(
-        category_id=category_id,
-        tenant_id=_resolve_tenant(get_settings().tenant_id_default),
-        name=body.name,
-    ))
-    return CategoryResponse(id=str(result.category_id), name=result.name, is_active=result.is_active, created_at=result.created_at)
+    result = await handler.handle(
+        UpdateCategoryCommand(
+            category_id=category_id,
+            tenant_id=_resolve_tenant(get_settings().tenant_id_default),
+            name=body.name,
+        )
+    )
+    return CategoryResponse(
+        id=str(result.category_id),
+        name=result.name,
+        is_active=result.is_active,
+        created_at=result.created_at,
+    )
 
 
 @router.delete("/categories/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -315,36 +377,58 @@ async def delete_category(
     _admin: CurrentUser = Depends(require_admin),
     handler: DeleteCategoryHandler = Depends(get_delete_category_handler),
 ) -> None:
-    await handler.handle(DeleteCategoryCommand(
-        category_id=category_id,
-        tenant_id=_resolve_tenant(get_settings().tenant_id_default),
-    ))
+    await handler.handle(
+        DeleteCategoryCommand(
+            category_id=category_id,
+            tenant_id=_resolve_tenant(get_settings().tenant_id_default),
+        )
+    )
 
 
 # ── GlassType routes ──────────────────────────────────────────────────────────
+
 
 @router.get("/glass-types", response_model=list[GlassTypeResponse])
 async def list_glass_types(
     current_user: CurrentUser = Depends(get_current_user),
     handler: ListGlassTypesHandler = Depends(get_list_glass_types_handler),
 ) -> list[GlassTypeResponse]:
-    results = await handler.handle(ListGlassTypesQuery(
-        tenant_id=_resolve_tenant(get_settings().tenant_id_default)
-    ))
-    return [GlassTypeResponse(id=str(r.glass_type_id), name=r.name, is_active=r.is_active, created_at=r.created_at) for r in results]
+    results = await handler.handle(
+        ListGlassTypesQuery(tenant_id=_resolve_tenant(get_settings().tenant_id_default))
+    )
+    return [
+        GlassTypeResponse(
+            id=str(r.glass_type_id),
+            name=r.name,
+            is_active=r.is_active,
+            created_at=r.created_at,
+        )
+        for r in results
+    ]
 
 
-@router.post("/glass-types", response_model=GlassTypeResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/glass-types",
+    response_model=GlassTypeResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_glass_type(
     body: CreateGlassTypeBody,
     _admin: CurrentUser = Depends(require_admin),
     handler: CreateGlassTypeHandler = Depends(get_create_glass_type_handler),
 ) -> GlassTypeResponse:
-    result = await handler.handle(CreateGlassTypeCommand(
-        tenant_id=_resolve_tenant(get_settings().tenant_id_default),
-        name=body.name,
-    ))
-    return GlassTypeResponse(id=str(result.glass_type_id), name=result.name, is_active=result.is_active, created_at=result.created_at)
+    result = await handler.handle(
+        CreateGlassTypeCommand(
+            tenant_id=_resolve_tenant(get_settings().tenant_id_default),
+            name=body.name,
+        )
+    )
+    return GlassTypeResponse(
+        id=str(result.glass_type_id),
+        name=result.name,
+        is_active=result.is_active,
+        created_at=result.created_at,
+    )
 
 
 @router.patch("/glass-types/{glass_type_id}", response_model=GlassTypeResponse)
@@ -354,12 +438,19 @@ async def update_glass_type(
     _admin: CurrentUser = Depends(require_admin),
     handler: UpdateGlassTypeHandler = Depends(get_update_glass_type_handler),
 ) -> GlassTypeResponse:
-    result = await handler.handle(UpdateGlassTypeCommand(
-        glass_type_id=glass_type_id,
-        tenant_id=_resolve_tenant(get_settings().tenant_id_default),
-        name=body.name,
-    ))
-    return GlassTypeResponse(id=str(result.glass_type_id), name=result.name, is_active=result.is_active, created_at=result.created_at)
+    result = await handler.handle(
+        UpdateGlassTypeCommand(
+            glass_type_id=glass_type_id,
+            tenant_id=_resolve_tenant(get_settings().tenant_id_default),
+            name=body.name,
+        )
+    )
+    return GlassTypeResponse(
+        id=str(result.glass_type_id),
+        name=result.name,
+        is_active=result.is_active,
+        created_at=result.created_at,
+    )
 
 
 @router.delete("/glass-types/{glass_type_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -368,47 +459,54 @@ async def delete_glass_type(
     _admin: CurrentUser = Depends(require_admin),
     handler: DeleteGlassTypeHandler = Depends(get_delete_glass_type_handler),
 ) -> None:
-    await handler.handle(DeleteGlassTypeCommand(
-        glass_type_id=glass_type_id,
-        tenant_id=_resolve_tenant(get_settings().tenant_id_default),
-    ))
+    await handler.handle(
+        DeleteGlassTypeCommand(
+            glass_type_id=glass_type_id,
+            tenant_id=_resolve_tenant(get_settings().tenant_id_default),
+        )
+    )
 
 
 # ── Product routes ────────────────────────────────────────────────────────────
+
 
 @router.get("/products", response_model=list[ProductResponse])
 async def list_products(
     current_user: CurrentUser = Depends(get_current_user),
     handler: ListProductsHandler = Depends(get_list_products_handler),
 ) -> list[ProductResponse]:
-    results = await handler.handle(ListProductsQuery(
-        tenant_id=_resolve_tenant(get_settings().tenant_id_default)
-    ))
+    results = await handler.handle(
+        ListProductsQuery(tenant_id=_resolve_tenant(get_settings().tenant_id_default))
+    )
     return [_to_product_response(r) for r in results]
 
 
-@router.post("/products", response_model=ProductResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/products", response_model=ProductResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_product(
     body: CreateProductBody,
     _admin: CurrentUser = Depends(require_admin),
     handler: CreateProductHandler = Depends(get_create_product_handler),
 ) -> ProductResponse:
-    result = await handler.handle(CreateProductCommand(
-        tenant_id=_resolve_tenant(get_settings().tenant_id_default),
-        name=body.name,
-        brand_id=body.brand_id,
-        sale_price_per_m2=body.sale_price_per_m2,
-        uv_percentage=body.uv_percentage,
-        irr_percentage=body.irr_percentage,
-        tser_percentage=body.tser_percentage,
-        warranty_years=body.warranty_years,
-        category_id=body.category_id,
-        roll_width_cm=body.roll_width_cm,
-        roll_length_m=body.roll_length_m,
-        application_types=body.application_types,
-        compatible_glass_ids=body.compatible_glass_ids,
-        technical_sheet_url=body.technical_sheet_url,
-    ))
+    result = await handler.handle(
+        CreateProductCommand(
+            tenant_id=_resolve_tenant(get_settings().tenant_id_default),
+            name=body.name,
+            brand_id=body.brand_id,
+            sale_price_per_m2=body.sale_price_per_m2,
+            uv_percentage=body.uv_percentage,
+            irr_percentage=body.irr_percentage,
+            tser_percentage=body.tser_percentage,
+            warranty_years=body.warranty_years,
+            category_id=body.category_id,
+            roll_width_cm=body.roll_width_cm,
+            roll_length_m=body.roll_length_m,
+            application_types=body.application_types,
+            compatible_glass_ids=body.compatible_glass_ids,
+            technical_sheet_url=body.technical_sheet_url,
+        )
+    )
     return _to_product_response(result)
 
 
@@ -418,10 +516,12 @@ async def get_product(
     current_user: CurrentUser = Depends(get_current_user),
     handler: GetProductHandler = Depends(get_product_handler),
 ) -> ProductResponse:
-    result = await handler.handle(GetProductQuery(
-        product_id=product_id,
-        tenant_id=_resolve_tenant(get_settings().tenant_id_default),
-    ))
+    result = await handler.handle(
+        GetProductQuery(
+            product_id=product_id,
+            tenant_id=_resolve_tenant(get_settings().tenant_id_default),
+        )
+    )
     return _to_product_response(result)
 
 
@@ -432,25 +532,27 @@ async def update_product(
     _admin: CurrentUser = Depends(require_admin),
     handler: UpdateProductHandler = Depends(get_update_product_handler),
 ) -> ProductResponse:
-    result = await handler.handle(UpdateProductCommand(
-        product_id=product_id,
-        tenant_id=_resolve_tenant(get_settings().tenant_id_default),
-        name=body.name,
-        brand_id=body.brand_id,
-        sale_price_per_m2=body.sale_price_per_m2,
-        uv_percentage=body.uv_percentage,
-        irr_percentage=body.irr_percentage,
-        tser_percentage=body.tser_percentage,
-        warranty_years=body.warranty_years,
-        category_id=body.category_id,
-        roll_width_cm=body.roll_width_cm,
-        roll_length_m=body.roll_length_m,
-        application_types=body.application_types,
-        compatible_glass_ids=body.compatible_glass_ids,
-        technical_sheet_url=body.technical_sheet_url,
-        clear_technical_sheet=body.clear_technical_sheet,
-        is_active=body.is_active,
-    ))
+    result = await handler.handle(
+        UpdateProductCommand(
+            product_id=product_id,
+            tenant_id=_resolve_tenant(get_settings().tenant_id_default),
+            name=body.name,
+            brand_id=body.brand_id,
+            sale_price_per_m2=body.sale_price_per_m2,
+            uv_percentage=body.uv_percentage,
+            irr_percentage=body.irr_percentage,
+            tser_percentage=body.tser_percentage,
+            warranty_years=body.warranty_years,
+            category_id=body.category_id,
+            roll_width_cm=body.roll_width_cm,
+            roll_length_m=body.roll_length_m,
+            application_types=body.application_types,
+            compatible_glass_ids=body.compatible_glass_ids,
+            technical_sheet_url=body.technical_sheet_url,
+            clear_technical_sheet=body.clear_technical_sheet,
+            is_active=body.is_active,
+        )
+    )
     return _to_product_response(result)
 
 
@@ -460,10 +562,12 @@ async def delete_product(
     _admin: CurrentUser = Depends(require_admin),
     handler: DeleteProductHandler = Depends(get_delete_product_handler),
 ) -> None:
-    await handler.handle(DeleteProductCommand(
-        product_id=product_id,
-        tenant_id=_resolve_tenant(get_settings().tenant_id_default),
-    ))
+    await handler.handle(
+        DeleteProductCommand(
+            product_id=product_id,
+            tenant_id=_resolve_tenant(get_settings().tenant_id_default),
+        )
+    )
 
 
 def _to_product_response(r: object) -> ProductResponse:

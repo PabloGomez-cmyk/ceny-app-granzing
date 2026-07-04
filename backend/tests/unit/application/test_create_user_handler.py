@@ -11,7 +11,9 @@ from tests.conftest import FakePasswordHasher, FakeUnitOfWork, FakeUserRepositor
 
 
 @pytest.fixture
-def handler(fake_uow: FakeUnitOfWork, fake_hasher: FakePasswordHasher) -> CreateUserHandler:
+def handler(
+    fake_uow: FakeUnitOfWork, fake_hasher: FakePasswordHasher
+) -> CreateUserHandler:
     return CreateUserHandler(uow=fake_uow, hasher=fake_hasher)
 
 
@@ -43,7 +45,7 @@ class TestCreateUser:
     ) -> None:
         await handler.handle(make_command(tenant_id, password="mipass"))
 
-        saved = list(fake_uow.users._store.values())[0]
+        saved = next(iter(fake_uow.users._store.values()))
         assert saved.hashed_password.value == "fake:mipass"
 
     async def test_hace_commit(
@@ -67,6 +69,7 @@ class TestCreateUser:
         tenant_id: TenantId,
     ) -> None:
         from uuid import uuid4
+
         from centy.domain.shared.value_objects import TenantId as TId
 
         repo = FakeUserRepository()
@@ -91,5 +94,6 @@ class TestCreateUser:
         self, handler: CreateUserHandler, tenant_id: TenantId
     ) -> None:
         from centy.domain.shared.exceptions import BusinessRuleViolationError
+
         with pytest.raises(BusinessRuleViolationError):
             await handler.handle(make_command(tenant_id, full_name="   "))

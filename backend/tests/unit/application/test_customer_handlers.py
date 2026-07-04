@@ -1,7 +1,8 @@
 """Tests para los use cases de Customer (CRUD de clientes)."""
 
-import pytest
 from uuid import uuid4
+
+import pytest
 
 from centy.application.customers.commands import (
     CreateCustomerCommand,
@@ -16,12 +17,16 @@ from centy.application.customers.handlers import (
     UpdateCustomerHandler,
 )
 from centy.application.customers.queries import GetCustomerQuery, ListCustomersQuery
-from centy.domain.shared.exceptions import AuthorizationError, BusinessRuleViolationError, NotFoundError
+from centy.domain.shared.exceptions import (
+    AuthorizationError,
+    BusinessRuleViolationError,
+    NotFoundError,
+)
 from centy.domain.shared.value_objects import TenantId
 from tests.conftest import FakeCustomerRepository, FakeUnitOfWork
 
-
 # ── Fixtures ──────────────────────────────────────────────────────────────────
+
 
 @pytest.fixture
 def tenant_id() -> TenantId:
@@ -45,7 +50,9 @@ def uow(customer_repo: FakeCustomerRepository) -> FakeUnitOfWork:
     return uow
 
 
-def make_create_command(tenant_id: TenantId, owner_id: uuid4, **overrides) -> CreateCustomerCommand:  # type: ignore[no-untyped-def]
+def make_create_command(
+    tenant_id: TenantId, owner_id: uuid4, **overrides
+) -> CreateCustomerCommand:  # type: ignore[no-untyped-def]
     defaults: dict = dict(
         tenant_id=tenant_id,
         owner_user_id=owner_id,
@@ -57,12 +64,15 @@ def make_create_command(tenant_id: TenantId, owner_id: uuid4, **overrides) -> Cr
 
 # ── CreateCustomer ────────────────────────────────────────────────────────────
 
+
 class TestCreateCustomerHandler:
     async def test_crea_cliente_correctamente(
         self, uow: FakeUnitOfWork, tenant_id: TenantId, owner_id: uuid4
     ) -> None:
         handler = CreateCustomerHandler(uow)
-        result = await handler.handle(make_create_command(tenant_id, owner_id, name="Ana López"))
+        result = await handler.handle(
+            make_create_command(tenant_id, owner_id, name="Ana López")
+        )
 
         assert result.name == "Ana López"
         assert result.is_active is True
@@ -74,7 +84,8 @@ class TestCreateCustomerHandler:
         handler = CreateCustomerHandler(uow)
         result = await handler.handle(
             make_create_command(
-                tenant_id, owner_id,
+                tenant_id,
+                owner_id,
                 name="Juan Pérez",
                 email="juan@empresa.com",
                 phone="+54 351 555-1234",
@@ -102,11 +113,16 @@ class TestCreateCustomerHandler:
         assert uow.committed is True
 
     async def test_persiste_en_repositorio(
-        self, uow: FakeUnitOfWork, customer_repo: FakeCustomerRepository,
-        tenant_id: TenantId, owner_id: uuid4
+        self,
+        uow: FakeUnitOfWork,
+        customer_repo: FakeCustomerRepository,
+        tenant_id: TenantId,
+        owner_id: uuid4,
     ) -> None:
         handler = CreateCustomerHandler(uow)
-        result = await handler.handle(make_create_command(tenant_id, owner_id, name="Persistido"))
+        result = await handler.handle(
+            make_create_command(tenant_id, owner_id, name="Persistido")
+        )
 
         saved = await customer_repo.get_by_id(result.customer_id, tenant_id)
         assert saved is not None
@@ -122,10 +138,14 @@ class TestCreateCustomerHandler:
 
 # ── GetCustomer ───────────────────────────────────────────────────────────────
 
+
 class TestGetCustomerHandler:
     async def test_devuelve_cliente_del_owner(
-        self, uow: FakeUnitOfWork, customer_repo: FakeCustomerRepository,
-        tenant_id: TenantId, owner_id: uuid4
+        self,
+        uow: FakeUnitOfWork,
+        customer_repo: FakeCustomerRepository,
+        tenant_id: TenantId,
+        owner_id: uuid4,
     ) -> None:
         created = await CreateCustomerHandler(uow).handle(
             make_create_command(tenant_id, owner_id, name="Mi Cliente")
@@ -143,8 +163,11 @@ class TestGetCustomerHandler:
         assert result.name == "Mi Cliente"
 
     async def test_otro_user_no_puede_ver_cliente(
-        self, uow: FakeUnitOfWork, customer_repo: FakeCustomerRepository,
-        tenant_id: TenantId, owner_id: uuid4
+        self,
+        uow: FakeUnitOfWork,
+        customer_repo: FakeCustomerRepository,
+        tenant_id: TenantId,
+        owner_id: uuid4,
     ) -> None:
         created = await CreateCustomerHandler(uow).handle(
             make_create_command(tenant_id, owner_id)
@@ -163,8 +186,11 @@ class TestGetCustomerHandler:
             )
 
     async def test_admin_tampoco_ve_clientes_ajenos(
-        self, uow: FakeUnitOfWork, customer_repo: FakeCustomerRepository,
-        tenant_id: TenantId, owner_id: uuid4
+        self,
+        uow: FakeUnitOfWork,
+        customer_repo: FakeCustomerRepository,
+        tenant_id: TenantId,
+        owner_id: uuid4,
     ) -> None:
         created = await CreateCustomerHandler(uow).handle(
             make_create_command(tenant_id, owner_id)
@@ -199,10 +225,13 @@ class TestGetCustomerHandler:
 
 # ── ListCustomers ─────────────────────────────────────────────────────────────
 
+
 class TestListCustomersHandler:
     async def test_devuelve_solo_clientes_del_owner(
-        self, uow: FakeUnitOfWork, customer_repo: FakeCustomerRepository,
-        tenant_id: TenantId
+        self,
+        uow: FakeUnitOfWork,
+        customer_repo: FakeCustomerRepository,
+        tenant_id: TenantId,
     ) -> None:
         owner_a = uuid4()
         owner_b = uuid4()
@@ -225,8 +254,10 @@ class TestListCustomersHandler:
         assert names == {"A1", "A2"}
 
     async def test_admin_ve_solo_sus_propios_clientes(
-        self, uow: FakeUnitOfWork, customer_repo: FakeCustomerRepository,
-        tenant_id: TenantId
+        self,
+        uow: FakeUnitOfWork,
+        customer_repo: FakeCustomerRepository,
+        tenant_id: TenantId,
     ) -> None:
         admin_id = uuid4()
         otro_user = uuid4()
@@ -261,6 +292,7 @@ class TestListCustomersHandler:
 
 
 # ── UpdateCustomer ────────────────────────────────────────────────────────────
+
 
 class TestUpdateCustomerHandler:
     async def _create(
@@ -373,10 +405,14 @@ class TestUpdateCustomerHandler:
 
 # ── DeactivateCustomer ────────────────────────────────────────────────────────
 
+
 class TestDeactivateCustomerHandler:
     async def test_desactiva_cliente(
-        self, uow: FakeUnitOfWork, customer_repo: FakeCustomerRepository,
-        tenant_id: TenantId, owner_id: uuid4
+        self,
+        uow: FakeUnitOfWork,
+        customer_repo: FakeCustomerRepository,
+        tenant_id: TenantId,
+        owner_id: uuid4,
     ) -> None:
         created = await CreateCustomerHandler(uow).handle(
             make_create_command(tenant_id, owner_id)

@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from centy.application.ports.repositories import IUserRepository
 from centy.domain.shared.value_objects import Email, TenantId
 from centy.domain.users.entities import Role, User
-from centy.domain.users.value_objects import HashedPassword, UserId
+from centy.domain.users.value_objects import HashedPassword
 from centy.infrastructure.persistence.models.user import UserModel
 
 

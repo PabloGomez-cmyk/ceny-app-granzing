@@ -1,6 +1,14 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, Numeric, String, Text
+from sqlalchemy import (
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
+)
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -22,15 +30,25 @@ class QuoteModel(Base):
     customer_snapshot: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="DRAFT")
     film_mode: Mapped[str] = mapped_column(String(20), nullable=False, default="SINGLE")
-    height_surcharge_pct: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False, default=30)
-    travel_cost: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False, default=0)
-    discount_pct: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False, default=0)
+    height_surcharge_pct: Mapped[float] = mapped_column(
+        Numeric(5, 2), nullable=False, default=30
+    )
+    travel_cost: Mapped[float] = mapped_column(
+        Numeric(12, 2), nullable=False, default=0
+    )
+    discount_pct: Mapped[float] = mapped_column(
+        Numeric(5, 2), nullable=False, default=0
+    )
     tax_pct: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False, default=0)
-    gap_cm: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False, server_default="3")
+    gap_cm: Mapped[float] = mapped_column(
+        Numeric(5, 2), nullable=False, server_default="3"
+    )
     commercial_conditions: Mapped[str] = mapped_column(Text, nullable=False, default="")
     cut_plan_snapshot: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     valid_until: Mapped[str] = mapped_column(String(10), nullable=False, default="")
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
 
 
 class GlassPaneModel(Base):
@@ -44,7 +62,9 @@ class GlassPaneModel(Base):
         nullable=False,
     )
     pane_id: Mapped[str] = mapped_column(String(10), nullable=False)
-    glass_type_id: Mapped[str | None] = mapped_column(UUID(as_uuid=False), nullable=True)
+    glass_type_id: Mapped[str | None] = mapped_column(
+        UUID(as_uuid=False), nullable=True
+    )
     glass_type_name: Mapped[str] = mapped_column(String(100), nullable=False)
     width_cm: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
     height_cm: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)

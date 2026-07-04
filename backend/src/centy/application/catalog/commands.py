@@ -4,8 +4,8 @@ from uuid import UUID
 
 from centy.domain.shared.value_objects import TenantId
 
-
 # ── Brand commands ────────────────────────────────────────────────────────────
+
 
 @dataclass(frozen=True)
 class CreateBrandCommand:
@@ -33,6 +33,7 @@ class DeleteBrandCommand:
 
 # ── ProductCategory commands ──────────────────────────────────────────────────
 
+
 @dataclass(frozen=True)
 class CreateCategoryCommand:
     tenant_id: TenantId
@@ -54,6 +55,7 @@ class DeleteCategoryCommand:
 
 # ── GlassType commands ────────────────────────────────────────────────────────
 
+
 @dataclass(frozen=True)
 class CreateGlassTypeCommand:
     tenant_id: TenantId
@@ -74,6 +76,7 @@ class DeleteGlassTypeCommand:
 
 
 # ── Product commands ──────────────────────────────────────────────────────────
+
 
 @dataclass(frozen=True)
 class CreateProductCommand:

@@ -15,8 +15,8 @@ from centy.domain.quotes.value_objects import FilmMode, LocationType, QuoteStatu
 from centy.domain.shared.exceptions import BusinessRuleViolationError
 from centy.domain.shared.value_objects import TenantId
 
-
 # ── Helpers ───────────────────────────────────────────────────────────────────
+
 
 def make_pane(
     pane_id: str = "v01",
@@ -77,10 +77,11 @@ def make_quote(**overrides) -> Quote:
 
 # ── GlassPane.surface_m2 ──────────────────────────────────────────────────────
 
+
 class TestGlassPaneSurface:
     def test_surface_calcula_correctamente(self) -> None:
         pane = make_pane(width_cm=200, height_cm=150, quantity=2)
-        # 2m × 1.5m × 2 = 6 m²
+        # 2m x 1.5m x 2 = 6 m2
         assert pane.surface_m2 == Decimal("6.00")
 
     def test_surface_unitario(self) -> None:
@@ -89,6 +90,7 @@ class TestGlassPaneSurface:
 
 
 # ── Quote.create() — validaciones ─────────────────────────────────────────────
+
 
 class TestQuoteCreate:
     def test_crea_quote_valido(self) -> None:
@@ -127,6 +129,7 @@ class TestQuoteCreate:
 
 # ── Quote.has_altura_panes ────────────────────────────────────────────────────
 
+
 class TestQuoteAlturaFlag:
     def test_sin_panes_altura_es_false(self) -> None:
         q = make_quote(glass_panes=[make_pane(location=LocationType.SUPERFICIE)])
@@ -144,6 +147,7 @@ class TestQuoteAlturaFlag:
 
 
 # ── Transiciones de estado ────────────────────────────────────────────────────
+
 
 class TestQuoteStatusTransitions:
     def test_submit_draft_a_sent(self) -> None:
@@ -224,6 +228,7 @@ class TestQuoteStatusTransitions:
 
 # ── QuoteCalculator ───────────────────────────────────────────────────────────
 
+
 class TestQuoteCalculator:
     calc = QuoteCalculator()
 
@@ -231,7 +236,7 @@ class TestQuoteCalculator:
         return make_quote(**overrides)
 
     def test_total_sin_iva_sin_descuento(self) -> None:
-        # 1 m² × $1000/m² = $1000 materials; todo cero → total = $1000
+        # 1 m² x $1000/m² = $1000 materials; todo cero → total = $1000
         q = self._quote_with(
             glass_panes=[make_pane(width_cm=100, height_cm=100)],
             lines=[make_line(price_per_m2=1000, surface_m2=1.0)],
@@ -305,7 +310,9 @@ class TestQuoteCalculator:
     def test_recargo_altura_se_suma_antes_de_iva(self) -> None:
         # pane 1m² en ALTURA; price $1000; altura 30% → surcharge $300
         # subtotal = $1000 + $300 = $1300, IVA 21% → $273, total $1573
-        pane = make_pane("v01", width_cm=100, height_cm=100, location=LocationType.ALTURA)
+        pane = make_pane(
+            "v01", width_cm=100, height_cm=100, location=LocationType.ALTURA
+        )
         line = QuoteLine(
             product_id=uuid4(),
             product_snapshot={},

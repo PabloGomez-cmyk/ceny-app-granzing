@@ -2,7 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from pydantic import BaseModel
 
 from centy.application.ports.storage import IObjectStorage
-from centy.infrastructure.api.dependencies import CurrentUser, get_current_user, get_storage
+from centy.infrastructure.api.dependencies import (
+    CurrentUser,
+    get_current_user,
+    get_storage,
+)
 
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 ALLOWED_DOC_TYPES = ALLOWED_IMAGE_TYPES | {"application/pdf"}
@@ -15,7 +19,9 @@ class UploadResponse(BaseModel):
     url: str
 
 
-@router.post("/image", response_model=UploadResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/image", response_model=UploadResponse, status_code=status.HTTP_201_CREATED
+)
 async def upload_image(
     file: UploadFile,
     current_user: CurrentUser = Depends(get_current_user),
@@ -23,7 +29,9 @@ async def upload_image(
 ) -> UploadResponse:
     """Sube una imagen (logo de marca). Solo ADMIN."""
     if current_user.role != "ADMIN":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Se requiere rol ADMIN")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Se requiere rol ADMIN"
+        )
     if file.content_type not in ALLOWED_IMAGE_TYPES:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -43,7 +51,9 @@ async def upload_image(
     return UploadResponse(url=url)
 
 
-@router.post("/document", response_model=UploadResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/document", response_model=UploadResponse, status_code=status.HTTP_201_CREATED
+)
 async def upload_document(
     file: UploadFile,
     current_user: CurrentUser = Depends(get_current_user),
@@ -51,7 +61,9 @@ async def upload_document(
 ) -> UploadResponse:
     """Sube una ficha técnica (imagen o PDF). Solo ADMIN."""
     if current_user.role != "ADMIN":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Se requiere rol ADMIN")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Se requiere rol ADMIN"
+        )
     if file.content_type not in ALLOWED_DOC_TYPES:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,

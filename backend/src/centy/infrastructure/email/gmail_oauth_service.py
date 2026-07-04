@@ -1,14 +1,10 @@
 import base64
 import json
 import urllib.parse
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import httpx
-
-import google.auth.exceptions
-from google.auth.transport.requests import Request as GoogleRequest
-from google.oauth2.credentials import Credentials
 
 from centy.application.ports.email import (
     IGmailOAuthService,
@@ -73,7 +69,7 @@ class GmailOAuthService(IGmailOAuthService):
             )
 
         expires_in: int = tokens.get("expires_in", 3600)
-        expiry = datetime.now(tz=timezone.utc) + timedelta(seconds=expires_in)
+        expiry = datetime.now(tz=UTC) + timedelta(seconds=expires_in)
 
         return OAuthTokens(
             access_token=tokens["access_token"],
@@ -83,10 +79,10 @@ class GmailOAuthService(IGmailOAuthService):
         )
 
     async def refresh_if_needed(self, config: UserEmailConfig) -> UserEmailConfig:
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         expiry = config.token_expiry
         if expiry.tzinfo is None:
-            expiry = expiry.replace(tzinfo=timezone.utc)
+            expiry = expiry.replace(tzinfo=UTC)
 
         if expiry > now:
             return config
@@ -112,7 +108,7 @@ class GmailOAuthService(IGmailOAuthService):
 
         tokens: dict[str, Any] = response.json()
         expires_in = tokens.get("expires_in", 3600)
-        new_expiry = datetime.now(tz=timezone.utc) + timedelta(seconds=expires_in)
+        new_expiry = datetime.now(tz=UTC) + timedelta(seconds=expires_in)
 
         return UserEmailConfig(
             user_id=config.user_id,
@@ -122,7 +118,7 @@ class GmailOAuthService(IGmailOAuthService):
             refresh_token=config.refresh_token,  # Google no rota el refresh token
             token_expiry=new_expiry,
             created_at=config.created_at,
-            updated_at=datetime.now(tz=timezone.utc),
+            updated_at=datetime.now(tz=UTC),
         )
 
 

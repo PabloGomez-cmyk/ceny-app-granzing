@@ -55,8 +55,8 @@ from centy.domain.shared.exceptions import NotFoundError
 from centy.domain.shared.value_objects import TenantId
 from tests.conftest import FakeUnitOfWork
 
-
 # ── Fixtures ──────────────────────────────────────────────────────────────────
+
 
 @pytest.fixture
 def tenant_id() -> TenantId:
@@ -69,6 +69,7 @@ def uow() -> FakeUnitOfWork:
 
 
 # ── Brand handlers ────────────────────────────────────────────────────────────
+
 
 class TestCreateBrandHandler:
     async def test_crea_marca_correctamente(
@@ -97,9 +98,7 @@ class TestCreateBrandHandler:
         )
         assert result.logo_url == "https://cdn.example.com/madico.png"
 
-    async def test_hace_commit(
-        self, uow: FakeUnitOfWork, tenant_id: TenantId
-    ) -> None:
+    async def test_hace_commit(self, uow: FakeUnitOfWork, tenant_id: TenantId) -> None:
         await CreateBrandHandler(uow).handle(
             CreateBrandCommand(tenant_id=tenant_id, name="Brand", color="#000000")
         )
@@ -150,8 +149,12 @@ class TestListBrandsHandler:
         self, uow: FakeUnitOfWork, tenant_id: TenantId
     ) -> None:
         create = CreateBrandHandler(uow)
-        await create.handle(CreateBrandCommand(tenant_id=tenant_id, name="A", color="#000000"))
-        await create.handle(CreateBrandCommand(tenant_id=tenant_id, name="B", color="#111111"))
+        await create.handle(
+            CreateBrandCommand(tenant_id=tenant_id, name="A", color="#000000")
+        )
+        await create.handle(
+            CreateBrandCommand(tenant_id=tenant_id, name="B", color="#111111")
+        )
 
         results = await ListBrandsHandler(uow.brands).handle(
             ListBrandsQuery(tenant_id=tenant_id)
@@ -191,7 +194,9 @@ class TestUpdateBrandHandler:
         uow.committed = False
 
         result = await UpdateBrandHandler(uow).handle(
-            UpdateBrandCommand(brand_id=created.brand_id, tenant_id=tenant_id, name="Nuevo")
+            UpdateBrandCommand(
+                brand_id=created.brand_id, tenant_id=tenant_id, name="Nuevo"
+            )
         )
         assert result.name == "Nuevo"
         assert uow.committed is True
@@ -203,13 +208,13 @@ class TestUpdateBrandHandler:
             CreateBrandCommand(tenant_id=tenant_id, name="3M", color="#000000")
         )
         result = await UpdateBrandHandler(uow).handle(
-            UpdateBrandCommand(brand_id=created.brand_id, tenant_id=tenant_id, color="#ffffff")
+            UpdateBrandCommand(
+                brand_id=created.brand_id, tenant_id=tenant_id, color="#ffffff"
+            )
         )
         assert result.color == "#ffffff"
 
-    async def test_clear_logo(
-        self, uow: FakeUnitOfWork, tenant_id: TenantId
-    ) -> None:
+    async def test_clear_logo(self, uow: FakeUnitOfWork, tenant_id: TenantId) -> None:
         created = await CreateBrandHandler(uow).handle(
             CreateBrandCommand(
                 tenant_id=tenant_id,
@@ -219,7 +224,9 @@ class TestUpdateBrandHandler:
             )
         )
         result = await UpdateBrandHandler(uow).handle(
-            UpdateBrandCommand(brand_id=created.brand_id, tenant_id=tenant_id, clear_logo=True)
+            UpdateBrandCommand(
+                brand_id=created.brand_id, tenant_id=tenant_id, clear_logo=True
+            )
         )
         assert result.logo_url is None
 
@@ -259,6 +266,7 @@ class TestDeleteBrandHandler:
 
 # ── ProductCategory handlers ──────────────────────────────────────────────────
 
+
 class TestCreateCategoryHandler:
     async def test_crea_categoria_correctamente(
         self, uow: FakeUnitOfWork, tenant_id: TenantId
@@ -269,9 +277,7 @@ class TestCreateCategoryHandler:
         assert result.name == "Solar"
         assert result.is_active is True
 
-    async def test_hace_commit(
-        self, uow: FakeUnitOfWork, tenant_id: TenantId
-    ) -> None:
+    async def test_hace_commit(self, uow: FakeUnitOfWork, tenant_id: TenantId) -> None:
         await CreateCategoryHandler(uow).handle(
             CreateCategoryCommand(tenant_id=tenant_id, name="Seguridad")
         )
@@ -314,8 +320,12 @@ class TestListCategoriesHandler:
     ) -> None:
         create = CreateCategoryHandler(uow)
         await create.handle(CreateCategoryCommand(tenant_id=tenant_id, name="Solar"))
-        await create.handle(CreateCategoryCommand(tenant_id=tenant_id, name="Seguridad"))
-        await create.handle(CreateCategoryCommand(tenant_id=tenant_id, name="Decorativo"))
+        await create.handle(
+            CreateCategoryCommand(tenant_id=tenant_id, name="Seguridad")
+        )
+        await create.handle(
+            CreateCategoryCommand(tenant_id=tenant_id, name="Decorativo")
+        )
 
         results = await ListCategoriesHandler(uow.product_categories).handle(
             ListCategoriesQuery(tenant_id=tenant_id)
@@ -357,7 +367,9 @@ class TestUpdateCategoryHandler:
     ) -> None:
         with pytest.raises(NotFoundError):
             await UpdateCategoryHandler(uow).handle(
-                UpdateCategoryCommand(category_id=uuid4(), tenant_id=tenant_id, name="X")
+                UpdateCategoryCommand(
+                    category_id=uuid4(), tenant_id=tenant_id, name="X"
+                )
             )
 
 
@@ -388,6 +400,7 @@ class TestDeleteCategoryHandler:
 
 # ── GlassType handlers ────────────────────────────────────────────────────────
 
+
 class TestCreateGlassTypeHandler:
     async def test_crea_tipo_de_vidrio_correctamente(
         self, uow: FakeUnitOfWork, tenant_id: TenantId
@@ -398,9 +411,7 @@ class TestCreateGlassTypeHandler:
         assert result.name == "Monolítico"
         assert result.is_active is True
 
-    async def test_hace_commit(
-        self, uow: FakeUnitOfWork, tenant_id: TenantId
-    ) -> None:
+    async def test_hace_commit(self, uow: FakeUnitOfWork, tenant_id: TenantId) -> None:
         await CreateGlassTypeHandler(uow).handle(
             CreateGlassTypeCommand(tenant_id=tenant_id, name="DVH")
         )
@@ -442,7 +453,9 @@ class TestListGlassTypesHandler:
         self, uow: FakeUnitOfWork, tenant_id: TenantId
     ) -> None:
         create = CreateGlassTypeHandler(uow)
-        await create.handle(CreateGlassTypeCommand(tenant_id=tenant_id, name="Monolítico"))
+        await create.handle(
+            CreateGlassTypeCommand(tenant_id=tenant_id, name="Monolítico")
+        )
         await create.handle(CreateGlassTypeCommand(tenant_id=tenant_id, name="DVH"))
 
         results = await ListGlassTypesHandler(uow.glass_types).handle(
@@ -485,21 +498,23 @@ class TestUpdateGlassTypeHandler:
     ) -> None:
         with pytest.raises(NotFoundError):
             await UpdateGlassTypeHandler(uow).handle(
-                UpdateGlassTypeCommand(glass_type_id=uuid4(), tenant_id=tenant_id, name="X")
+                UpdateGlassTypeCommand(
+                    glass_type_id=uuid4(), tenant_id=tenant_id, name="X"
+                )
             )
 
 
 class TestDeleteGlassTypeHandler:
-    async def test_elimina_tipo(
-        self, uow: FakeUnitOfWork, tenant_id: TenantId
-    ) -> None:
+    async def test_elimina_tipo(self, uow: FakeUnitOfWork, tenant_id: TenantId) -> None:
         created = await CreateGlassTypeHandler(uow).handle(
             CreateGlassTypeCommand(tenant_id=tenant_id, name="Borrar")
         )
         uow.committed = False
 
         await DeleteGlassTypeHandler(uow).handle(
-            DeleteGlassTypeCommand(glass_type_id=created.glass_type_id, tenant_id=tenant_id)
+            DeleteGlassTypeCommand(
+                glass_type_id=created.glass_type_id, tenant_id=tenant_id
+            )
         )
         assert uow.committed is True
         saved = await uow.glass_types.get_by_id(created.glass_type_id, tenant_id)
@@ -515,6 +530,7 @@ class TestDeleteGlassTypeHandler:
 
 
 # ── Product handlers ──────────────────────────────────────────────────────────
+
 
 def _product_cmd(tenant_id: TenantId, **overrides) -> CreateProductCommand:  # type: ignore[no-untyped-def]
     defaults: dict = dict(
@@ -557,9 +573,7 @@ class TestCreateProductHandler:
         assert set(result.application_types) == {"WINDOW", "AUTOMOTIVE"}
         assert result.compatible_glass_ids == glass_ids
 
-    async def test_hace_commit(
-        self, uow: FakeUnitOfWork, tenant_id: TenantId
-    ) -> None:
+    async def test_hace_commit(self, uow: FakeUnitOfWork, tenant_id: TenantId) -> None:
         await CreateProductHandler(uow).handle(_product_cmd(tenant_id))
         assert uow.committed is True
 
@@ -638,9 +652,7 @@ class TestListProductsHandler:
 
 
 class TestUpdateProductHandler:
-    async def _create(
-        self, uow: FakeUnitOfWork, tenant_id: TenantId, **kwargs
-    ):  # type: ignore[return]
+    async def _create(self, uow: FakeUnitOfWork, tenant_id: TenantId, **kwargs):  # type: ignore[return]
         uow.committed = False
         return await CreateProductHandler(uow).handle(_product_cmd(tenant_id, **kwargs))
 

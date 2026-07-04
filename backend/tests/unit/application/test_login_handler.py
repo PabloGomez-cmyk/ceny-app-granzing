@@ -1,10 +1,19 @@
 """Tests para los use cases de autenticación: Login, Refresh, Logout."""
 
 import json
+
 import pytest
 
-from centy.application.auth.commands import LoginCommand, LogoutCommand, RefreshTokenCommand
-from centy.application.auth.handlers import LoginHandler, LogoutHandler, RefreshTokenHandler
+from centy.application.auth.commands import (
+    LoginCommand,
+    LogoutCommand,
+    RefreshTokenCommand,
+)
+from centy.application.auth.handlers import (
+    LoginHandler,
+    LogoutHandler,
+    RefreshTokenHandler,
+)
 from centy.domain.shared.exceptions import AuthorizationError
 from centy.domain.shared.value_objects import Email, TenantId
 from centy.domain.users.entities import Role, User
@@ -23,7 +32,9 @@ def make_login_handler(
     tokens: FakeTokenService,
     cache: FakeCacheService,
 ) -> LoginHandler:
-    return LoginHandler(user_repo=repo, hasher=hasher, token_service=tokens, cache=cache)
+    return LoginHandler(
+        user_repo=repo, hasher=hasher, token_service=tokens, cache=cache
+    )
 
 
 @pytest.fixture
@@ -37,6 +48,7 @@ def repo_with_operator(tenant_id: TenantId) -> FakeUserRepository:
         role=Role.OPERATOR,
     )
     import asyncio
+
     asyncio.get_event_loop().run_until_complete(repo.save(user))
     return repo
 
@@ -50,9 +62,13 @@ class TestLoginHandler:
         fake_tokens: FakeTokenService,
         fake_cache: FakeCacheService,
     ) -> None:
-        handler = make_login_handler(repo_with_operator, fake_hasher, fake_tokens, fake_cache)
+        handler = make_login_handler(
+            repo_with_operator, fake_hasher, fake_tokens, fake_cache
+        )
         result = await handler.handle(
-            LoginCommand(email="op@glazing.com", password="pass123", tenant_id=tenant_id)
+            LoginCommand(
+                email="op@glazing.com", password="pass123", tenant_id=tenant_id
+            )
         )
 
         assert result.access_token.startswith("access|")
@@ -69,9 +85,13 @@ class TestLoginHandler:
         fake_tokens: FakeTokenService,
         fake_cache: FakeCacheService,
     ) -> None:
-        handler = make_login_handler(repo_with_operator, fake_hasher, fake_tokens, fake_cache)
+        handler = make_login_handler(
+            repo_with_operator, fake_hasher, fake_tokens, fake_cache
+        )
         result = await handler.handle(
-            LoginCommand(email="op@glazing.com", password="pass123", tenant_id=tenant_id)
+            LoginCommand(
+                email="op@glazing.com", password="pass123", tenant_id=tenant_id
+            )
         )
 
         jti = result.refresh_token.split("|")[2]
@@ -85,10 +105,14 @@ class TestLoginHandler:
         fake_tokens: FakeTokenService,
         fake_cache: FakeCacheService,
     ) -> None:
-        handler = make_login_handler(repo_with_operator, fake_hasher, fake_tokens, fake_cache)
+        handler = make_login_handler(
+            repo_with_operator, fake_hasher, fake_tokens, fake_cache
+        )
         with pytest.raises(AuthorizationError, match="incorrectos"):
             await handler.handle(
-                LoginCommand(email="op@glazing.com", password="WRONG", tenant_id=tenant_id)
+                LoginCommand(
+                    email="op@glazing.com", password="WRONG", tenant_id=tenant_id
+                )
             )
 
     async def test_usuario_inexistente_lanza_auth_error(
@@ -98,10 +122,14 @@ class TestLoginHandler:
         fake_tokens: FakeTokenService,
         fake_cache: FakeCacheService,
     ) -> None:
-        handler = make_login_handler(FakeUserRepository(), fake_hasher, fake_tokens, fake_cache)
+        handler = make_login_handler(
+            FakeUserRepository(), fake_hasher, fake_tokens, fake_cache
+        )
         with pytest.raises(AuthorizationError):
             await handler.handle(
-                LoginCommand(email="nadie@glazing.com", password="x", tenant_id=tenant_id)
+                LoginCommand(
+                    email="nadie@glazing.com", password="x", tenant_id=tenant_id
+                )
             )
 
     async def test_login_almacena_claims_completos_en_json(
@@ -112,9 +140,13 @@ class TestLoginHandler:
         fake_tokens: FakeTokenService,
         fake_cache: FakeCacheService,
     ) -> None:
-        handler = make_login_handler(repo_with_operator, fake_hasher, fake_tokens, fake_cache)
+        handler = make_login_handler(
+            repo_with_operator, fake_hasher, fake_tokens, fake_cache
+        )
         result = await handler.handle(
-            LoginCommand(email="op@glazing.com", password="pass123", tenant_id=tenant_id)
+            LoginCommand(
+                email="op@glazing.com", password="pass123", tenant_id=tenant_id
+            )
         )
 
         jti = result.refresh_token.split("|")[2]
@@ -148,7 +180,9 @@ class TestLoginHandler:
         handler = make_login_handler(repo, fake_hasher, fake_tokens, fake_cache)
         with pytest.raises(AuthorizationError, match="desactivada"):
             await handler.handle(
-                LoginCommand(email="inactivo@glazing.com", password="pass", tenant_id=tenant_id)
+                LoginCommand(
+                    email="inactivo@glazing.com", password="pass", tenant_id=tenant_id
+                )
             )
 
 
@@ -159,6 +193,7 @@ class TestRefreshTokenHandler:
         fake_cache: FakeCacheService,
     ) -> None:
         from uuid import uuid4
+
         jti = str(uuid4())
         await fake_cache.set(f"rt:{jti}", "user-id-123", 3600)
         old_refresh = f"refresh|user-id-123|{jti}"
@@ -177,14 +212,17 @@ class TestRefreshTokenHandler:
         tenant_id: TenantId,
     ) -> None:
         from uuid import uuid4
+
         jti = str(uuid4())
         user_id = str(uuid4())
-        cached = json.dumps({
-            "user_id": user_id,
-            "tenant_id": str(tenant_id),
-            "role": "ADMIN",
-            "email": "admin@glazing.com",
-        })
+        cached = json.dumps(
+            {
+                "user_id": user_id,
+                "tenant_id": str(tenant_id),
+                "role": "ADMIN",
+                "email": "admin@glazing.com",
+            }
+        )
         await fake_cache.set(f"rt:{jti}", cached, 3600)
         old_refresh = f"refresh|{user_id}|{jti}"
 
@@ -203,9 +241,12 @@ class TestRefreshTokenHandler:
         fake_cache: FakeCacheService,
     ) -> None:
         from uuid import uuid4
+
         jti = str(uuid4())
         user_id = str(uuid4())
-        cached = json.dumps({"user_id": user_id, "tenant_id": "", "role": "OPERATOR", "email": ""})
+        cached = json.dumps(
+            {"user_id": user_id, "tenant_id": "", "role": "OPERATOR", "email": ""}
+        )
         await fake_cache.set(f"rt:{jti}", cached, 3600)
         old_refresh = f"refresh|{user_id}|{jti}"
 
@@ -213,7 +254,7 @@ class TestRefreshTokenHandler:
         result = await handler.handle(RefreshTokenCommand(refresh_token=old_refresh))
 
         new_jti = result.refresh_token.split("|")[2]
-        assert await fake_cache.get(f"rt:{jti}") is None        # viejo revocado
+        assert await fake_cache.get(f"rt:{jti}") is None  # viejo revocado
         assert await fake_cache.get(f"rt:{new_jti}") is not None  # nuevo activo
 
     async def test_refresh_token_no_en_cache_lanza_error(
@@ -222,6 +263,7 @@ class TestRefreshTokenHandler:
         fake_cache: FakeCacheService,
     ) -> None:
         from uuid import uuid4
+
         invalid_refresh = f"refresh|user-id|{uuid4()}"
         handler = RefreshTokenHandler(token_service=fake_tokens, cache=fake_cache)
         with pytest.raises(AuthorizationError, match="expirado o revocado"):
@@ -235,6 +277,7 @@ class TestLogoutHandler:
         fake_cache: FakeCacheService,
     ) -> None:
         from uuid import uuid4
+
         jti = str(uuid4())
         await fake_cache.set(f"rt:{jti}", "user-id", 3600)
         refresh = f"refresh|user-id|{jti}"

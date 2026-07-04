@@ -1,8 +1,7 @@
-from decimal import Decimal
-from enum import Enum
+from enum import StrEnum
 
 
-class QuoteStatus(str, Enum):
+class QuoteStatus(StrEnum):
     DRAFT = "DRAFT"
     SENT = "SENT"
     ACCEPTED = "ACCEPTED"
@@ -11,11 +10,11 @@ class QuoteStatus(str, Enum):
     CANCELLED = "CANCELLED"
 
 
-class LocationType(str, Enum):
+class LocationType(StrEnum):
     SUPERFICIE = "SUPERFICIE"
     ALTURA = "ALTURA"
 
 
-class FilmMode(str, Enum):
+class FilmMode(StrEnum):
     SINGLE = "SINGLE"
     PER_GLASS = "PER_GLASS"

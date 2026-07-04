@@ -1,8 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel, EmailStr
 
-from centy.application.auth.commands import LoginCommand, LogoutCommand, RefreshTokenCommand
-from centy.application.auth.handlers import LoginHandler, LogoutHandler, RefreshTokenHandler
+from centy.application.auth.commands import (
+    LoginCommand,
+    LogoutCommand,
+    RefreshTokenCommand,
+)
+from centy.application.auth.handlers import (
+    LoginHandler,
+    LogoutHandler,
+    RefreshTokenHandler,
+)
 from centy.application.auth.password_reset_handlers import (
     ForgotPasswordCommand,
     ForgotPasswordHandler,
@@ -10,7 +18,11 @@ from centy.application.auth.password_reset_handlers import (
     ResetPasswordHandler,
     ValidateResetTokenHandler,
 )
-from centy.domain.shared.exceptions import AuthorizationError, BusinessRuleViolationError, NotFoundError
+from centy.domain.shared.exceptions import (
+    AuthorizationError,
+    BusinessRuleViolationError,
+    NotFoundError,
+)
 from centy.infrastructure.api.dependencies import (
     CurrentUser,
     get_current_user,
@@ -58,15 +70,19 @@ async def login(
 ) -> TokenResponse:
     settings = get_settings()
     try:
-        from centy.domain.shared.value_objects import TenantId
         import uuid
+
+        from centy.domain.shared.value_objects import TenantId
+
         result = await handler.handle(
             LoginCommand(
                 email=body.email,
                 password=body.password,
-                tenant_id=TenantId(uuid.UUID(settings.tenant_id_default)
+                tenant_id=TenantId(
+                    uuid.UUID(settings.tenant_id_default)
                     if _is_uuid(settings.tenant_id_default)
-                    else uuid.uuid5(uuid.NAMESPACE_DNS, settings.tenant_id_default)),
+                    else uuid.uuid5(uuid.NAMESPACE_DNS, settings.tenant_id_default)
+                ),
             )
         )
     except AuthorizationError as exc:
@@ -90,7 +106,9 @@ async def refresh_token(
     handler: RefreshTokenHandler = Depends(get_refresh_handler),
 ) -> TokenResponse:
     try:
-        result = await handler.handle(RefreshTokenCommand(refresh_token=body.refresh_token))
+        result = await handler.handle(
+            RefreshTokenCommand(refresh_token=body.refresh_token)
+        )
     except AuthorizationError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc)
@@ -164,14 +182,19 @@ async def reset_password(
     handler: ResetPasswordHandler = Depends(get_reset_password_handler),
 ) -> Response:
     try:
-        await handler.handle(ResetPasswordCommand(token=body.token, new_password=body.new_password))
+        await handler.handle(
+            ResetPasswordCommand(token=body.token, new_password=body.new_password)
+        )
     except (BusinessRuleViolationError, NotFoundError) as exc:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)
+        ) from exc
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 def _is_uuid(value: str) -> bool:
     import uuid
+
     try:
         uuid.UUID(value)
         return True

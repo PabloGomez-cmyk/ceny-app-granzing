@@ -9,9 +9,7 @@ from centy.infrastructure.persistence.database import Base
 
 class CustomerLabelModel(Base):
     __tablename__ = "customer_labels"
-    __table_args__ = (
-        Index("ix_customer_labels_owner", "owner_user_id", "tenant_id"),
-    )
+    __table_args__ = (Index("ix_customer_labels_owner", "owner_user_id", "tenant_id"),)
 
     id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True)
     tenant_id: Mapped[str] = mapped_column(UUID(as_uuid=False), nullable=False)
@@ -19,7 +17,9 @@ class CustomerLabelModel(Base):
     name: Mapped[str] = mapped_column(String(50), nullable=False)
     color: Mapped[str] = mapped_column(String(7), nullable=False, default="#10b981")
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
 
 
 class CustomerModel(Base):
@@ -47,4 +47,6 @@ class CustomerModel(Base):
     )
     notes: Mapped[str | None] = mapped_column(String(2000), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )

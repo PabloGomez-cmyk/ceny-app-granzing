@@ -22,13 +22,17 @@ from centy.application.quotes.handlers import (
     UpdateQuoteHandler,
     UpdateQuoteStatusHandler,
 )
-from centy.application.quotes.queries import GetQuoteQuery, GetQuoteStatsQuery, ListQuotesQuery
+from centy.application.quotes.queries import (
+    GetQuoteQuery,
+    GetQuoteStatsQuery,
+    ListQuotesQuery,
+)
 from centy.domain.quotes.value_objects import FilmMode, LocationType, QuoteStatus
 from centy.domain.shared.value_objects import TenantId
 from centy.infrastructure.api.dependencies import (
     CurrentUser,
-    get_current_user,
     get_create_quote_handler,
+    get_current_user,
     get_delete_quote_handler,
     get_list_quotes_handler,
     get_quote_handler,
@@ -49,6 +53,7 @@ def _resolve_tenant(settings_tenant: str) -> TenantId:
 
 
 # ── Request schemas ───────────────────────────────────────────────────────────
+
 
 class GlassPaneBody(BaseModel):
     pane_id: str = Field(..., min_length=1, max_length=10)
@@ -106,6 +111,7 @@ class QuoteStatsResponse(BaseModel):
 
 
 # ── Response schemas ──────────────────────────────────────────────────────────
+
 
 class GlassPaneResponse(BaseModel):
     pane_id: str
@@ -179,8 +185,8 @@ def _to_response(r: object) -> QuoteResponse:
             for p in r.glass_panes  # type: ignore[attr-defined]
         ],
         lines=[
-            QuoteLineResponse(**l.__dict__)
-            for l in r.lines  # type: ignore[attr-defined]
+            QuoteLineResponse(**line.__dict__)
+            for line in r.lines  # type: ignore[attr-defined]
         ],
         height_surcharge_pct=r.height_surcharge_pct,  # type: ignore[attr-defined]
         travel_cost=r.travel_cost,  # type: ignore[attr-defined]
@@ -197,6 +203,7 @@ def _to_response(r: object) -> QuoteResponse:
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────
+
 
 @router.get("", response_model=list[QuoteResponse])
 async def list_quotes(
@@ -242,14 +249,14 @@ async def create_quote(
             ],
             lines=[
                 QuoteLineInput(
-                    product_id=l.product_id,
-                    product_snapshot=l.product_snapshot,
-                    glass_pane_ids=l.glass_pane_ids,
-                    price_per_m2=l.price_per_m2,
-                    surface_m2=l.surface_m2,
-                    subtotal=l.subtotal,
+                    product_id=line.product_id,
+                    product_snapshot=line.product_snapshot,
+                    glass_pane_ids=line.glass_pane_ids,
+                    price_per_m2=line.price_per_m2,
+                    surface_m2=line.surface_m2,
+                    subtotal=line.subtotal,
                 )
-                for l in body.lines
+                for line in body.lines
             ],
             height_surcharge_pct=body.height_surcharge_pct,
             travel_cost=body.travel_cost,
@@ -271,7 +278,11 @@ async def get_quote_stats(
 ) -> QuoteStatsResponse:
     if current_user.role != "ADMIN":
         from fastapi import HTTPException
-        raise HTTPException(status_code=403, detail="Solo administradores pueden ver estadísticas globales")
+
+        raise HTTPException(
+            status_code=403,
+            detail="Solo administradores pueden ver estadísticas globales",
+        )
     result = await handler.handle(
         GetQuoteStatsQuery(tenant_id=_resolve_tenant(get_settings().tenant_id_default))
     )
@@ -359,14 +370,14 @@ async def update_quote(
             ],
             lines=[
                 QuoteLineInput(
-                    product_id=l.product_id,
-                    product_snapshot=l.product_snapshot,
-                    glass_pane_ids=l.glass_pane_ids,
-                    price_per_m2=l.price_per_m2,
-                    surface_m2=l.surface_m2,
-                    subtotal=l.subtotal,
+                    product_id=line.product_id,
+                    product_snapshot=line.product_snapshot,
+                    glass_pane_ids=line.glass_pane_ids,
+                    price_per_m2=line.price_per_m2,
+                    surface_m2=line.surface_m2,
+                    subtotal=line.subtotal,
                 )
-                for l in body.lines
+                for line in body.lines
             ],
             height_surcharge_pct=body.height_surcharge_pct,
             travel_cost=body.travel_cost,

@@ -5,8 +5,8 @@ Revises: 0005
 Create Date: 2026-06-11
 """
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 
 revision = "0006"
@@ -26,7 +26,12 @@ def upgrade() -> None:
         sa.Column("customer_snapshot", JSONB, nullable=True),
         sa.Column("status", sa.String(20), nullable=False, server_default="DRAFT"),
         sa.Column("film_mode", sa.String(20), nullable=False, server_default="SINGLE"),
-        sa.Column("height_surcharge_pct", sa.Numeric(5, 2), nullable=False, server_default="30"),
+        sa.Column(
+            "height_surcharge_pct",
+            sa.Numeric(5, 2),
+            nullable=False,
+            server_default="30",
+        ),
         sa.Column("travel_cost", sa.Numeric(12, 2), nullable=False, server_default="0"),
         sa.Column("discount_pct", sa.Numeric(5, 2), nullable=False, server_default="0"),
         sa.Column("commercial_conditions", sa.Text, nullable=False, server_default=""),

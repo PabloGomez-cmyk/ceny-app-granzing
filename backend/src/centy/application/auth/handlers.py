@@ -48,7 +48,9 @@ class LoginHandler:
 
     async def handle(self, command: LoginCommand) -> LoginResult:
         user = await self._repo.get_by_email(Email(command.email), command.tenant_id)
-        if user is None or not self._hasher.verify(command.password, user.hashed_password):
+        if user is None or not self._hasher.verify(
+            command.password, user.hashed_password
+        ):
             raise AuthorizationError("Email o contraseña incorrectos")
 
         if not user.is_active:
@@ -68,12 +70,14 @@ class LoginHandler:
         # Almacenar JTI + claims en Redis para poder reconstruir el access token al renovar
         payload = self._tokens.decode_refresh_token(refresh_token)
         jti = payload["jti"]
-        cached_claims = json.dumps({
-            "user_id": user_id_str,
-            "tenant_id": str(user.tenant_id),
-            "role": user.role.value,
-            "email": user.email.value,
-        })
+        cached_claims = json.dumps(
+            {
+                "user_id": user_id_str,
+                "tenant_id": str(user.tenant_id),
+                "role": user.role.value,
+                "email": user.email.value,
+            }
+        )
         await self._cache.set(
             f"{_REFRESH_PREFIX}{jti}", cached_claims, _REFRESH_TTL_SECONDS
         )

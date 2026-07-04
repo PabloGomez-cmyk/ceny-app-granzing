@@ -5,8 +5,8 @@ Revises: 0004
 Create Date: 2026-05-31
 """
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects.postgresql import ARRAY, UUID
 
 revision = "0005"
@@ -23,7 +23,9 @@ def upgrade() -> None:
         sa.Column("name", sa.String(100), nullable=False),
         sa.Column("color", sa.String(7), nullable=False, server_default="#0f6e50"),
         sa.Column("logo_url", sa.Text, nullable=True),
-        sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.text("true")),
+        sa.Column(
+            "is_active", sa.Boolean(), nullable=False, server_default=sa.text("true")
+        ),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -34,7 +36,9 @@ def upgrade() -> None:
         sa.Column("id", UUID(as_uuid=False), nullable=False),
         sa.Column("tenant_id", UUID(as_uuid=False), nullable=False),
         sa.Column("name", sa.String(100), nullable=False),
-        sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.text("true")),
+        sa.Column(
+            "is_active", sa.Boolean(), nullable=False, server_default=sa.text("true")
+        ),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -45,7 +49,9 @@ def upgrade() -> None:
         sa.Column("id", UUID(as_uuid=False), nullable=False),
         sa.Column("tenant_id", UUID(as_uuid=False), nullable=False),
         sa.Column("name", sa.String(100), nullable=False),
-        sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.text("true")),
+        sa.Column(
+            "is_active", sa.Boolean(), nullable=False, server_default=sa.text("true")
+        ),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -65,11 +71,15 @@ def upgrade() -> None:
         sa.Column("warranty_years", sa.Integer(), nullable=False),
         sa.Column("application_types", ARRAY(sa.String(20)), nullable=False),
         sa.Column("technical_sheet_url", sa.Text, nullable=True),
-        sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.text("true")),
+        sa.Column(
+            "is_active", sa.Boolean(), nullable=False, server_default=sa.text("true")
+        ),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.ForeignKeyConstraint(["brand_id"], ["brands.id"], ondelete="RESTRICT"),
-        sa.ForeignKeyConstraint(["category_id"], ["product_categories.id"], ondelete="RESTRICT"),
+        sa.ForeignKeyConstraint(
+            ["category_id"], ["product_categories.id"], ondelete="RESTRICT"
+        ),
     )
     op.create_index("ix_products_tenant", "products", ["tenant_id"])
 
@@ -79,7 +89,9 @@ def upgrade() -> None:
         sa.Column("glass_type_id", UUID(as_uuid=False), nullable=False),
         sa.PrimaryKeyConstraint("product_id", "glass_type_id"),
         sa.ForeignKeyConstraint(["product_id"], ["products.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["glass_type_id"], ["glass_types.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["glass_type_id"], ["glass_types.id"], ondelete="CASCADE"
+        ),
     )
 
 

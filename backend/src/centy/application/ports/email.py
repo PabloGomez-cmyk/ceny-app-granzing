@@ -9,8 +9,8 @@ class UserEmailConfig:
     user_id: UUID
     tenant_id: str
     gmail_email: str
-    access_token: str        # plain text — encryption vive en la infra
-    refresh_token: str       # plain text — encryption vive en la infra
+    access_token: str  # plain text — encryption vive en la infra
+    refresh_token: str  # plain text — encryption vive en la infra
     token_expiry: datetime
     created_at: datetime
     updated_at: datetime
@@ -31,7 +31,7 @@ class EmailMessage:
     html_body: str
     from_name: str | None = None
     attachment_pdf_base64: str | None = None  # PDF adjunto codificado en base64
-    attachment_filename: str | None = None    # Nombre del archivo adjunto
+    attachment_filename: str | None = None  # Nombre del archivo adjunto
 
 
 class IEmailSender(ABC):
@@ -60,7 +60,9 @@ class IGmailOAuthService(ABC):
 
 class IEmailConfigRepository(ABC):
     @abstractmethod
-    async def get_by_user_id(self, user_id: UUID, tenant_id: str) -> UserEmailConfig | None:
+    async def get_by_user_id(
+        self, user_id: UUID, tenant_id: str
+    ) -> UserEmailConfig | None:
         """Retorna la config de Gmail del usuario o None si no configuró."""
         ...
 

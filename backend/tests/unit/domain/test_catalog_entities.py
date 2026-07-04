@@ -13,8 +13,8 @@ from centy.domain.catalog.value_objects import ApplicationType, Percentage
 from centy.domain.shared.exceptions import BusinessRuleViolationError, ValidationError
 from centy.domain.shared.value_objects import TenantId
 
-
 # ── Helpers ───────────────────────────────────────────────────────────────────
+
 
 def make_tenant() -> TenantId:
     return TenantId(uuid4())
@@ -67,6 +67,7 @@ def make_product(**overrides) -> Product:  # type: ignore[no-untyped-def]
 
 # ── Percentage ────────────────────────────────────────────────────────────────
 
+
 class TestPercentage:
     @pytest.mark.parametrize("value", ["0", "0.00", "50", "99.99", "100"])
     def test_acepta_rango_valido(self, value: str) -> None:
@@ -92,6 +93,7 @@ class TestPercentage:
 
 # ── ApplicationType ───────────────────────────────────────────────────────────
 
+
 class TestApplicationType:
     def test_valores_existentes(self) -> None:
         assert ApplicationType.WINDOW == "WINDOW"
@@ -106,6 +108,7 @@ class TestApplicationType:
 
 
 # ── Brand.create ──────────────────────────────────────────────────────────────
+
 
 class TestBrandCreate:
     def test_crea_con_datos_validos(self) -> None:
@@ -153,6 +156,7 @@ class TestBrandCreate:
 
 # ── Brand.update ──────────────────────────────────────────────────────────────
 
+
 class TestBrandUpdate:
     def test_actualiza_nombre(self) -> None:
         b = make_brand(name="Viejo")
@@ -198,6 +202,7 @@ class TestBrandUpdate:
 
 # ── Brand.deactivate / reactivate ─────────────────────────────────────────────
 
+
 class TestBrandCicloDeVida:
     def test_deactivate_pone_is_active_false(self) -> None:
         b = make_brand()
@@ -223,6 +228,7 @@ class TestBrandCicloDeVida:
 
 
 # ── ProductCategory ───────────────────────────────────────────────────────────
+
 
 class TestProductCategoryCreate:
     def test_crea_con_datos_validos(self) -> None:
@@ -284,6 +290,7 @@ class TestProductCategoryMutaciones:
 
 # ── GlassType ─────────────────────────────────────────────────────────────────
 
+
 class TestGlassTypeCreate:
     def test_crea_con_datos_validos(self) -> None:
         g = make_glass_type()
@@ -338,6 +345,7 @@ class TestGlassTypeMutaciones:
 
 
 # ── Product.create ────────────────────────────────────────────────────────────
+
 
 class TestProductCreate:
     def test_crea_con_datos_minimos(self) -> None:
@@ -405,6 +413,7 @@ class TestProductCreate:
 
 # ── Product.update ────────────────────────────────────────────────────────────
 
+
 class TestProductUpdate:
     def test_actualiza_nombre(self) -> None:
         p = make_product(name="Viejo")
@@ -418,7 +427,11 @@ class TestProductUpdate:
 
     def test_actualiza_porcentajes(self) -> None:
         p = make_product()
-        p.update(uv_percentage=Decimal("95"), irr_percentage=Decimal("65"), tser_percentage=Decimal("50"))
+        p.update(
+            uv_percentage=Decimal("95"),
+            irr_percentage=Decimal("65"),
+            tser_percentage=Decimal("50"),
+        )
         assert p.uv_percentage.value == Decimal("95.00")
         assert p.irr_percentage.value == Decimal("65.00")
         assert p.tser_percentage.value == Decimal("50.00")
@@ -467,6 +480,7 @@ class TestProductUpdate:
 
 
 # ── Product.deactivate / reactivate ──────────────────────────────────────────
+
 
 class TestProductCicloDeVida:
     def test_deactivate_pone_is_active_false(self) -> None:

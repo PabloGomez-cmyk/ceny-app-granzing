@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import date, datetime
+from typing import Any
 from uuid import UUID
 
 from centy.domain.shared.entity import Entity
@@ -15,9 +16,9 @@ class Warranty(Entity):
     quote_id: UUID
     quote_line_id: UUID
     product_id: UUID
-    product_snapshot: dict  # {name, brand_name, uv_pct, irr_pct, tser_pct}
+    product_snapshot: dict[str, Any]  # {name, brand_name, uv_pct, irr_pct, tser_pct}
     warranty_number: str
-    customer_snapshot: dict | None
+    customer_snapshot: dict[str, Any] | None
     created_by_user_id: UUID
     warranty_years: int
     expires_at: date
@@ -31,9 +32,9 @@ class Warranty(Entity):
         quote_id: UUID,
         quote_line_id: UUID,
         product_id: UUID,
-        product_snapshot: dict,
+        product_snapshot: dict[str, Any],
         warranty_number: str,
-        customer_snapshot: dict | None,
+        customer_snapshot: dict[str, Any] | None,
         created_by_user_id: UUID,
         warranty_years: int,
     ) -> "Warranty":

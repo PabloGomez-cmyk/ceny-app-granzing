@@ -4,8 +4,9 @@ Revision ID: 0008
 Revises: 0007
 Create Date: 2026-06-18
 """
-from alembic import op
+
 import sqlalchemy as sa
+from alembic import op
 
 revision = "0008"
 down_revision = "0007"
@@ -16,11 +17,15 @@ depends_on = None
 def upgrade() -> None:
     op.add_column(
         "products",
-        sa.Column("roll_width_cm", sa.Numeric(8, 2), nullable=False, server_default="152"),
+        sa.Column(
+            "roll_width_cm", sa.Numeric(8, 2), nullable=False, server_default="152"
+        ),
     )
     op.add_column(
         "products",
-        sa.Column("roll_length_m", sa.Numeric(8, 2), nullable=False, server_default="30"),
+        sa.Column(
+            "roll_length_m", sa.Numeric(8, 2), nullable=False, server_default="30"
+        ),
     )
     op.add_column(
         "quotes",

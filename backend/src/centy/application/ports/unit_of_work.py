@@ -29,8 +29,7 @@ class IUnitOfWork(ABC):
     warranties: IWarrantyRepository
 
     @abstractmethod
-    async def __aenter__(self) -> Self:
-        ...
+    async def __aenter__(self) -> Self: ...
 
     @abstractmethod
     async def __aexit__(
@@ -38,13 +37,10 @@ class IUnitOfWork(ABC):
         exc_type: type[BaseException] | None,
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @abstractmethod
-    async def commit(self) -> None:
-        ...
+    async def commit(self) -> None: ...
 
     @abstractmethod
-    async def rollback(self) -> None:
-        ...
+    async def rollback(self) -> None: ...

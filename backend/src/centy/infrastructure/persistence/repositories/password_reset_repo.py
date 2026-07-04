@@ -1,11 +1,16 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID
 
 from sqlalchemy import delete, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from centy.application.ports.repositories import IPasswordResetTokenRepository, PasswordResetToken
-from centy.infrastructure.persistence.models.password_reset import PasswordResetTokenModel
+from centy.application.ports.repositories import (
+    IPasswordResetTokenRepository,
+    PasswordResetToken,
+)
+from centy.infrastructure.persistence.models.password_reset import (
+    PasswordResetTokenModel,
+)
 
 
 class SQLAlchemyPasswordResetTokenRepository(IPasswordResetTokenRepository):
@@ -43,14 +48,14 @@ class SQLAlchemyPasswordResetTokenRepository(IPasswordResetTokenRepository):
         stmt = (
             update(PasswordResetTokenModel)
             .where(PasswordResetTokenModel.token == token)
-            .values(used_at=datetime.now(tz=timezone.utc))
+            .values(used_at=datetime.now(tz=UTC))
         )
         await self._session.execute(stmt)
         await self._session.commit()
 
     async def delete_expired(self) -> None:
         stmt = delete(PasswordResetTokenModel).where(
-            PasswordResetTokenModel.expires_at < datetime.now(tz=timezone.utc)
+            PasswordResetTokenModel.expires_at < datetime.now(tz=UTC)
         )
         await self._session.execute(stmt)
         await self._session.commit()

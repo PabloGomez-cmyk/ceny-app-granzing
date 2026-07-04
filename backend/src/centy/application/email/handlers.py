@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID
 
 from centy.application.email.commands import (
@@ -52,15 +52,15 @@ class GetGmailStatusHandler:
 
 
 class ConnectGmailHandler:
-    def __init__(
-        self, oauth: IGmailOAuthService, repo: IEmailConfigRepository
-    ) -> None:
+    def __init__(self, oauth: IGmailOAuthService, repo: IEmailConfigRepository) -> None:
         self._oauth = oauth
         self._repo = repo
 
     async def handle(self, cmd: ConnectGmailCommand) -> GmailStatusResult:
-        tokens = await self._oauth.exchange_code(cmd.authorization_code, cmd.redirect_uri)
-        now = datetime.now(tz=timezone.utc)
+        tokens = await self._oauth.exchange_code(
+            cmd.authorization_code, cmd.redirect_uri
+        )
+        now = datetime.now(tz=UTC)
         config = UserEmailConfig(
             user_id=cmd.user_id,
             tenant_id=cmd.tenant_id,
@@ -145,7 +145,7 @@ class SendQuoteEmailHandler:
             config=fresh_config,
             message=EmailMessage(
                 to=cmd.recipient_email,
-                subject=f"Presupuesto #{quote.quote_number} – {from_name or 'Glazing'}",
+                subject=f"Presupuesto #{quote.quote_number} - {from_name or 'Glazing'}",
                 html_body=html_body,
                 from_name=from_name,
                 attachment_pdf_base64=cmd.pdf_base64,
@@ -195,9 +195,9 @@ def _build_quote_html(
         {custom_block}
         <p style="margin:0 0 24px;color:#374151;font-size:14px">
           Te enviamos el presupuesto <strong>#{quote_number}</strong>
-          {f'con el total de <strong style="color:#0f6e50">{total}</strong>.' if total else '.'}
+          {f'con el total de <strong style="color:#0f6e50">{total}</strong>.' if total else "."}
         </p>
-        {'<div style="background:#f8fafc;border:1px solid #e2e6f0;border-radius:10px;padding:20px;margin-bottom:24px"><p style="margin:0 0 4px;font-size:12px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Total del presupuesto</p><p style="margin:0;font-size:28px;font-weight:bold;color:#0f6e50">' + total + '</p></div>' if total else ''}
+        {'<div style="background:#f8fafc;border:1px solid #e2e6f0;border-radius:10px;padding:20px;margin-bottom:24px"><p style="margin:0 0 4px;font-size:12px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Total del presupuesto</p><p style="margin:0;font-size:28px;font-weight:bold;color:#0f6e50">' + total + "</p></div>" if total else ""}
         <a href="{quote_url}" style="display:inline-block;background:#0f6e50;color:#fff;text-decoration:none;border-radius:8px;padding:12px 24px;font-size:14px;font-weight:600">
           Ver presupuesto completo →
         </a>

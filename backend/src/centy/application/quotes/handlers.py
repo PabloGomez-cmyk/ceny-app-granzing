@@ -1,7 +1,8 @@
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
-from uuid import UUID, uuid4
+from typing import Any
+from uuid import UUID
 
 from centy.application.ports.repositories import IQuoteRepository
 from centy.application.ports.unit_of_work import IUnitOfWork
@@ -11,14 +12,18 @@ from centy.application.quotes.commands import (
     UpdateQuoteCommand,
     UpdateQuoteStatusCommand,
 )
-from centy.application.quotes.queries import GetQuoteQuery, GetQuoteStatsQuery, ListQuotesQuery
+from centy.application.quotes.queries import (
+    GetQuoteQuery,
+    GetQuoteStatsQuery,
+    ListQuotesQuery,
+)
 from centy.domain.quotes.entities import GlassPane, Quote, QuoteLine
-from centy.domain.quotes.services import QuoteCalculator, QuoteTotals
-from centy.domain.quotes.value_objects import FilmMode, QuoteStatus
+from centy.domain.quotes.services import QuoteCalculator
+from centy.domain.quotes.value_objects import QuoteStatus
 from centy.domain.shared.exceptions import AuthorizationError, NotFoundError
 
-
 # ── Result dataclasses ────────────────────────────────────────────────────────
+
 
 @dataclass(frozen=True)
 class GlassPaneResult:
@@ -38,7 +43,7 @@ class GlassPaneResult:
 class QuoteLineResult:
     line_id: str
     product_id: str
-    product_snapshot: dict
+    product_snapshot: dict[str, Any]
     glass_pane_ids: list[str]
     price_per_m2: Decimal
     surface_m2: Decimal
@@ -63,7 +68,7 @@ class QuoteResult:
     created_by_user_id: str
     quote_number: str
     customer_id: str | None
-    customer_snapshot: dict | None
+    customer_snapshot: dict[str, Any] | None
     status: str
     film_mode: str
     glass_panes: list[GlassPaneResult]
@@ -74,7 +79,7 @@ class QuoteResult:
     tax_pct: Decimal
     gap_cm: Decimal
     commercial_conditions: str
-    cut_plan_snapshot: dict
+    cut_plan_snapshot: dict[str, Any]
     valid_until: str
     totals: QuoteTotalsResult
     has_altura: bool
@@ -101,15 +106,15 @@ def _pane_result(p: GlassPane) -> GlassPaneResult:
     )
 
 
-def _line_result(l: QuoteLine) -> QuoteLineResult:
+def _line_result(line: QuoteLine) -> QuoteLineResult:
     return QuoteLineResult(
-        line_id=str(l.line_id),
-        product_id=str(l.product_id),
-        product_snapshot=l.product_snapshot,
-        glass_pane_ids=l.glass_pane_ids,
-        price_per_m2=l.price_per_m2,
-        surface_m2=l.surface_m2,
-        subtotal=l.subtotal,
+        line_id=str(line.line_id),
+        product_id=str(line.product_id),
+        product_snapshot=line.product_snapshot,
+        glass_pane_ids=line.glass_pane_ids,
+        price_per_m2=line.price_per_m2,
+        surface_m2=line.surface_m2,
+        subtotal=line.subtotal,
     )
 
 
@@ -125,7 +130,7 @@ def _quote_result(q: Quote) -> QuoteResult:
         status=q.status.value,
         film_mode=q.film_mode.value,
         glass_panes=[_pane_result(p) for p in q.glass_panes],
-        lines=[_line_result(l) for l in q.lines],
+        lines=[_line_result(line) for line in q.lines],
         height_surcharge_pct=q.height_surcharge_pct,
         travel_cost=q.travel_cost,
         discount_pct=q.discount_pct,
@@ -158,13 +163,16 @@ def _can_access(quote: Quote, user_id: UUID, role: str) -> bool:
 
 # ── Handlers ──────────────────────────────────────────────────────────────────
 
+
 class CreateQuoteHandler:
     def __init__(self, uow: IUnitOfWork) -> None:
         self._uow = uow
 
     async def handle(self, command: CreateQuoteCommand) -> QuoteResult:
         async with self._uow as uow:
-            seq = await uow.quotes.next_sequence(command.tenant_id, command.created_by_user_id)
+            seq = await uow.quotes.next_sequence(
+                command.tenant_id, command.created_by_user_id
+            )
             quote_number = _build_quote_number(seq)
 
             glass_panes = [
@@ -184,14 +192,14 @@ class CreateQuoteHandler:
 
             lines = [
                 QuoteLine(
-                    product_id=l.product_id,
-                    product_snapshot=l.product_snapshot,
-                    glass_pane_ids=l.glass_pane_ids,
-                    price_per_m2=l.price_per_m2,
-                    surface_m2=l.surface_m2,
-                    subtotal=l.subtotal,
+                    product_id=line.product_id,
+                    product_snapshot=line.product_snapshot,
+                    glass_pane_ids=line.glass_pane_ids,
+                    price_per_m2=line.price_per_m2,
+                    surface_m2=line.surface_m2,
+                    subtotal=line.subtotal,
                 )
-                for l in command.lines
+                for line in command.lines
             ]
 
             quote = Quote.create(
@@ -250,8 +258,12 @@ class UpdateQuoteStatusHandler:
             quote = await uow.quotes.get_by_id(command.quote_id, command.tenant_id)
             if quote is None:
                 raise NotFoundError(f"Presupuesto {command.quote_id} no encontrado")
-            if not _can_access(quote, command.requester_user_id, command.requester_role):
-                raise AuthorizationError("No tiene permiso para modificar este presupuesto")
+            if not _can_access(
+                quote, command.requester_user_id, command.requester_role
+            ):
+                raise AuthorizationError(
+                    "No tiene permiso para modificar este presupuesto"
+                )
 
             if command.new_status == QuoteStatus.SENT:
                 quote.submit()
@@ -279,10 +291,15 @@ class UpdateQuoteHandler:
             quote = await uow.quotes.get_by_id(command.quote_id, command.tenant_id)
             if quote is None:
                 raise NotFoundError(f"Presupuesto {command.quote_id} no encontrado")
-            if not _can_access(quote, command.requester_user_id, command.requester_role):
-                raise AuthorizationError("No tiene permiso para editar este presupuesto")
+            if not _can_access(
+                quote, command.requester_user_id, command.requester_role
+            ):
+                raise AuthorizationError(
+                    "No tiene permiso para editar este presupuesto"
+                )
             if quote.status in (QuoteStatus.INVOICED, QuoteStatus.COMPLETED):
                 from centy.domain.shared.exceptions import DomainError
+
                 raise DomainError("No se puede editar un presupuesto ya facturado")
 
             glass_panes = [
@@ -301,14 +318,14 @@ class UpdateQuoteHandler:
             ]
             lines = [
                 QuoteLine(
-                    product_id=l.product_id,
-                    product_snapshot=l.product_snapshot,
-                    glass_pane_ids=l.glass_pane_ids,
-                    price_per_m2=l.price_per_m2,
-                    surface_m2=l.surface_m2,
-                    subtotal=l.subtotal,
+                    product_id=line.product_id,
+                    product_snapshot=line.product_snapshot,
+                    glass_pane_ids=line.glass_pane_ids,
+                    price_per_m2=line.price_per_m2,
+                    surface_m2=line.surface_m2,
+                    subtotal=line.subtotal,
                 )
-                for l in command.lines
+                for line in command.lines
             ]
 
             updated = Quote(
@@ -348,13 +365,18 @@ class DeleteQuoteHandler:
             quote = await uow.quotes.get_by_id(command.quote_id, command.tenant_id)
             if quote is None:
                 raise NotFoundError(f"Presupuesto {command.quote_id} no encontrado")
-            if not _can_access(quote, command.requester_user_id, command.requester_role):
-                raise AuthorizationError("No tiene permiso para eliminar este presupuesto")
+            if not _can_access(
+                quote, command.requester_user_id, command.requester_role
+            ):
+                raise AuthorizationError(
+                    "No tiene permiso para eliminar este presupuesto"
+                )
             await uow.quotes.delete(command.quote_id, command.tenant_id)
             await uow.commit()
 
 
 # ── Quote stats ───────────────────────────────────────────────────────────────
+
 
 @dataclass(frozen=True)
 class UserQuoteStatResult:
@@ -375,8 +397,10 @@ class QuoteStatsResult:
 def _conversion(quotes: list[Quote]) -> float:
     non_cancelled = [q for q in quotes if q.status != QuoteStatus.CANCELLED]
     converted = [
-        q for q in non_cancelled
-        if q.status in (QuoteStatus.ACCEPTED, QuoteStatus.INVOICED, QuoteStatus.COMPLETED)
+        q
+        for q in non_cancelled
+        if q.status
+        in (QuoteStatus.ACCEPTED, QuoteStatus.INVOICED, QuoteStatus.COMPLETED)
     ]
     return round(len(converted) / len(non_cancelled) * 100, 1) if non_cancelled else 0.0
 
@@ -388,13 +412,13 @@ class GetQuoteStatsHandler:
     async def handle(self, query: GetQuoteStatsQuery) -> QuoteStatsResult:
         quotes = await self._repo.list_by_tenant(query.tenant_id)
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         first_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
         def is_this_month(q: Quote) -> bool:
             ts = q.created_at
             if ts.tzinfo is None:
-                ts = ts.replace(tzinfo=timezone.utc)
+                ts = ts.replace(tzinfo=UTC)
             return ts >= first_of_month
 
         quotes_this_month = sum(1 for q in quotes if is_this_month(q))

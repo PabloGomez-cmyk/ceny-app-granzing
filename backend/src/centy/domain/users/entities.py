@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 from centy.domain.shared.entity import Entity
 from centy.domain.shared.exceptions import BusinessRuleViolationError
@@ -7,7 +7,7 @@ from centy.domain.shared.value_objects import Email, TenantId
 from centy.domain.users.value_objects import HashedPassword
 
 
-class Role(str, Enum):
+class Role(StrEnum):
     ADMIN = "ADMIN"
     OPERATOR = "OPERATOR"
 
@@ -67,7 +67,9 @@ class User(Entity):
     ) -> None:
         if full_name is not None:
             if not full_name.strip():
-                raise BusinessRuleViolationError("El nombre completo no puede estar vacío")
+                raise BusinessRuleViolationError(
+                    "El nombre completo no puede estar vacío"
+                )
             self.full_name = full_name.strip()
         if company_name is not None:
             self.company_name = company_name or None

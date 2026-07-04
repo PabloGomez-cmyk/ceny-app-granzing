@@ -31,7 +31,9 @@ class SQLAlchemyWarrantyRepository(IWarrantyRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def get_by_id(self, warranty_id: UUID, tenant_id: TenantId) -> Warranty | None:
+    async def get_by_id(
+        self, warranty_id: UUID, tenant_id: TenantId
+    ) -> Warranty | None:
         result = await self._session.execute(
             select(WarrantyModel).where(
                 WarrantyModel.id == str(warranty_id),
@@ -83,7 +85,9 @@ class SQLAlchemyWarrantyRepository(IWarrantyRepository):
         )
         return [_to_domain(m) for m in result.scalars().all()]
 
-    async def list_by_quote(self, quote_id: UUID, tenant_id: TenantId) -> list[Warranty]:
+    async def list_by_quote(
+        self, quote_id: UUID, tenant_id: TenantId
+    ) -> list[Warranty]:
         result = await self._session.execute(
             select(WarrantyModel)
             .where(

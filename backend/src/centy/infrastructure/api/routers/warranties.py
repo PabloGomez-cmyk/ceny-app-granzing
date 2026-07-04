@@ -46,6 +46,7 @@ def _resolve_tenant(settings_tenant: str) -> TenantId:
 
 # ── Request bodies ──────────────────────────────────────────────────────────────
 
+
 class SendWarrantiesEmailBody(BaseModel):
     recipient_email: EmailStr
     recipient_name: str | None = None
@@ -53,6 +54,7 @@ class SendWarrantiesEmailBody(BaseModel):
 
 
 # ── Response schema ───────────────────────────────────────────────────────────
+
 
 class WarrantyResponse(BaseModel):
     id: str
@@ -92,6 +94,7 @@ def _to_response(r: object) -> WarrantyResponse:
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 
+
 @router.get("/warranties", response_model=list[WarrantyResponse])
 async def list_warranties(
     current_user: CurrentUser = Depends(get_current_user),
@@ -128,7 +131,9 @@ async def get_warranty(
 async def list_warranties_by_quote(
     quote_id: UUID,
     current_user: CurrentUser = Depends(get_current_user),
-    handler: ListWarrantiesByQuoteHandler = Depends(get_list_warranties_by_quote_handler),
+    handler: ListWarrantiesByQuoteHandler = Depends(
+        get_list_warranties_by_quote_handler
+    ),
 ) -> list[WarrantyResponse]:
     results = await handler.handle(
         ListWarrantiesByQuoteQuery(
@@ -162,7 +167,9 @@ async def generate_warranties(
     return [_to_response(r) for r in results]
 
 
-@router.post("/quotes/{quote_id}/warranties/send-email", status_code=status.HTTP_204_NO_CONTENT)
+@router.post(
+    "/quotes/{quote_id}/warranties/send-email", status_code=status.HTTP_204_NO_CONTENT
+)
 async def send_warranties_email(
     quote_id: str,
     body: SendWarrantiesEmailBody,

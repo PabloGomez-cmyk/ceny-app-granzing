@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 from jose import JWTError, jwt
@@ -29,7 +29,7 @@ class JwtTokenService(ITokenService):
         self._refresh_delta = timedelta(days=refresh_token_expire_days)
 
     def create_access_token(self, subject: str, extra_claims: dict[str, str]) -> str:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         payload: dict[str, object] = {
             "sub": subject,
             "iat": now,
@@ -40,7 +40,7 @@ class JwtTokenService(ITokenService):
         return jwt.encode(payload, self._private_key, algorithm=_ALGORITHM)
 
     def create_refresh_token(self, subject: str) -> str:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         payload: dict[str, object] = {
             "sub": subject,
             "iat": now,

@@ -7,8 +7,9 @@ import os
 import re
 from logging.config import fileConfig
 
-from alembic import context
 from sqlalchemy import create_engine, pool
+
+from alembic import context
 
 config = context.config
 if config.config_file_name is not None:
@@ -18,8 +19,13 @@ if config.config_file_name is not None:
 # Si falla el import (e.g. módulo no instalado), target_metadata queda None.
 try:
     # Importar todos los modelos para que autogenerate detecte cambios en todas las tablas
-    from centy.infrastructure.persistence.models import CustomerLabelModel, CustomerModel, UserModel  # noqa: F401
+    from centy.infrastructure.persistence.models import (  # noqa: F401
+        CustomerLabelModel,
+        CustomerModel,
+        UserModel,
+    )
     from centy.infrastructure.persistence.models.user import Base
+
     target_metadata = Base.metadata
 except Exception:
     target_metadata = None  # type: ignore[assignment]

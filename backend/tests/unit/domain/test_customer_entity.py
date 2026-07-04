@@ -3,15 +3,16 @@
 NO hay DB ni frameworks: puro dominio Python.
 """
 
-import pytest
 from uuid import uuid4
+
+import pytest
 
 from centy.domain.customers.entities import Customer, CustomerLabel
 from centy.domain.shared.exceptions import BusinessRuleViolationError, ValidationError
 from centy.domain.shared.value_objects import TenantId
 
-
 # ── Helpers ───────────────────────────────────────────────────────────────────
+
 
 def make_label(**overrides) -> CustomerLabel:  # type: ignore[no-untyped-def]
     defaults: dict = dict(
@@ -35,6 +36,7 @@ def make_customer(**overrides) -> Customer:  # type: ignore[no-untyped-def]
 
 
 # ── CustomerLabel.create ──────────────────────────────────────────────────────
+
 
 class TestCustomerLabelCreate:
     def test_crea_con_datos_validos(self) -> None:
@@ -76,6 +78,7 @@ class TestCustomerLabelCreate:
 
 
 # ── CustomerLabel.rename / change_color / deactivate ─────────────────────────
+
 
 class TestCustomerLabelMutaciones:
     def test_rename_actualiza_nombre(self) -> None:
@@ -121,6 +124,7 @@ class TestCustomerLabelMutaciones:
 
 
 # ── Customer.create ───────────────────────────────────────────────────────────
+
 
 class TestCustomerCreate:
     def test_crea_con_nombre_minimo(self) -> None:
@@ -194,6 +198,7 @@ class TestCustomerCreate:
 
 # ── Customer.update ───────────────────────────────────────────────────────────
 
+
 class TestCustomerUpdate:
     def test_actualiza_nombre(self) -> None:
         c = make_customer(name="Viejo")
@@ -218,7 +223,12 @@ class TestCustomerUpdate:
 
     def test_actualiza_ciudad_provincia_barrio_cp(self) -> None:
         c = make_customer()
-        c.update(city="Rosario", province="Santa Fe", neighborhood="Centro", postal_code="2000")
+        c.update(
+            city="Rosario",
+            province="Santa Fe",
+            neighborhood="Centro",
+            postal_code="2000",
+        )
         assert c.city == "Rosario"
         assert c.province == "Santa Fe"
         assert c.neighborhood == "Centro"
@@ -260,6 +270,7 @@ class TestCustomerUpdate:
 
 
 # ── Customer.deactivate / reactivate ─────────────────────────────────────────
+
 
 class TestCustomerCicloDeVida:
     def test_deactivate_pone_is_active_false(self) -> None:

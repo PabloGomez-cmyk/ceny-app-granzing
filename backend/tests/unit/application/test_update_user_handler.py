@@ -5,8 +5,9 @@ NO hay DB, NO hay frameworks: puro Python con fakes en memoria.
 """
 
 import asyncio
-import pytest
 from uuid import uuid4
+
+import pytest
 
 from centy.application.users.commands import UpdateUserCommand
 from centy.application.users.handlers import UpdateUserHandler
@@ -16,8 +17,8 @@ from centy.domain.users.entities import Role, User
 from centy.domain.users.value_objects import HashedPassword
 from tests.conftest import FakePasswordHasher, FakeUnitOfWork, FakeUserRepository
 
-
 # ── Helpers ───────────────────────────────────────────────────────────────────
+
 
 def make_handler(uow: FakeUnitOfWork) -> UpdateUserHandler:
     return UpdateUserHandler(uow=uow, hasher=FakePasswordHasher())
@@ -37,6 +38,7 @@ def make_existing_user(tenant_id: TenantId, **overrides) -> User:  # type: ignor
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
+
 @pytest.fixture
 def existing_user(tenant_id: TenantId) -> User:
     return make_existing_user(tenant_id)
@@ -50,6 +52,7 @@ def uow_with_user(fake_repo: FakeUserRepository, existing_user: User) -> FakeUni
 
 # ── Tests ─────────────────────────────────────────────────────────────────────
 
+
 class TestUpdateUserHandler:
     # ── Nombre ───────────────────────────────────────────────────────────────
 
@@ -57,7 +60,9 @@ class TestUpdateUserHandler:
         self, uow_with_user: FakeUnitOfWork, existing_user: User, tenant_id: TenantId
     ) -> None:
         result = await make_handler(uow_with_user).handle(
-            UpdateUserCommand(user_id=existing_user.id, tenant_id=tenant_id, full_name="Nuevo Nombre")
+            UpdateUserCommand(
+                user_id=existing_user.id, tenant_id=tenant_id, full_name="Nuevo Nombre"
+            )
         )
         assert result.full_name == "Nuevo Nombre"
 
@@ -86,7 +91,9 @@ class TestUpdateUserHandler:
     ) -> None:
         result = await make_handler(uow_with_user).handle(
             UpdateUserCommand(
-                user_id=existing_user.id, tenant_id=tenant_id, email="original@glazing.com"
+                user_id=existing_user.id,
+                tenant_id=tenant_id,
+                email="original@glazing.com",
             )
         )
         assert result.email == "original@glazing.com"
@@ -94,15 +101,21 @@ class TestUpdateUserHandler:
     async def test_email_duplicado_lanza_conflict(
         self, fake_repo: FakeUserRepository, tenant_id: TenantId
     ) -> None:
-        other = make_existing_user(tenant_id, email=Email("ocupado@glazing.com"), full_name="Otro")
-        target = make_existing_user(tenant_id, email=Email("target@glazing.com"), full_name="Target")
+        other = make_existing_user(
+            tenant_id, email=Email("ocupado@glazing.com"), full_name="Otro"
+        )
+        target = make_existing_user(
+            tenant_id, email=Email("target@glazing.com"), full_name="Target"
+        )
         await fake_repo.save(other)
         await fake_repo.save(target)
         uow = FakeUnitOfWork(repo=fake_repo)
 
         with pytest.raises(ConflictError):
             await make_handler(uow).handle(
-                UpdateUserCommand(user_id=target.id, tenant_id=tenant_id, email="ocupado@glazing.com")
+                UpdateUserCommand(
+                    user_id=target.id, tenant_id=tenant_id, email="ocupado@glazing.com"
+                )
             )
 
     # ── Rol ───────────────────────────────────────────────────────────────────
@@ -111,7 +124,9 @@ class TestUpdateUserHandler:
         self, uow_with_user: FakeUnitOfWork, existing_user: User, tenant_id: TenantId
     ) -> None:
         result = await make_handler(uow_with_user).handle(
-            UpdateUserCommand(user_id=existing_user.id, tenant_id=tenant_id, role=Role.ADMIN)
+            UpdateUserCommand(
+                user_id=existing_user.id, tenant_id=tenant_id, role=Role.ADMIN
+            )
         )
         assert result.role == Role.ADMIN.value
 
@@ -121,14 +136,18 @@ class TestUpdateUserHandler:
         self, uow_with_user: FakeUnitOfWork, existing_user: User, tenant_id: TenantId
     ) -> None:
         result = await make_handler(uow_with_user).handle(
-            UpdateUserCommand(user_id=existing_user.id, tenant_id=tenant_id, is_active=False)
+            UpdateUserCommand(
+                user_id=existing_user.id, tenant_id=tenant_id, is_active=False
+            )
         )
         assert result.is_active is False
 
     async def test_reactiva_usuario_inactivo(
         self, fake_repo: FakeUserRepository, tenant_id: TenantId
     ) -> None:
-        user = make_existing_user(tenant_id, email=Email("inactivo@glazing.com"), full_name="Inactivo")
+        user = make_existing_user(
+            tenant_id, email=Email("inactivo@glazing.com"), full_name="Inactivo"
+        )
         user.deactivate()
         await fake_repo.save(user)
         uow = FakeUnitOfWork(repo=fake_repo)
@@ -144,7 +163,9 @@ class TestUpdateUserHandler:
         self, uow_with_user: FakeUnitOfWork, existing_user: User, tenant_id: TenantId
     ) -> None:
         await make_handler(uow_with_user).handle(
-            UpdateUserCommand(user_id=existing_user.id, tenant_id=tenant_id, password="nuevapass")
+            UpdateUserCommand(
+                user_id=existing_user.id, tenant_id=tenant_id, password="nuevapass"
+            )
         )
         saved = uow_with_user.users._store[existing_user.id]
         assert saved.hashed_password.value == "fake:nuevapass"
@@ -164,7 +185,11 @@ class TestUpdateUserHandler:
         self, uow_with_user: FakeUnitOfWork, existing_user: User, tenant_id: TenantId
     ) -> None:
         result = await make_handler(uow_with_user).handle(
-            UpdateUserCommand(user_id=existing_user.id, tenant_id=tenant_id, company_name="Glazing Sur")
+            UpdateUserCommand(
+                user_id=existing_user.id,
+                tenant_id=tenant_id,
+                company_name="Glazing Sur",
+            )
         )
         assert result.company_name == "Glazing Sur"
 
@@ -184,7 +209,9 @@ class TestUpdateUserHandler:
         self, uow_with_user: FakeUnitOfWork, existing_user: User, tenant_id: TenantId
     ) -> None:
         result = await make_handler(uow_with_user).handle(
-            UpdateUserCommand(user_id=existing_user.id, tenant_id=tenant_id, company_name="")
+            UpdateUserCommand(
+                user_id=existing_user.id, tenant_id=tenant_id, company_name=""
+            )
         )
         assert result.company_name is None
 
@@ -206,7 +233,11 @@ class TestUpdateUserHandler:
         self, uow_with_user: FakeUnitOfWork, existing_user: User, tenant_id: TenantId
     ) -> None:
         result = await make_handler(uow_with_user).handle(
-            UpdateUserCommand(user_id=existing_user.id, tenant_id=tenant_id, company_street="Av. Rivadavia 500")
+            UpdateUserCommand(
+                user_id=existing_user.id,
+                tenant_id=tenant_id,
+                company_street="Av. Rivadavia 500",
+            )
         )
         assert result.company_street == "Av. Rivadavia 500"
 
@@ -214,7 +245,9 @@ class TestUpdateUserHandler:
         self, uow_with_user: FakeUnitOfWork, existing_user: User, tenant_id: TenantId
     ) -> None:
         result = await make_handler(uow_with_user).handle(
-            UpdateUserCommand(user_id=existing_user.id, tenant_id=tenant_id, company_city="Rosario")
+            UpdateUserCommand(
+                user_id=existing_user.id, tenant_id=tenant_id, company_city="Rosario"
+            )
         )
         assert result.company_city == "Rosario"
 
@@ -222,7 +255,11 @@ class TestUpdateUserHandler:
         self, uow_with_user: FakeUnitOfWork, existing_user: User, tenant_id: TenantId
     ) -> None:
         result = await make_handler(uow_with_user).handle(
-            UpdateUserCommand(user_id=existing_user.id, tenant_id=tenant_id, company_province="Santa Fe")
+            UpdateUserCommand(
+                user_id=existing_user.id,
+                tenant_id=tenant_id,
+                company_province="Santa Fe",
+            )
         )
         assert result.company_province == "Santa Fe"
 
@@ -230,7 +267,11 @@ class TestUpdateUserHandler:
         self, uow_with_user: FakeUnitOfWork, existing_user: User, tenant_id: TenantId
     ) -> None:
         result = await make_handler(uow_with_user).handle(
-            UpdateUserCommand(user_id=existing_user.id, tenant_id=tenant_id, company_postal_code="2000")
+            UpdateUserCommand(
+                user_id=existing_user.id,
+                tenant_id=tenant_id,
+                company_postal_code="2000",
+            )
         )
         assert result.company_postal_code == "2000"
 
@@ -238,7 +279,11 @@ class TestUpdateUserHandler:
         self, uow_with_user: FakeUnitOfWork, existing_user: User, tenant_id: TenantId
     ) -> None:
         result = await make_handler(uow_with_user).handle(
-            UpdateUserCommand(user_id=existing_user.id, tenant_id=tenant_id, company_cuit="30-99887766-5")
+            UpdateUserCommand(
+                user_id=existing_user.id,
+                tenant_id=tenant_id,
+                company_cuit="30-99887766-5",
+            )
         )
         assert result.company_cuit == "30-99887766-5"
 
@@ -269,11 +314,15 @@ class TestUpdateUserHandler:
     ) -> None:
         # Primero asignamos un valor
         await make_handler(uow_with_user).handle(
-            UpdateUserCommand(user_id=existing_user.id, tenant_id=tenant_id, company_street="Calle 1")
+            UpdateUserCommand(
+                user_id=existing_user.id, tenant_id=tenant_id, company_street="Calle 1"
+            )
         )
         # Luego lo limpiamos con string vacío
         result = await make_handler(uow_with_user).handle(
-            UpdateUserCommand(user_id=existing_user.id, tenant_id=tenant_id, company_street="")
+            UpdateUserCommand(
+                user_id=existing_user.id, tenant_id=tenant_id, company_street=""
+            )
         )
         assert result.company_street is None
 
@@ -296,7 +345,8 @@ class TestUpdateUserHandler:
     ) -> None:
         result = await make_handler(uow_with_user).handle(
             UpdateUserCommand(
-                user_id=existing_user.id, tenant_id=tenant_id,
+                user_id=existing_user.id,
+                tenant_id=tenant_id,
                 company_color_primary="#0f6e50",
             )
         )
@@ -307,7 +357,8 @@ class TestUpdateUserHandler:
     ) -> None:
         result = await make_handler(uow_with_user).handle(
             UpdateUserCommand(
-                user_id=existing_user.id, tenant_id=tenant_id,
+                user_id=existing_user.id,
+                tenant_id=tenant_id,
                 company_color_secondary="#e8f5f0",
             )
         )
@@ -319,7 +370,8 @@ class TestUpdateUserHandler:
         conditions = "Válido 15 días.\nForma de pago: 50% anticipo, 50% entrega."
         result = await make_handler(uow_with_user).handle(
             UpdateUserCommand(
-                user_id=existing_user.id, tenant_id=tenant_id,
+                user_id=existing_user.id,
+                tenant_id=tenant_id,
                 default_commercial_conditions=conditions,
             )
         )
@@ -330,7 +382,8 @@ class TestUpdateUserHandler:
     ) -> None:
         result = await make_handler(uow_with_user).handle(
             UpdateUserCommand(
-                user_id=existing_user.id, tenant_id=tenant_id,
+                user_id=existing_user.id,
+                tenant_id=tenant_id,
                 company_color_primary="",
             )
         )
@@ -341,7 +394,8 @@ class TestUpdateUserHandler:
     ) -> None:
         result = await make_handler(uow_with_user).handle(
             UpdateUserCommand(
-                user_id=existing_user.id, tenant_id=tenant_id,
+                user_id=existing_user.id,
+                tenant_id=tenant_id,
                 default_commercial_conditions="",
             )
         )
@@ -382,14 +436,16 @@ class TestUpdateUserHandler:
         # Primero establecemos colores
         await make_handler(uow_with_user).handle(
             UpdateUserCommand(
-                user_id=existing_user.id, tenant_id=tenant_id,
+                user_id=existing_user.id,
+                tenant_id=tenant_id,
                 company_color_primary="#0f6e50",
             )
         )
         # Luego actualizamos otro campo sin tocar los colores
         result = await make_handler(uow_with_user).handle(
             UpdateUserCommand(
-                user_id=existing_user.id, tenant_id=tenant_id,
+                user_id=existing_user.id,
+                tenant_id=tenant_id,
                 company_name="Empresa Nueva",
             )
         )
@@ -412,7 +468,9 @@ class TestUpdateUserHandler:
         self, uow_with_user: FakeUnitOfWork, existing_user: User, tenant_id: TenantId
     ) -> None:
         await make_handler(uow_with_user).handle(
-            UpdateUserCommand(user_id=existing_user.id, tenant_id=tenant_id, full_name="Cualquiera")
+            UpdateUserCommand(
+                user_id=existing_user.id, tenant_id=tenant_id, full_name="Cualquiera"
+            )
         )
         assert uow_with_user.committed is True
 

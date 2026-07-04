@@ -24,8 +24,8 @@ from centy.domain.shared.value_objects import Email, TenantId
 from centy.domain.users.entities import Role, User
 from centy.domain.users.value_objects import HashedPassword
 
-
 # ── Fakes ─────────────────────────────────────────────────────────────────────
+
 
 class FakeUserRepository(IUserRepository):
     def __init__(self) -> None:
@@ -37,7 +37,11 @@ class FakeUserRepository(IUserRepository):
 
     async def get_by_email(self, email: Email, tenant_id: TenantId) -> User | None:
         return next(
-            (u for u in self._store.values() if u.email == email and u.tenant_id == tenant_id),
+            (
+                u
+                for u in self._store.values()
+                if u.email == email and u.tenant_id == tenant_id
+            ),
             None,
         )
 
@@ -55,16 +59,21 @@ class FakeCustomerLabelRepository(ICustomerLabelRepository):
     def __init__(self) -> None:
         self._store: dict[UUID, CustomerLabel] = {}
 
-    async def get_by_id(self, label_id: UUID, tenant_id: TenantId) -> CustomerLabel | None:
+    async def get_by_id(
+        self, label_id: UUID, tenant_id: TenantId
+    ) -> CustomerLabel | None:
         lb = self._store.get(label_id)
         return lb if lb and lb.tenant_id == tenant_id else None
 
     async def save(self, label: CustomerLabel) -> None:
         self._store[label.id] = label
 
-    async def list_by_owner(self, owner_user_id: UUID, tenant_id: TenantId) -> list[CustomerLabel]:
+    async def list_by_owner(
+        self, owner_user_id: UUID, tenant_id: TenantId
+    ) -> list[CustomerLabel]:
         return [
-            lb for lb in self._store.values()
+            lb
+            for lb in self._store.values()
             if lb.owner_user_id == owner_user_id and lb.tenant_id == tenant_id
         ]
 
@@ -78,16 +87,21 @@ class FakeCustomerRepository(ICustomerRepository):
     def __init__(self) -> None:
         self._store: dict[UUID, Customer] = {}
 
-    async def get_by_id(self, customer_id: UUID, tenant_id: TenantId) -> Customer | None:
+    async def get_by_id(
+        self, customer_id: UUID, tenant_id: TenantId
+    ) -> Customer | None:
         c = self._store.get(customer_id)
         return c if c and c.tenant_id == tenant_id else None
 
     async def save(self, customer: Customer) -> None:
         self._store[customer.id] = customer
 
-    async def list_by_owner(self, owner_user_id: UUID, tenant_id: TenantId) -> list[Customer]:
+    async def list_by_owner(
+        self, owner_user_id: UUID, tenant_id: TenantId
+    ) -> list[Customer]:
         return [
-            c for c in self._store.values()
+            c
+            for c in self._store.values()
             if c.owner_user_id == owner_user_id and c.tenant_id == tenant_id
         ]
 
@@ -124,7 +138,9 @@ class FakeProductCategoryRepository(IProductCategoryRepository):
     def __init__(self) -> None:
         self._store: dict[UUID, ProductCategory] = {}
 
-    async def get_by_id(self, category_id: UUID, tenant_id: TenantId) -> ProductCategory | None:
+    async def get_by_id(
+        self, category_id: UUID, tenant_id: TenantId
+    ) -> ProductCategory | None:
         c = self._store.get(category_id)
         return c if c and c.tenant_id == tenant_id else None
 
@@ -144,7 +160,9 @@ class FakeGlassTypeRepository(IGlassTypeRepository):
     def __init__(self) -> None:
         self._store: dict[UUID, GlassType] = {}
 
-    async def get_by_id(self, glass_type_id: UUID, tenant_id: TenantId) -> GlassType | None:
+    async def get_by_id(
+        self, glass_type_id: UUID, tenant_id: TenantId
+    ) -> GlassType | None:
         g = self._store.get(glass_type_id)
         return g if g and g.tenant_id == tenant_id else None
 
@@ -184,9 +202,13 @@ class FakeUnitOfWork(IUnitOfWork):
     def __init__(self, repo: FakeUserRepository | None = None) -> None:
         self.users: FakeUserRepository = repo or FakeUserRepository()
         self.customers: FakeCustomerRepository = FakeCustomerRepository()
-        self.customer_labels: FakeCustomerLabelRepository = FakeCustomerLabelRepository()
+        self.customer_labels: FakeCustomerLabelRepository = (
+            FakeCustomerLabelRepository()
+        )
         self.brands: FakeBrandRepository = FakeBrandRepository()
-        self.product_categories: FakeProductCategoryRepository = FakeProductCategoryRepository()
+        self.product_categories: FakeProductCategoryRepository = (
+            FakeProductCategoryRepository()
+        )
         self.glass_types: FakeGlassTypeRepository = FakeGlassTypeRepository()
         self.products: FakeProductRepository = FakeProductRepository()
         self.committed = False
@@ -231,7 +253,13 @@ class FakeTokenService(ITokenService):
 
     def decode_access_token(self, token: str) -> dict[str, str]:
         _, sub, tenant, role, email = token.split("|", 4)
-        return {"sub": sub, "tenant_id": tenant, "role": role, "email": email, "type": "access"}
+        return {
+            "sub": sub,
+            "tenant_id": tenant,
+            "role": role,
+            "email": email,
+            "type": "access",
+        }
 
     def decode_refresh_token(self, token: str) -> dict[str, str]:
         parts = token.split("|")
@@ -256,6 +284,7 @@ class FakeCacheService(ICacheService):
 
 
 # ── Fixtures de dominio ───────────────────────────────────────────────────────
+
 
 @pytest.fixture
 def tenant_id() -> TenantId:

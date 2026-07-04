@@ -13,7 +13,9 @@ class IPasswordHasher(ABC):
 
 class ITokenService(ABC):
     @abstractmethod
-    def create_access_token(self, subject: str, extra_claims: dict[str, str]) -> str: ...
+    def create_access_token(
+        self, subject: str, extra_claims: dict[str, str]
+    ) -> str: ...
 
     @abstractmethod
     def create_refresh_token(self, subject: str) -> str: ...

@@ -36,8 +36,8 @@ from centy.application.ports.unit_of_work import IUnitOfWork
 from centy.domain.catalog.entities import Brand, GlassType, Product, ProductCategory
 from centy.domain.shared.exceptions import NotFoundError
 
-
 # ── Result dataclasses ────────────────────────────────────────────────────────
+
 
 @dataclass(frozen=True)
 class BrandResult:
@@ -87,6 +87,7 @@ class ProductResult:
 
 
 # ── Mappers ───────────────────────────────────────────────────────────────────
+
 
 def _brand_result(b: Brand) -> BrandResult:
     return BrandResult(
@@ -140,6 +141,7 @@ def _product_result(p: Product) -> ProductResult:
 
 
 # ── Brand handlers ────────────────────────────────────────────────────────────
+
 
 class CreateBrandHandler:
     def __init__(self, uow: IUnitOfWork) -> None:
@@ -213,6 +215,7 @@ class DeleteBrandHandler:
 
 # ── ProductCategory handlers ──────────────────────────────────────────────────
 
+
 class CreateCategoryHandler:
     def __init__(self, uow: IUnitOfWork) -> None:
         self._uow = uow
@@ -254,7 +257,9 @@ class UpdateCategoryHandler:
 
     async def handle(self, command: UpdateCategoryCommand) -> CategoryResult:
         async with self._uow as uow:
-            cat = await uow.product_categories.get_by_id(command.category_id, command.tenant_id)
+            cat = await uow.product_categories.get_by_id(
+                command.category_id, command.tenant_id
+            )
             if cat is None:
                 raise NotFoundError(f"Categoría {command.category_id} no encontrada")
             if command.name is not None:
@@ -270,7 +275,9 @@ class DeleteCategoryHandler:
 
     async def handle(self, command: DeleteCategoryCommand) -> None:
         async with self._uow as uow:
-            cat = await uow.product_categories.get_by_id(command.category_id, command.tenant_id)
+            cat = await uow.product_categories.get_by_id(
+                command.category_id, command.tenant_id
+            )
             if cat is None:
                 raise NotFoundError(f"Categoría {command.category_id} no encontrada")
             await uow.product_categories.delete(command.category_id, command.tenant_id)
@@ -278,6 +285,7 @@ class DeleteCategoryHandler:
 
 
 # ── GlassType handlers ────────────────────────────────────────────────────────
+
 
 class CreateGlassTypeHandler:
     def __init__(self, uow: IUnitOfWork) -> None:
@@ -320,9 +328,13 @@ class UpdateGlassTypeHandler:
 
     async def handle(self, command: UpdateGlassTypeCommand) -> GlassTypeResult:
         async with self._uow as uow:
-            gt = await uow.glass_types.get_by_id(command.glass_type_id, command.tenant_id)
+            gt = await uow.glass_types.get_by_id(
+                command.glass_type_id, command.tenant_id
+            )
             if gt is None:
-                raise NotFoundError(f"Tipo de vidrio {command.glass_type_id} no encontrado")
+                raise NotFoundError(
+                    f"Tipo de vidrio {command.glass_type_id} no encontrado"
+                )
             if command.name is not None:
                 gt.rename(command.name)
             await uow.glass_types.save(gt)
@@ -336,14 +348,19 @@ class DeleteGlassTypeHandler:
 
     async def handle(self, command: DeleteGlassTypeCommand) -> None:
         async with self._uow as uow:
-            gt = await uow.glass_types.get_by_id(command.glass_type_id, command.tenant_id)
+            gt = await uow.glass_types.get_by_id(
+                command.glass_type_id, command.tenant_id
+            )
             if gt is None:
-                raise NotFoundError(f"Tipo de vidrio {command.glass_type_id} no encontrado")
+                raise NotFoundError(
+                    f"Tipo de vidrio {command.glass_type_id} no encontrado"
+                )
             await uow.glass_types.delete(command.glass_type_id, command.tenant_id)
             await uow.commit()
 
 
 # ── Product handlers ──────────────────────────────────────────────────────────
+
 
 class CreateProductHandler:
     def __init__(self, uow: IUnitOfWork) -> None:
@@ -398,7 +415,9 @@ class UpdateProductHandler:
 
     async def handle(self, command: UpdateProductCommand) -> ProductResult:
         async with self._uow as uow:
-            product = await uow.products.get_by_id(command.product_id, command.tenant_id)
+            product = await uow.products.get_by_id(
+                command.product_id, command.tenant_id
+            )
             if product is None:
                 raise NotFoundError(f"Producto {command.product_id} no encontrado")
             if command.is_active is not None:
@@ -433,7 +452,9 @@ class DeleteProductHandler:
 
     async def handle(self, command: DeleteProductCommand) -> None:
         async with self._uow as uow:
-            product = await uow.products.get_by_id(command.product_id, command.tenant_id)
+            product = await uow.products.get_by_id(
+                command.product_id, command.tenant_id
+            )
             if product is None:
                 raise NotFoundError(f"Producto {command.product_id} no encontrado")
             await uow.products.delete(command.product_id, command.tenant_id)

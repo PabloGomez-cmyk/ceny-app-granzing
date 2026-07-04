@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 from decimal import Decimal
 from uuid import UUID
 
@@ -22,8 +21,8 @@ from centy.infrastructure.persistence.models.product import (
     ProductModel,
 )
 
-
 # ── Brand repository ──────────────────────────────────────────────────────────
+
 
 class SQLAlchemyBrandRepository(IBrandRepository):
     def __init__(self, session: AsyncSession) -> None:
@@ -47,15 +46,17 @@ class SQLAlchemyBrandRepository(IBrandRepository):
             existing.logo_url = brand.logo_url
             existing.is_active = brand.is_active
         else:
-            self._session.add(BrandModel(
-                id=str(brand.id),
-                tenant_id=str(brand.tenant_id),
-                name=brand.name,
-                color=brand.color,
-                logo_url=brand.logo_url,
-                is_active=brand.is_active,
-                created_at=brand.created_at,
-            ))
+            self._session.add(
+                BrandModel(
+                    id=str(brand.id),
+                    tenant_id=str(brand.tenant_id),
+                    name=brand.name,
+                    color=brand.color,
+                    logo_url=brand.logo_url,
+                    is_active=brand.is_active,
+                    created_at=brand.created_at,
+                )
+            )
 
     async def list_by_tenant(self, tenant_id: TenantId) -> list[Brand]:
         result = await self._session.execute(
@@ -88,11 +89,14 @@ def _brand_to_domain(row: BrandModel) -> Brand:
 
 # ── ProductCategory repository ────────────────────────────────────────────────
 
+
 class SQLAlchemyProductCategoryRepository(IProductCategoryRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def get_by_id(self, category_id: UUID, tenant_id: TenantId) -> ProductCategory | None:
+    async def get_by_id(
+        self, category_id: UUID, tenant_id: TenantId
+    ) -> ProductCategory | None:
         result = await self._session.execute(
             select(ProductCategoryModel).where(
                 ProductCategoryModel.id == str(category_id),
@@ -108,13 +112,15 @@ class SQLAlchemyProductCategoryRepository(IProductCategoryRepository):
             existing.name = category.name
             existing.is_active = category.is_active
         else:
-            self._session.add(ProductCategoryModel(
-                id=str(category.id),
-                tenant_id=str(category.tenant_id),
-                name=category.name,
-                is_active=category.is_active,
-                created_at=category.created_at,
-            ))
+            self._session.add(
+                ProductCategoryModel(
+                    id=str(category.id),
+                    tenant_id=str(category.tenant_id),
+                    name=category.name,
+                    is_active=category.is_active,
+                    created_at=category.created_at,
+                )
+            )
 
     async def list_by_tenant(self, tenant_id: TenantId) -> list[ProductCategory]:
         result = await self._session.execute(
@@ -145,11 +151,14 @@ def _category_to_domain(row: ProductCategoryModel) -> ProductCategory:
 
 # ── GlassType repository ──────────────────────────────────────────────────────
 
+
 class SQLAlchemyGlassTypeRepository(IGlassTypeRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def get_by_id(self, glass_type_id: UUID, tenant_id: TenantId) -> GlassType | None:
+    async def get_by_id(
+        self, glass_type_id: UUID, tenant_id: TenantId
+    ) -> GlassType | None:
         result = await self._session.execute(
             select(GlassTypeModel).where(
                 GlassTypeModel.id == str(glass_type_id),
@@ -165,13 +174,15 @@ class SQLAlchemyGlassTypeRepository(IGlassTypeRepository):
             existing.name = glass_type.name
             existing.is_active = glass_type.is_active
         else:
-            self._session.add(GlassTypeModel(
-                id=str(glass_type.id),
-                tenant_id=str(glass_type.tenant_id),
-                name=glass_type.name,
-                is_active=glass_type.is_active,
-                created_at=glass_type.created_at,
-            ))
+            self._session.add(
+                GlassTypeModel(
+                    id=str(glass_type.id),
+                    tenant_id=str(glass_type.tenant_id),
+                    name=glass_type.name,
+                    is_active=glass_type.is_active,
+                    created_at=glass_type.created_at,
+                )
+            )
 
     async def list_by_tenant(self, tenant_id: TenantId) -> list[GlassType]:
         result = await self._session.execute(
@@ -201,6 +212,7 @@ def _glass_type_to_domain(row: GlassTypeModel) -> GlassType:
 
 
 # ── Product repository ────────────────────────────────────────────────────────
+
 
 class SQLAlchemyProductRepository(IProductRepository):
     def __init__(self, session: AsyncSession) -> None:
@@ -236,24 +248,26 @@ class SQLAlchemyProductRepository(IProductRepository):
             existing.technical_sheet_url = product.technical_sheet_url
             existing.is_active = product.is_active
         else:
-            self._session.add(ProductModel(
-                id=str(product.id),
-                tenant_id=str(product.tenant_id),
-                name=product.name,
-                brand_id=str(product.brand_id),
-                category_id=str(product.category_id),
-                sale_price_per_m2=float(product.sale_price_per_m2.amount),
-                uv_percentage=float(product.uv_percentage.value),
-                irr_percentage=float(product.irr_percentage.value),
-                tser_percentage=float(product.tser_percentage.value),
-                warranty_years=product.warranty_years,
-                roll_width_cm=float(product.roll_width_cm),
-                roll_length_m=float(product.roll_length_m),
-                application_types=[t.value for t in product.application_types],
-                technical_sheet_url=product.technical_sheet_url,
-                is_active=product.is_active,
-                created_at=product.created_at,
-            ))
+            self._session.add(
+                ProductModel(
+                    id=str(product.id),
+                    tenant_id=str(product.tenant_id),
+                    name=product.name,
+                    brand_id=str(product.brand_id),
+                    category_id=str(product.category_id),
+                    sale_price_per_m2=float(product.sale_price_per_m2.amount),
+                    uv_percentage=float(product.uv_percentage.value),
+                    irr_percentage=float(product.irr_percentage.value),
+                    tser_percentage=float(product.tser_percentage.value),
+                    warranty_years=product.warranty_years,
+                    roll_width_cm=float(product.roll_width_cm),
+                    roll_length_m=float(product.roll_length_m),
+                    application_types=[t.value for t in product.application_types],
+                    technical_sheet_url=product.technical_sheet_url,
+                    is_active=product.is_active,
+                    created_at=product.created_at,
+                )
+            )
 
         await self._sync_glass_types(str(product.id), product.compatible_glass_ids)
 
@@ -284,7 +298,9 @@ class SQLAlchemyProductRepository(IProductRepository):
         )
         return [UUID(row) for row in result.scalars()]
 
-    async def _load_glass_ids_bulk(self, product_ids: list[str]) -> dict[str, list[UUID]]:
+    async def _load_glass_ids_bulk(
+        self, product_ids: list[str]
+    ) -> dict[str, list[UUID]]:
         if not product_ids:
             return {}
         result = await self._session.execute(
@@ -304,10 +320,12 @@ class SQLAlchemyProductRepository(IProductRepository):
             )
         )
         for gid in glass_ids:
-            self._session.add(ProductGlassTypeModel(
-                product_id=product_id,
-                glass_type_id=str(gid),
-            ))
+            self._session.add(
+                ProductGlassTypeModel(
+                    product_id=product_id,
+                    glass_type_id=str(gid),
+                )
+            )
 
 
 def _product_to_domain(row: ProductModel, glass_ids: list[UUID]) -> Product:

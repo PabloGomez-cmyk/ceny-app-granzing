@@ -24,6 +24,12 @@ class UserEmailConfigModel(Base):
     gmail_email: Mapped[str] = mapped_column(String(255), nullable=False)
     access_token_enc: Mapped[str] = mapped_column(String(2048), nullable=False)
     refresh_token_enc: Mapped[str] = mapped_column(String(2048), nullable=False)
-    token_expiry: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    token_expiry: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )

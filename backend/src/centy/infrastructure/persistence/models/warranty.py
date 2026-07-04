@@ -30,5 +30,9 @@ class WarrantyModel(Base):
     created_by_user_id: Mapped[str] = mapped_column(UUID(as_uuid=False), nullable=False)
     warranty_years: Mapped[int] = mapped_column(Integer, nullable=False)
     expires_at: Mapped[date] = mapped_column(Date, nullable=False)
-    sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    sent_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )

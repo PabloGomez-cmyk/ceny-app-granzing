@@ -4,16 +4,17 @@ Cada regla de negocio del dominio tiene su test aquí.
 NO hay DB, NO hay frameworks: puro Python.
 """
 
-import pytest
 from uuid import uuid4
+
+import pytest
 
 from centy.domain.shared.exceptions import BusinessRuleViolationError, ValidationError
 from centy.domain.shared.value_objects import Email, TenantId
 from centy.domain.users.entities import Role, User
 from centy.domain.users.value_objects import HashedPassword
 
-
 # ── Helpers ──────────────────────────────────────────────────────────────────
+
 
 def make_user(**overrides) -> User:  # type: ignore[no-untyped-def]
     defaults: dict = dict(
@@ -28,6 +29,7 @@ def make_user(**overrides) -> User:  # type: ignore[no-untyped-def]
 
 
 # ── User.create ───────────────────────────────────────────────────────────────
+
 
 class TestUserCreate:
     def test_creates_active_by_default(self) -> None:
@@ -55,6 +57,7 @@ class TestUserCreate:
 
 # ── User.deactivate / reactivate ─────────────────────────────────────────────
 
+
 class TestUserLifecycle:
     def test_deactivate_active_user(self) -> None:
         user = make_user()
@@ -81,6 +84,7 @@ class TestUserLifecycle:
 
 # ── Role ─────────────────────────────────────────────────────────────────────
 
+
 class TestUserRole:
     def test_assign_role_changes_role(self) -> None:
         user = make_user(role=Role.OPERATOR)
@@ -100,18 +104,22 @@ class TestUserRole:
 
 # ── Email value object ────────────────────────────────────────────────────────
 
+
 class TestEmail:
     def test_valid_email_accepted(self) -> None:
         email = Email("user@example.com")
         assert email.value == "user@example.com"
 
-    @pytest.mark.parametrize("bad", [
-        "not-an-email",
-        "missing@domain",
-        "@nodomain.com",
-        "spaces in@email.com",
-        "",
-    ])
+    @pytest.mark.parametrize(
+        "bad",
+        [
+            "not-an-email",
+            "missing@domain",
+            "@nodomain.com",
+            "spaces in@email.com",
+            "",
+        ],
+    )
     def test_invalid_emails_rejected(self, bad: str) -> None:
         with pytest.raises(ValidationError):
             Email(bad)
@@ -122,6 +130,7 @@ class TestEmail:
 
 
 # ── HashedPassword value object ───────────────────────────────────────────────
+
 
 class TestHashedPassword:
     def test_empty_value_raises(self) -> None:
@@ -134,6 +143,7 @@ class TestHashedPassword:
 
 
 # ── Campos de empresa ─────────────────────────────────────────────────────────
+
 
 class TestUserCompanyFields:
     def test_company_fields_none_por_defecto(self) -> None:
@@ -198,6 +208,7 @@ class TestUserCompanyFields:
 
 
 # ── User.update_profile ───────────────────────────────────────────────────────
+
 
 class TestUserUpdateProfile:
     def test_actualiza_full_name(self) -> None:
@@ -361,4 +372,7 @@ class TestUserUpdateProfile:
         )
         assert user.company_color_primary == "#0f6e50"
         assert user.company_color_secondary == "#e8f5f0"
-        assert user.default_commercial_conditions == "Validez: 30 días.\nForma de pago: contado."
+        assert (
+            user.default_commercial_conditions
+            == "Validez: 30 días.\nForma de pago: contado."
+        )

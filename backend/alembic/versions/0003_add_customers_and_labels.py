@@ -5,8 +5,8 @@ Revises: 0002
 Create Date: 2026-05-27
 """
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects.postgresql import UUID
 
 revision = "0003"
@@ -24,11 +24,15 @@ def upgrade() -> None:
         sa.Column("owner_user_id", UUID(as_uuid=False), nullable=False),
         sa.Column("name", sa.String(50), nullable=False),
         sa.Column("color", sa.String(7), nullable=False, server_default="#10b981"),
-        sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.text("true")),
+        sa.Column(
+            "is_active", sa.Boolean(), nullable=False, server_default=sa.text("true")
+        ),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index("ix_customer_labels_owner", "customer_labels", ["owner_user_id", "tenant_id"])
+    op.create_index(
+        "ix_customer_labels_owner", "customer_labels", ["owner_user_id", "tenant_id"]
+    )
 
     op.create_table(
         "customers",
@@ -41,7 +45,9 @@ def upgrade() -> None:
         sa.Column("address", sa.String(500), nullable=True),
         sa.Column("label_id", UUID(as_uuid=False), nullable=True),
         sa.Column("notes", sa.String(2000), nullable=True),
-        sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.text("true")),
+        sa.Column(
+            "is_active", sa.Boolean(), nullable=False, server_default=sa.text("true")
+        ),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.ForeignKeyConstraint(

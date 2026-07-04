@@ -24,18 +24,17 @@ from centy.application.quotes.handlers import (
     CreateQuoteHandler,
     DeleteQuoteHandler,
     GetQuoteHandler,
-    ListQuotesHandler,
     UpdateQuoteHandler,
     UpdateQuoteStatusHandler,
 )
-from centy.application.quotes.queries import GetQuoteQuery, ListQuotesQuery
-from centy.domain.quotes.entities import GlassPane, Quote, QuoteLine
+from centy.application.quotes.queries import GetQuoteQuery
+from centy.domain.quotes.entities import Quote
 from centy.domain.quotes.value_objects import FilmMode, LocationType, QuoteStatus
 from centy.domain.shared.exceptions import AuthorizationError, NotFoundError
 from centy.domain.shared.value_objects import TenantId
 
-
 # ── Fake repo ─────────────────────────────────────────────────────────────────
+
 
 class FakeQuoteRepository(IQuoteRepository):
     def __init__(self) -> None:
@@ -54,7 +53,8 @@ class FakeQuoteRepository(IQuoteRepository):
 
     async def list_by_user(self, user_id: UUID, tenant_id: TenantId) -> list[Quote]:
         return [
-            q for q in self._store.values()
+            q
+            for q in self._store.values()
             if q.tenant_id == tenant_id and q.created_by_user_id == user_id
         ]
 
@@ -77,6 +77,7 @@ class FakeQuoteUnitOfWork(IUnitOfWork):
             FakeProductRepository,
             FakeUserRepository,
         )
+
         self.users = FakeUserRepository()
         self.customers = FakeCustomerRepository()
         self.customer_labels = FakeCustomerLabelRepository()
@@ -107,6 +108,7 @@ class FakeQuoteUnitOfWork(IUnitOfWork):
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
+
 @pytest.fixture
 def tenant_id() -> TenantId:
     return TenantId(uuid4())
@@ -122,7 +124,9 @@ def uow(quote_repo: FakeQuoteRepository) -> FakeQuoteUnitOfWork:
     return FakeQuoteUnitOfWork(repo=quote_repo)
 
 
-def _pane_input(pane_id: str = "v01", location: LocationType = LocationType.SUPERFICIE) -> GlassPaneInput:
+def _pane_input(
+    pane_id: str = "v01", location: LocationType = LocationType.SUPERFICIE
+) -> GlassPaneInput:
     return GlassPaneInput(
         pane_id=pane_id,
         glass_type_id=None,
@@ -136,7 +140,9 @@ def _pane_input(pane_id: str = "v01", location: LocationType = LocationType.SUPE
     )
 
 
-def _line_input(pane_ids: list[str] | None = None, price: float = 1000.0) -> QuoteLineInput:
+def _line_input(
+    pane_ids: list[str] | None = None, price: float = 1000.0
+) -> QuoteLineInput:
     p = Decimal(str(price))
     return QuoteLineInput(
         product_id=uuid4(),
@@ -177,6 +183,7 @@ def _create_cmd(
 
 # ── CreateQuoteHandler ────────────────────────────────────────────────────────
 
+
 class TestCreateQuoteHandler:
     @pytest.mark.asyncio
     async def test_crea_quote_y_asigna_numero(
@@ -215,7 +222,9 @@ class TestCreateQuoteHandler:
     ) -> None:
         # subtotal $1000, descuento 10% → taxable $900, IVA 21% → $189, total $1089
         result = await CreateQuoteHandler(uow).handle(
-            _create_cmd(tenant_id, uuid4(), discount_pct=Decimal("10"), tax_pct=Decimal("21"))
+            _create_cmd(
+                tenant_id, uuid4(), discount_pct=Decimal("10"), tax_pct=Decimal("21")
+            )
         )
         assert result.totals.discount_amount == Decimal("100.00")
         assert result.totals.tax_amount == Decimal("189.00")
@@ -227,7 +236,9 @@ class TestCreateQuoteHandler:
     ) -> None:
         # materials $1000 + travel $500 = $1500, IVA 21% → $315, total $1815
         result = await CreateQuoteHandler(uow).handle(
-            _create_cmd(tenant_id, uuid4(), travel_cost=Decimal("500"), tax_pct=Decimal("21"))
+            _create_cmd(
+                tenant_id, uuid4(), travel_cost=Decimal("500"), tax_pct=Decimal("21")
+            )
         )
         assert result.totals.subtotal == Decimal("1500.00")
         assert result.totals.tax_amount == Decimal("315.00")
@@ -246,10 +257,14 @@ class TestCreateQuoteHandler:
 
 # ── GetQuoteHandler ───────────────────────────────────────────────────────────
 
+
 class TestGetQuoteHandler:
     @pytest.mark.asyncio
     async def test_owner_puede_ver_su_quote(
-        self, uow: FakeQuoteUnitOfWork, quote_repo: FakeQuoteRepository, tenant_id: TenantId
+        self,
+        uow: FakeQuoteUnitOfWork,
+        quote_repo: FakeQuoteRepository,
+        tenant_id: TenantId,
     ) -> None:
         user_id = uuid4()
         created = await CreateQuoteHandler(uow).handle(_create_cmd(tenant_id, user_id))
@@ -265,7 +280,10 @@ class TestGetQuoteHandler:
 
     @pytest.mark.asyncio
     async def test_admin_puede_ver_cualquier_quote(
-        self, uow: FakeQuoteUnitOfWork, quote_repo: FakeQuoteRepository, tenant_id: TenantId
+        self,
+        uow: FakeQuoteUnitOfWork,
+        quote_repo: FakeQuoteRepository,
+        tenant_id: TenantId,
     ) -> None:
         owner_id = uuid4()
         admin_id = uuid4()
@@ -282,7 +300,10 @@ class TestGetQuoteHandler:
 
     @pytest.mark.asyncio
     async def test_otro_operator_no_puede_ver(
-        self, uow: FakeQuoteUnitOfWork, quote_repo: FakeQuoteRepository, tenant_id: TenantId
+        self,
+        uow: FakeQuoteUnitOfWork,
+        quote_repo: FakeQuoteRepository,
+        tenant_id: TenantId,
     ) -> None:
         owner_id = uuid4()
         other_id = uuid4()
@@ -313,6 +334,7 @@ class TestGetQuoteHandler:
 
 
 # ── UpdateQuoteStatusHandler ──────────────────────────────────────────────────
+
 
 class TestUpdateQuoteStatusHandler:
     @pytest.mark.asyncio
@@ -377,6 +399,7 @@ class TestUpdateQuoteStatusHandler:
 
 # ── UpdateQuoteHandler ────────────────────────────────────────────────────────
 
+
 class TestUpdateQuoteHandler:
     def _update_cmd(
         self,
@@ -416,7 +439,9 @@ class TestUpdateQuoteHandler:
             _create_cmd(tenant_id, user_id, tax_pct=Decimal("0"))
         )
         updated = await UpdateQuoteHandler(uow).handle(
-            self._update_cmd(UUID(created.quote_id), tenant_id, user_id, tax_pct=Decimal("21"))
+            self._update_cmd(
+                UUID(created.quote_id), tenant_id, user_id, tax_pct=Decimal("21")
+            )
         )
         assert updated.tax_pct == Decimal("21")
         assert updated.totals.tax_amount == Decimal("210.00")
@@ -439,6 +464,7 @@ class TestUpdateQuoteHandler:
                 )
             )
         from centy.domain.shared.exceptions import DomainError
+
         with pytest.raises(DomainError, match="facturado"):
             await UpdateQuoteHandler(uow).handle(
                 self._update_cmd(qid, tenant_id, user_id)
@@ -447,10 +473,14 @@ class TestUpdateQuoteHandler:
 
 # ── DeleteQuoteHandler ────────────────────────────────────────────────────────
 
+
 class TestDeleteQuoteHandler:
     @pytest.mark.asyncio
     async def test_elimina_quote_propio(
-        self, uow: FakeQuoteUnitOfWork, quote_repo: FakeQuoteRepository, tenant_id: TenantId
+        self,
+        uow: FakeQuoteUnitOfWork,
+        quote_repo: FakeQuoteRepository,
+        tenant_id: TenantId,
     ) -> None:
         user_id = uuid4()
         created = await CreateQuoteHandler(uow).handle(_create_cmd(tenant_id, user_id))

@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from cryptography.fernet import Fernet
@@ -33,7 +33,9 @@ class SQLAlchemyEmailConfigRepository(IEmailConfigRepository):
             updated_at=model.updated_at,
         )
 
-    async def get_by_user_id(self, user_id: UUID, tenant_id: str) -> UserEmailConfig | None:
+    async def get_by_user_id(
+        self, user_id: UUID, tenant_id: str
+    ) -> UserEmailConfig | None:
         stmt = select(UserEmailConfigModel).where(
             UserEmailConfigModel.user_id == str(user_id),
             UserEmailConfigModel.tenant_id == tenant_id,
@@ -68,7 +70,7 @@ class SQLAlchemyEmailConfigRepository(IEmailConfigRepository):
             model.access_token_enc = self._encrypt(config.access_token)
             model.refresh_token_enc = self._encrypt(config.refresh_token)
             model.token_expiry = config.token_expiry
-            model.updated_at = datetime.now(tz=timezone.utc)
+            model.updated_at = datetime.now(tz=UTC)
 
         await self._session.commit()
 

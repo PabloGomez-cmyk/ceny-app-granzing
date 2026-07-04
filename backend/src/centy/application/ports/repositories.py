@@ -28,71 +28,66 @@ class IUserRepository(ABC):
     """
 
     @abstractmethod
-    async def get_by_id(self, user_id: UUID, tenant_id: TenantId) -> User | None:
-        ...
+    async def get_by_id(self, user_id: UUID, tenant_id: TenantId) -> User | None: ...
 
     @abstractmethod
-    async def get_by_email(self, email: Email, tenant_id: TenantId) -> User | None:
-        ...
+    async def get_by_email(self, email: Email, tenant_id: TenantId) -> User | None: ...
 
     @abstractmethod
-    async def save(self, user: User) -> None:
-        ...
+    async def save(self, user: User) -> None: ...
 
     @abstractmethod
-    async def list_by_tenant(self, tenant_id: TenantId) -> list[User]:
-        ...
+    async def list_by_tenant(self, tenant_id: TenantId) -> list[User]: ...
 
     @abstractmethod
-    async def delete(self, user_id: UUID, tenant_id: TenantId) -> None:
-        ...
+    async def delete(self, user_id: UUID, tenant_id: TenantId) -> None: ...
 
 
 class ICustomerLabelRepository(ABC):
     """Puerto de salida para etiquetas de clientes."""
 
     @abstractmethod
-    async def get_by_id(self, label_id: UUID, tenant_id: TenantId) -> CustomerLabel | None:
-        ...
+    async def get_by_id(
+        self, label_id: UUID, tenant_id: TenantId
+    ) -> CustomerLabel | None: ...
 
     @abstractmethod
-    async def save(self, label: CustomerLabel) -> None:
-        ...
+    async def save(self, label: CustomerLabel) -> None: ...
 
     @abstractmethod
-    async def list_by_owner(self, owner_user_id: UUID, tenant_id: TenantId) -> list[CustomerLabel]:
-        ...
+    async def list_by_owner(
+        self, owner_user_id: UUID, tenant_id: TenantId
+    ) -> list[CustomerLabel]: ...
 
     @abstractmethod
-    async def delete(self, label_id: UUID, tenant_id: TenantId) -> None:
-        ...
+    async def delete(self, label_id: UUID, tenant_id: TenantId) -> None: ...
 
 
 class ICustomerRepository(ABC):
     """Puerto de salida para persistencia de clientes."""
 
     @abstractmethod
-    async def get_by_id(self, customer_id: UUID, tenant_id: TenantId) -> Customer | None:
-        ...
+    async def get_by_id(
+        self, customer_id: UUID, tenant_id: TenantId
+    ) -> Customer | None: ...
 
     @abstractmethod
-    async def save(self, customer: Customer) -> None:
-        ...
+    async def save(self, customer: Customer) -> None: ...
 
     @abstractmethod
-    async def list_by_owner(self, owner_user_id: UUID, tenant_id: TenantId) -> list[Customer]:
-        ...
+    async def list_by_owner(
+        self, owner_user_id: UUID, tenant_id: TenantId
+    ) -> list[Customer]: ...
 
     @abstractmethod
-    async def list_by_tenant(self, tenant_id: TenantId) -> list[Customer]:
-        ...
+    async def list_by_tenant(self, tenant_id: TenantId) -> list[Customer]: ...
 
     @abstractmethod
-    async def delete(self, customer_id: UUID, tenant_id: TenantId) -> None:
-        ...
+    async def delete(self, customer_id: UUID, tenant_id: TenantId) -> None: ...
 
 
 # ── Catalog repositories ──────────────────────────────────────────────────────
+
 
 class IBrandRepository(ABC):
     @abstractmethod
@@ -110,7 +105,9 @@ class IBrandRepository(ABC):
 
 class IProductCategoryRepository(ABC):
     @abstractmethod
-    async def get_by_id(self, category_id: UUID, tenant_id: TenantId) -> ProductCategory | None: ...
+    async def get_by_id(
+        self, category_id: UUID, tenant_id: TenantId
+    ) -> ProductCategory | None: ...
 
     @abstractmethod
     async def save(self, category: ProductCategory) -> None: ...
@@ -124,7 +121,9 @@ class IProductCategoryRepository(ABC):
 
 class IGlassTypeRepository(ABC):
     @abstractmethod
-    async def get_by_id(self, glass_type_id: UUID, tenant_id: TenantId) -> GlassType | None: ...
+    async def get_by_id(
+        self, glass_type_id: UUID, tenant_id: TenantId
+    ) -> GlassType | None: ...
 
     @abstractmethod
     async def save(self, glass_type: GlassType) -> None: ...
@@ -138,7 +137,9 @@ class IGlassTypeRepository(ABC):
 
 class IProductRepository(ABC):
     @abstractmethod
-    async def get_by_id(self, product_id: UUID, tenant_id: TenantId) -> Product | None: ...
+    async def get_by_id(
+        self, product_id: UUID, tenant_id: TenantId
+    ) -> Product | None: ...
 
     @abstractmethod
     async def save(self, product: Product) -> None: ...
@@ -172,7 +173,9 @@ class IQuoteRepository(ABC):
 
 class IWarrantyRepository(ABC):
     @abstractmethod
-    async def get_by_id(self, warranty_id: UUID, tenant_id: TenantId) -> Warranty | None: ...
+    async def get_by_id(
+        self, warranty_id: UUID, tenant_id: TenantId
+    ) -> Warranty | None: ...
 
     @abstractmethod
     async def save(self, warranty: Warranty) -> None: ...
@@ -181,10 +184,14 @@ class IWarrantyRepository(ABC):
     async def list_by_tenant(self, tenant_id: TenantId) -> list[Warranty]: ...
 
     @abstractmethod
-    async def list_by_user(self, user_id: UUID, tenant_id: TenantId) -> list[Warranty]: ...
+    async def list_by_user(
+        self, user_id: UUID, tenant_id: TenantId
+    ) -> list[Warranty]: ...
 
     @abstractmethod
-    async def list_by_quote(self, quote_id: UUID, tenant_id: TenantId) -> list[Warranty]: ...
+    async def list_by_quote(
+        self, quote_id: UUID, tenant_id: TenantId
+    ) -> list[Warranty]: ...
 
     @abstractmethod
     async def next_sequence(self, tenant_id: TenantId) -> int: ...

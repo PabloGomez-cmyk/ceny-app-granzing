@@ -1,6 +1,11 @@
-from centy.infrastructure.persistence.models.customer import CustomerLabelModel, CustomerModel
+from centy.infrastructure.persistence.models.customer import (
+    CustomerLabelModel,
+    CustomerModel,
+)
 from centy.infrastructure.persistence.models.email_config import UserEmailConfigModel
-from centy.infrastructure.persistence.models.password_reset import PasswordResetTokenModel
+from centy.infrastructure.persistence.models.password_reset import (
+    PasswordResetTokenModel,
+)
 from centy.infrastructure.persistence.models.product import (
     BrandModel,
     GlassTypeModel,
@@ -17,18 +22,18 @@ from centy.infrastructure.persistence.models.user import UserModel
 from centy.infrastructure.persistence.models.warranty import WarrantyModel
 
 __all__ = [
-    "UserModel",
-    "UserEmailConfigModel",
-    "PasswordResetTokenModel",
+    "BrandModel",
     "CustomerLabelModel",
     "CustomerModel",
-    "BrandModel",
-    "ProductCategoryModel",
-    "GlassTypeModel",
-    "ProductModel",
-    "ProductGlassTypeModel",
-    "QuoteModel",
     "GlassPaneModel",
+    "GlassTypeModel",
+    "PasswordResetTokenModel",
+    "ProductCategoryModel",
+    "ProductGlassTypeModel",
+    "ProductModel",
     "QuoteLineModel",
+    "QuoteModel",
+    "UserEmailConfigModel",
+    "UserModel",
     "WarrantyModel",
 ]

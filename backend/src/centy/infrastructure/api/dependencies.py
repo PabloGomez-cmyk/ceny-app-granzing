@@ -5,35 +5,17 @@ from pathlib import Path
 import redis.asyncio as aioredis
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from centy.application.auth.handlers import LoginHandler, LogoutHandler, RefreshTokenHandler
+from centy.application.auth.handlers import (
+    LoginHandler,
+    LogoutHandler,
+    RefreshTokenHandler,
+)
 from centy.application.auth.password_reset_handlers import (
     ForgotPasswordHandler,
     ResetPasswordHandler,
     ValidateResetTokenHandler,
-)
-from centy.application.email.handlers import (
-    ConnectGmailHandler,
-    DisconnectGmailHandler,
-    GetGmailAuthUrlHandler,
-    GetGmailStatusHandler,
-    SendQuoteEmailHandler,
-)
-from centy.application.warranties.handlers import (
-    GenerateWarrantiesHandler,
-    GetWarrantyHandler,
-    ListWarrantiesByQuoteHandler,
-    ListWarrantiesHandler,
-    SendWarrantiesEmailHandler,
-)
-from centy.application.quotes.handlers import (
-    CreateQuoteHandler,
-    DeleteQuoteHandler,
-    GetQuoteHandler,
-    GetQuoteStatsHandler,
-    ListQuotesHandler,
-    UpdateQuoteHandler,
-    UpdateQuoteStatusHandler,
 )
 from centy.application.catalog.handlers import (
     CreateBrandHandler,
@@ -68,9 +50,25 @@ from centy.application.customers.handlers import (
     UpdateCustomerHandler,
     UpdateCustomerLabelHandler,
 )
+from centy.application.email.handlers import (
+    ConnectGmailHandler,
+    DisconnectGmailHandler,
+    GetGmailAuthUrlHandler,
+    GetGmailStatusHandler,
+    SendQuoteEmailHandler,
+)
 from centy.application.ports.auth import IPasswordHasher, ITokenService
 from centy.application.ports.cache import ICacheService
 from centy.application.ports.storage import IObjectStorage
+from centy.application.quotes.handlers import (
+    CreateQuoteHandler,
+    DeleteQuoteHandler,
+    GetQuoteHandler,
+    GetQuoteStatsHandler,
+    ListQuotesHandler,
+    UpdateQuoteHandler,
+    UpdateQuoteStatusHandler,
+)
 from centy.application.users.handlers import (
     AssignRoleHandler,
     CreateUserHandler,
@@ -79,17 +77,30 @@ from centy.application.users.handlers import (
     ListUsersHandler,
     UpdateUserHandler,
 )
+from centy.application.warranties.handlers import (
+    GenerateWarrantiesHandler,
+    GetWarrantyHandler,
+    ListWarrantiesByQuoteHandler,
+    ListWarrantiesHandler,
+    SendWarrantiesEmailHandler,
+)
 from centy.domain.shared.exceptions import AuthorizationError
 from centy.infrastructure.auth.bcrypt_hasher import BcryptPasswordHasher
 from centy.infrastructure.auth.jwt_service import JwtTokenService
 from centy.infrastructure.cache.redis_cache import RedisCacheService
 from centy.infrastructure.config.settings import Settings, get_settings
-from sqlalchemy.ext.asyncio import AsyncSession
-
+from centy.infrastructure.email.gmail_oauth_sender import GmailOAuthSender
+from centy.infrastructure.email.gmail_oauth_service import GmailOAuthService
 from centy.infrastructure.persistence.database import get_session, get_session_factory
 from centy.infrastructure.persistence.repositories.customer_repo import (
     SQLAlchemyCustomerLabelRepository,
     SQLAlchemyCustomerRepository,
+)
+from centy.infrastructure.persistence.repositories.email_config_repo import (
+    SQLAlchemyEmailConfigRepository,
+)
+from centy.infrastructure.persistence.repositories.password_reset_repo import (
+    SQLAlchemyPasswordResetTokenRepository,
 )
 from centy.infrastructure.persistence.repositories.product_repo import (
     SQLAlchemyBrandRepository,
@@ -107,17 +118,6 @@ from centy.infrastructure.persistence.repositories.warranty_repo import (
     SQLAlchemyWarrantyRepository,
 )
 from centy.infrastructure.persistence.unit_of_work import SQLAlchemyUnitOfWork
-from centy.infrastructure.email.gmail_oauth_sender import GmailOAuthSender
-from centy.infrastructure.email.gmail_oauth_service import GmailOAuthService
-from centy.infrastructure.persistence.repositories.email_config_repo import (
-    SQLAlchemyEmailConfigRepository,
-)
-from centy.infrastructure.persistence.repositories.quote_repo import (
-    SQLAlchemyQuoteRepository,
-)
-from centy.infrastructure.persistence.repositories.password_reset_repo import (
-    SQLAlchemyPasswordResetTokenRepository,
-)
 from centy.infrastructure.storage.local_storage import LocalObjectStorage
 from centy.infrastructure.storage.r2_storage import R2ObjectStorage
 
@@ -133,6 +133,7 @@ class CurrentUser:
 
 
 # ── Singletons de infraestructura ─────────────────────────────────────────────
+
 
 @lru_cache
 def _get_password_hasher() -> IPasswordHasher:
@@ -192,6 +193,7 @@ def get_storage(settings: Settings = Depends(get_settings)) -> IObjectStorage:
 
 # ── Auth handlers ─────────────────────────────────────────────────────────────
 
+
 async def get_login_handler(
     settings: Settings = Depends(get_settings),
     cache: ICacheService = Depends(get_cache_service),
@@ -239,6 +241,7 @@ def get_logout_handler(
 
 # ── Users handlers ────────────────────────────────────────────────────────────
 
+
 def get_create_user_handler() -> CreateUserHandler:
     return CreateUserHandler(uow=get_uow(), hasher=BcryptPasswordHasher())
 
@@ -269,6 +272,7 @@ def get_update_user_handler() -> UpdateUserHandler:
 
 # ── Customers handlers ────────────────────────────────────────────────────────
 
+
 def get_create_customer_handler() -> CreateCustomerHandler:
     return CreateCustomerHandler(uow=get_uow())
 
@@ -295,6 +299,7 @@ def get_deactivate_customer_handler() -> DeactivateCustomerHandler:
 
 # ── CustomerLabel handlers ────────────────────────────────────────────────────
 
+
 def get_create_label_handler() -> CreateCustomerLabelHandler:
     return CreateCustomerLabelHandler(uow=get_uow())
 
@@ -314,6 +319,7 @@ def get_delete_label_handler() -> DeleteCustomerLabelHandler:
 
 
 # ── RBAC ─────────────────────────────────────────────────────────────────────
+
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(_bearer),
@@ -354,6 +360,7 @@ async def require_admin(
 
 # ── Brand handlers ────────────────────────────────────────────────────────────
 
+
 def get_create_brand_handler() -> CreateBrandHandler:
     return CreateBrandHandler(uow=get_uow())
 
@@ -379,6 +386,7 @@ def get_delete_brand_handler() -> DeleteBrandHandler:
 
 
 # ── Category handlers ─────────────────────────────────────────────────────────
+
 
 def get_create_category_handler() -> CreateCategoryHandler:
     return CreateCategoryHandler(uow=get_uow())
@@ -406,6 +414,7 @@ def get_delete_category_handler() -> DeleteCategoryHandler:
 
 # ── GlassType handlers ────────────────────────────────────────────────────────
 
+
 def get_create_glass_type_handler() -> CreateGlassTypeHandler:
     return CreateGlassTypeHandler(uow=get_uow())
 
@@ -432,6 +441,7 @@ def get_delete_glass_type_handler() -> DeleteGlassTypeHandler:
 
 # ── Product handlers ──────────────────────────────────────────────────────────
 
+
 def get_create_product_handler() -> CreateProductHandler:
     return CreateProductHandler(uow=get_uow())
 
@@ -457,6 +467,7 @@ def get_delete_product_handler() -> DeleteProductHandler:
 
 
 # ── Quote handlers ────────────────────────────────────────────────────────────
+
 
 def get_create_quote_handler() -> CreateQuoteHandler:
     return CreateQuoteHandler(uow=get_uow())
@@ -494,6 +505,7 @@ async def get_quote_stats_handler(
 
 # ── Warranty handlers ─────────────────────────────────────────────────────────
 
+
 def get_generate_warranties_handler() -> GenerateWarrantiesHandler:
     return GenerateWarrantiesHandler(uow=get_uow())
 
@@ -518,7 +530,10 @@ async def get_warranty_handler(
 
 # ── Gmail / Email handlers ────────────────────────────────────────────────────
 
-def _get_gmail_oauth_service(settings: Settings = Depends(get_settings)) -> GmailOAuthService:
+
+def _get_gmail_oauth_service(
+    settings: Settings = Depends(get_settings),
+) -> GmailOAuthService:
     return GmailOAuthService(
         client_id=settings.gmail_oauth_client_id,
         client_secret=settings.gmail_oauth_client_secret,
@@ -536,6 +551,7 @@ def _get_email_encryption_key(settings: Settings = Depends(get_settings)) -> byt
     key = settings.gmail_token_encryption_key
     if not key:
         from cryptography.fernet import Fernet
+
         key = Fernet.generate_key().decode()
     return key.encode()
 
@@ -544,16 +560,16 @@ async def get_gmail_status_handler(
     session: AsyncSession = Depends(get_session),
     enc_key: bytes = Depends(_get_email_encryption_key),
 ) -> GetGmailStatusHandler:
-    return GetGmailStatusHandler(
-        repo=SQLAlchemyEmailConfigRepository(session, enc_key)
-    )
+    return GetGmailStatusHandler(repo=SQLAlchemyEmailConfigRepository(session, enc_key))
 
 
 async def get_gmail_auth_url_handler(
     settings: Settings = Depends(get_settings),
 ) -> GetGmailAuthUrlHandler:
     return GetGmailAuthUrlHandler(
-        oauth=GmailOAuthService(settings.gmail_oauth_client_id, settings.gmail_oauth_client_secret)
+        oauth=GmailOAuthService(
+            settings.gmail_oauth_client_id, settings.gmail_oauth_client_secret
+        )
     )
 
 
@@ -563,7 +579,9 @@ async def get_connect_gmail_handler(
     enc_key: bytes = Depends(_get_email_encryption_key),
 ) -> ConnectGmailHandler:
     return ConnectGmailHandler(
-        oauth=GmailOAuthService(settings.gmail_oauth_client_id, settings.gmail_oauth_client_secret),
+        oauth=GmailOAuthService(
+            settings.gmail_oauth_client_id, settings.gmail_oauth_client_secret
+        ),
         repo=SQLAlchemyEmailConfigRepository(session, enc_key),
     )
 
@@ -582,11 +600,15 @@ async def get_send_quote_email_handler(
     settings: Settings = Depends(get_settings),
     enc_key: bytes = Depends(_get_email_encryption_key),
 ) -> SendQuoteEmailHandler:
-    oauth = GmailOAuthService(settings.gmail_oauth_client_id, settings.gmail_oauth_client_secret)
+    oauth = GmailOAuthService(
+        settings.gmail_oauth_client_id, settings.gmail_oauth_client_secret
+    )
     return SendQuoteEmailHandler(
         oauth=oauth,
         email_config_repo=SQLAlchemyEmailConfigRepository(session, enc_key),
-        sender=GmailOAuthSender(settings.gmail_oauth_client_id, settings.gmail_oauth_client_secret),
+        sender=GmailOAuthSender(
+            settings.gmail_oauth_client_id, settings.gmail_oauth_client_secret
+        ),
         quote_repo=SQLAlchemyQuoteRepository(session),
         user_repo=SQLAlchemyUserRepository(session),
     )
@@ -597,11 +619,15 @@ async def get_send_warranties_email_handler(
     settings: Settings = Depends(get_settings),
     enc_key: bytes = Depends(_get_email_encryption_key),
 ) -> SendWarrantiesEmailHandler:
-    oauth = GmailOAuthService(settings.gmail_oauth_client_id, settings.gmail_oauth_client_secret)
+    oauth = GmailOAuthService(
+        settings.gmail_oauth_client_id, settings.gmail_oauth_client_secret
+    )
     return SendWarrantiesEmailHandler(
         oauth=oauth,
         email_config_repo=SQLAlchemyEmailConfigRepository(session, enc_key),
-        sender=GmailOAuthSender(settings.gmail_oauth_client_id, settings.gmail_oauth_client_secret),
+        sender=GmailOAuthSender(
+            settings.gmail_oauth_client_id, settings.gmail_oauth_client_secret
+        ),
         quote_repo=SQLAlchemyQuoteRepository(session),
         warranty_repo=SQLAlchemyWarrantyRepository(session),
         user_repo=SQLAlchemyUserRepository(session),
@@ -613,13 +639,17 @@ async def get_forgot_password_handler(
     settings: Settings = Depends(get_settings),
     enc_key: bytes = Depends(_get_email_encryption_key),
 ) -> ForgotPasswordHandler:
-    oauth = GmailOAuthService(settings.gmail_oauth_client_id, settings.gmail_oauth_client_secret)
+    oauth = GmailOAuthService(
+        settings.gmail_oauth_client_id, settings.gmail_oauth_client_secret
+    )
     return ForgotPasswordHandler(
         user_repo=SQLAlchemyUserRepository(session),
         token_repo=SQLAlchemyPasswordResetTokenRepository(session),
         email_config_repo=SQLAlchemyEmailConfigRepository(session, enc_key),
         oauth=oauth,
-        sender=GmailOAuthSender(settings.gmail_oauth_client_id, settings.gmail_oauth_client_secret),
+        sender=GmailOAuthSender(
+            settings.gmail_oauth_client_id, settings.gmail_oauth_client_secret
+        ),
     )
 
 

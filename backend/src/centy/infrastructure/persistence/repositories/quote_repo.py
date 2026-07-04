@@ -55,8 +55,10 @@ def _quote_to_domain(
         customer_snapshot=q.customer_snapshot,
         status=QuoteStatus(q.status),
         film_mode=FilmMode(q.film_mode),
-        glass_panes=[_pane_to_domain(p) for p in sorted(panes, key=lambda x: x.sort_order)],
-        lines=[_line_to_domain(l) for l in lines],
+        glass_panes=[
+            _pane_to_domain(p) for p in sorted(panes, key=lambda x: x.sort_order)
+        ],
+        lines=[_line_to_domain(line) for line in lines],
         height_surcharge_pct=Decimal(str(q.height_surcharge_pct)),
         travel_cost=Decimal(str(q.travel_cost)),
         discount_pct=Decimal(str(q.discount_pct)),
@@ -118,7 +120,9 @@ class SQLAlchemyQuoteRepository(IQuoteRepository):
                     GlassPaneModel(
                         quote_id=str(quote.id),
                         pane_id=pane.pane_id,
-                        glass_type_id=str(pane.glass_type_id) if pane.glass_type_id else None,
+                        glass_type_id=str(pane.glass_type_id)
+                        if pane.glass_type_id
+                        else None,
                         glass_type_name=pane.glass_type_name,
                         width_cm=float(pane.width_cm),
                         height_cm=float(pane.height_cm),
@@ -170,7 +174,9 @@ class SQLAlchemyQuoteRepository(IQuoteRepository):
                     GlassPaneModel(
                         quote_id=str(quote.id),
                         pane_id=pane.pane_id,
-                        glass_type_id=str(pane.glass_type_id) if pane.glass_type_id else None,
+                        glass_type_id=str(pane.glass_type_id)
+                        if pane.glass_type_id
+                        else None,
                         glass_type_name=pane.glass_type_name,
                         width_cm=float(pane.width_cm),
                         height_cm=float(pane.height_cm),
@@ -222,7 +228,9 @@ class SQLAlchemyQuoteRepository(IQuoteRepository):
 
     async def next_sequence(self, tenant_id: TenantId, user_id: UUID) -> int:
         result = await self._session.execute(
-            select(func.count()).select_from(QuoteModel).where(
+            select(func.count())
+            .select_from(QuoteModel)
+            .where(
                 QuoteModel.tenant_id == str(tenant_id),
                 QuoteModel.created_by_user_id == str(user_id),
             )

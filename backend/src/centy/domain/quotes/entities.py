@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from decimal import Decimal
+from typing import Any
 from uuid import UUID, uuid4
 
 from centy.domain.quotes.value_objects import FilmMode, LocationType, QuoteStatus
@@ -33,11 +34,13 @@ class QuoteLine:
 
     line_id: UUID = field(default_factory=uuid4)
     product_id: UUID
-    product_snapshot: dict  # {name, brand_name, brand_color, price_per_m2, uv_pct, irr_pct}
+    product_snapshot: dict[
+        str, Any
+    ]  # {name, brand_name, brand_color, price_per_m2, uv_pct, irr_pct}
     glass_pane_ids: list[str]
     price_per_m2: Decimal
     surface_m2: Decimal
-    subtotal: Decimal  # price_per_m2 × surface_m2
+    subtotal: Decimal  # price_per_m2 x surface_m2
 
 
 @dataclass(kw_only=True)
@@ -48,7 +51,7 @@ class Quote(Entity):
     created_by_user_id: UUID
     quote_number: str
     customer_id: UUID | None = None
-    customer_snapshot: dict | None = None
+    customer_snapshot: dict[str, Any] | None = None
     status: QuoteStatus = QuoteStatus.DRAFT
     film_mode: FilmMode = FilmMode.SINGLE
     glass_panes: list[GlassPane] = field(default_factory=list)
@@ -59,7 +62,7 @@ class Quote(Entity):
     tax_pct: Decimal = Decimal("0")
     gap_cm: Decimal = Decimal("3")
     commercial_conditions: str = ""
-    cut_plan_snapshot: dict = field(default_factory=dict)
+    cut_plan_snapshot: dict[str, Any] = field(default_factory=dict)
     valid_until: str = ""
 
     @classmethod
@@ -70,7 +73,7 @@ class Quote(Entity):
         created_by_user_id: UUID,
         quote_number: str,
         customer_id: UUID | None,
-        customer_snapshot: dict | None,
+        customer_snapshot: dict[str, Any] | None,
         film_mode: FilmMode,
         glass_panes: list[GlassPane],
         lines: list[QuoteLine],
@@ -80,17 +83,25 @@ class Quote(Entity):
         tax_pct: Decimal,
         gap_cm: Decimal = Decimal("3"),
         commercial_conditions: str,
-        cut_plan_snapshot: dict,
+        cut_plan_snapshot: dict[str, Any],
         valid_until: str,
     ) -> "Quote":
         if not glass_panes:
-            raise BusinessRuleViolationError("El presupuesto debe tener al menos un vidrio")
+            raise BusinessRuleViolationError(
+                "El presupuesto debe tener al menos un vidrio"
+            )
         if not lines:
-            raise BusinessRuleViolationError("El presupuesto debe tener al menos una lámina asignada")
+            raise BusinessRuleViolationError(
+                "El presupuesto debe tener al menos una lámina asignada"
+            )
         if discount_pct < -50 or discount_pct > 50:
-            raise BusinessRuleViolationError("El descuento/recargo debe estar entre -50% y +50%")
+            raise BusinessRuleViolationError(
+                "El descuento/recargo debe estar entre -50% y +50%"
+            )
         if gap_cm < 0:
-            raise BusinessRuleViolationError("El espacio entre vidrios no puede ser negativo")
+            raise BusinessRuleViolationError(
+                "El espacio entre vidrios no puede ser negativo"
+            )
         return cls(
             tenant_id=tenant_id,
             created_by_user_id=created_by_user_id,
@@ -116,27 +127,37 @@ class Quote(Entity):
 
     def submit(self) -> None:
         if self.status != QuoteStatus.DRAFT:
-            raise BusinessRuleViolationError("Solo se pueden enviar presupuestos en estado DRAFT")
+            raise BusinessRuleViolationError(
+                "Solo se pueden enviar presupuestos en estado DRAFT"
+            )
         self.status = QuoteStatus.SENT
 
     def accept(self) -> None:
         if self.status != QuoteStatus.SENT:
-            raise BusinessRuleViolationError("Solo se pueden aceptar presupuestos enviados")
+            raise BusinessRuleViolationError(
+                "Solo se pueden aceptar presupuestos enviados"
+            )
         self.status = QuoteStatus.ACCEPTED
 
     def invoice(self) -> None:
         if self.status != QuoteStatus.ACCEPTED:
-            raise BusinessRuleViolationError("Solo se pueden facturar presupuestos aceptados")
+            raise BusinessRuleViolationError(
+                "Solo se pueden facturar presupuestos aceptados"
+            )
         self.status = QuoteStatus.INVOICED
 
     def complete(self) -> None:
         if self.status != QuoteStatus.INVOICED:
-            raise BusinessRuleViolationError("Solo se pueden terminar presupuestos facturados")
+            raise BusinessRuleViolationError(
+                "Solo se pueden terminar presupuestos facturados"
+            )
         self.status = QuoteStatus.COMPLETED
 
     def cancel(self) -> None:
         if self.status in (QuoteStatus.INVOICED, QuoteStatus.COMPLETED):
-            raise BusinessRuleViolationError("No se puede cancelar un presupuesto facturado o terminado")
+            raise BusinessRuleViolationError(
+                "No se puede cancelar un presupuesto facturado o terminado"
+            )
         if self.status == QuoteStatus.CANCELLED:
             raise BusinessRuleViolationError("El presupuesto ya está cancelado")
         self.status = QuoteStatus.CANCELLED

@@ -1,11 +1,15 @@
 import uuid
-from datetime import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr
 
-from centy.application.users.commands import AssignRoleCommand, CreateUserCommand, DeactivateUserCommand, UpdateUserCommand
+from centy.application.users.commands import (
+    AssignRoleCommand,
+    CreateUserCommand,
+    DeactivateUserCommand,
+    UpdateUserCommand,
+)
 from centy.application.users.handlers import (
     AssignRoleHandler,
     CreateUserHandler,
@@ -99,11 +103,20 @@ async def list_users(
     )
     return [
         UserResponse(
-            id=str(r.user_id), email=r.email, full_name=r.full_name, role=r.role,
-            is_active=r.is_active, company_name=r.company_name, company_logo_url=r.company_logo_url,
-            company_street=r.company_street, company_city=r.company_city, company_province=r.company_province,
-            company_postal_code=r.company_postal_code, company_cuit=r.company_cuit,
-            company_color_primary=r.company_color_primary, company_color_secondary=r.company_color_secondary,
+            id=str(r.user_id),
+            email=r.email,
+            full_name=r.full_name,
+            role=r.role,
+            is_active=r.is_active,
+            company_name=r.company_name,
+            company_logo_url=r.company_logo_url,
+            company_street=r.company_street,
+            company_city=r.company_city,
+            company_province=r.company_province,
+            company_postal_code=r.company_postal_code,
+            company_cuit=r.company_cuit,
+            company_color_primary=r.company_color_primary,
+            company_color_secondary=r.company_color_secondary,
             default_commercial_conditions=r.default_commercial_conditions,
         )
         for r in results
@@ -128,13 +141,21 @@ async def create_user(
             )
         )
     except ConflictError as exc:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail=str(exc)
+        ) from exc
     return UserResponse(
-        id=str(result.user_id), email=result.email, full_name=result.full_name,
-        role=result.role, is_active=result.is_active,
-        company_name=result.company_name, company_logo_url=result.company_logo_url,
-        company_street=result.company_street, company_city=result.company_city,
-        company_province=result.company_province, company_postal_code=result.company_postal_code,
+        id=str(result.user_id),
+        email=result.email,
+        full_name=result.full_name,
+        role=result.role,
+        is_active=result.is_active,
+        company_name=result.company_name,
+        company_logo_url=result.company_logo_url,
+        company_street=result.company_street,
+        company_city=result.company_city,
+        company_province=result.company_province,
+        company_postal_code=result.company_postal_code,
         company_cuit=result.company_cuit,
         company_color_primary=result.company_color_primary,
         company_color_secondary=result.company_color_secondary,
@@ -151,19 +172,31 @@ async def get_user(
     settings = get_settings()
     # El operativo solo puede ver su propio perfil; admin ve cualquiera
     if current_user.role != "ADMIN" and current_user.user_id != str(user_id):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado"
+        )
     try:
         result = await handler.handle(
-            GetUserByIdQuery(user_id=user_id, tenant_id=_resolve_tenant(settings.tenant_id_default))
+            GetUserByIdQuery(
+                user_id=user_id, tenant_id=_resolve_tenant(settings.tenant_id_default)
+            )
         )
     except NotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)
+        ) from exc
     return UserResponse(
-        id=str(result.user_id), email=result.email, full_name=result.full_name,
-        role=result.role, is_active=result.is_active,
-        company_name=result.company_name, company_logo_url=result.company_logo_url,
-        company_street=result.company_street, company_city=result.company_city,
-        company_province=result.company_province, company_postal_code=result.company_postal_code,
+        id=str(result.user_id),
+        email=result.email,
+        full_name=result.full_name,
+        role=result.role,
+        is_active=result.is_active,
+        company_name=result.company_name,
+        company_logo_url=result.company_logo_url,
+        company_street=result.company_street,
+        company_city=result.company_city,
+        company_province=result.company_province,
+        company_postal_code=result.company_postal_code,
         company_cuit=result.company_cuit,
         company_color_primary=result.company_color_primary,
         company_color_secondary=result.company_color_secondary,
@@ -180,7 +213,9 @@ async def update_user(
 ) -> UserResponse:
     settings = get_settings()
     if current_user.role != "ADMIN" and current_user.user_id != str(user_id):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado"
+        )
     # Operativos solo pueden cambiar su contraseña y datos de empresa
     if current_user.role != "ADMIN":
         body = UpdateUserRequest(
@@ -219,15 +254,25 @@ async def update_user(
             )
         )
     except NotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)
+        ) from exc
     except ConflictError as exc:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail=str(exc)
+        ) from exc
     return UserResponse(
-        id=str(result.user_id), email=result.email, full_name=result.full_name,
-        role=result.role, is_active=result.is_active,
-        company_name=result.company_name, company_logo_url=result.company_logo_url,
-        company_street=result.company_street, company_city=result.company_city,
-        company_province=result.company_province, company_postal_code=result.company_postal_code,
+        id=str(result.user_id),
+        email=result.email,
+        full_name=result.full_name,
+        role=result.role,
+        is_active=result.is_active,
+        company_name=result.company_name,
+        company_logo_url=result.company_logo_url,
+        company_street=result.company_street,
+        company_city=result.company_city,
+        company_province=result.company_province,
+        company_postal_code=result.company_postal_code,
         company_cuit=result.company_cuit,
         company_color_primary=result.company_color_primary,
         company_color_secondary=result.company_color_secondary,
@@ -244,10 +289,14 @@ async def deactivate_user(
     settings = get_settings()
     try:
         await handler.handle(
-            DeactivateUserCommand(user_id=user_id, tenant_id=_resolve_tenant(settings.tenant_id_default))
+            DeactivateUserCommand(
+                user_id=user_id, tenant_id=_resolve_tenant(settings.tenant_id_default)
+            )
         )
     except NotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)
+        ) from exc
 
 
 @router.patch("/{user_id}/role", response_model=UserResponse)
@@ -267,4 +316,6 @@ async def assign_role(
             )
         )
     except NotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)
+        ) from exc

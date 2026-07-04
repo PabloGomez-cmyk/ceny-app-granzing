@@ -3,10 +3,16 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from centy.application.ports.repositories import ICustomerLabelRepository, ICustomerRepository
+from centy.application.ports.repositories import (
+    ICustomerLabelRepository,
+    ICustomerRepository,
+)
 from centy.domain.customers.entities import Customer, CustomerLabel
 from centy.domain.shared.value_objects import Email, TenantId
-from centy.infrastructure.persistence.models.customer import CustomerLabelModel, CustomerModel
+from centy.infrastructure.persistence.models.customer import (
+    CustomerLabelModel,
+    CustomerModel,
+)
 
 
 def _label_to_domain(m: CustomerLabelModel) -> CustomerLabel:
@@ -77,7 +83,9 @@ class SQLAlchemyCustomerLabelRepository(ICustomerLabelRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def get_by_id(self, label_id: UUID, tenant_id: TenantId) -> CustomerLabel | None:
+    async def get_by_id(
+        self, label_id: UUID, tenant_id: TenantId
+    ) -> CustomerLabel | None:
         result = await self._session.execute(
             select(CustomerLabelModel).where(
                 CustomerLabelModel.id == str(label_id),
@@ -96,7 +104,9 @@ class SQLAlchemyCustomerLabelRepository(ICustomerLabelRepository):
             existing.color = label.color
             existing.is_active = label.is_active
 
-    async def list_by_owner(self, owner_user_id: UUID, tenant_id: TenantId) -> list[CustomerLabel]:
+    async def list_by_owner(
+        self, owner_user_id: UUID, tenant_id: TenantId
+    ) -> list[CustomerLabel]:
         result = await self._session.execute(
             select(CustomerLabelModel)
             .where(
@@ -117,7 +127,9 @@ class SQLAlchemyCustomerRepository(ICustomerRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def get_by_id(self, customer_id: UUID, tenant_id: TenantId) -> Customer | None:
+    async def get_by_id(
+        self, customer_id: UUID, tenant_id: TenantId
+    ) -> Customer | None:
         result = await self._session.execute(
             select(CustomerModel).where(
                 CustomerModel.id == str(customer_id),
@@ -144,7 +156,9 @@ class SQLAlchemyCustomerRepository(ICustomerRepository):
             existing.notes = customer.notes
             existing.is_active = customer.is_active
 
-    async def list_by_owner(self, owner_user_id: UUID, tenant_id: TenantId) -> list[Customer]:
+    async def list_by_owner(
+        self, owner_user_id: UUID, tenant_id: TenantId
+    ) -> list[Customer]:
         result = await self._session.execute(
             select(CustomerModel)
             .where(

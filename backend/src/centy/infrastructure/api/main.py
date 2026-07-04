@@ -1,6 +1,6 @@
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import AsyncGenerator
 
 import sentry_sdk
 import structlog
@@ -29,8 +29,9 @@ from centy.infrastructure.persistence.models import (  # noqa: F401
     BrandModel,
     CustomerLabelModel,
     CustomerModel,
-    GlassTypeModel,
     GlassPaneModel,
+    GlassTypeModel,
+    PasswordResetTokenModel,
     ProductCategoryModel,
     ProductGlassTypeModel,
     ProductModel,
@@ -38,7 +39,6 @@ from centy.infrastructure.persistence.models import (  # noqa: F401
     QuoteModel,
     UserEmailConfigModel,
     UserModel,
-    PasswordResetTokenModel,
     WarrantyModel,
 )
 
@@ -79,28 +79,48 @@ def create_app() -> FastAPI:
 
     @app.exception_handler(NotFoundError)
     async def not_found_handler(request: Request, exc: NotFoundError) -> JSONResponse:
-        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"detail": str(exc)})
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND, content={"detail": str(exc)}
+        )
 
     @app.exception_handler(ConflictError)
     async def conflict_handler(request: Request, exc: ConflictError) -> JSONResponse:
-        return JSONResponse(status_code=status.HTTP_409_CONFLICT, content={"detail": str(exc)})
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT, content={"detail": str(exc)}
+        )
 
     @app.exception_handler(AuthorizationError)
-    async def auth_error_handler(request: Request, exc: AuthorizationError) -> JSONResponse:
-        return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"detail": str(exc)})
+    async def auth_error_handler(
+        request: Request, exc: AuthorizationError
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED, content={"detail": str(exc)}
+        )
 
     @app.exception_handler(ValidationError)
-    async def validation_handler(request: Request, exc: ValidationError) -> JSONResponse:
-        return JSONResponse(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content={"detail": str(exc)})
+    async def validation_handler(
+        request: Request, exc: ValidationError
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            content={"detail": str(exc)},
+        )
 
     @app.exception_handler(BusinessRuleViolationError)
-    async def business_rule_handler(request: Request, exc: BusinessRuleViolationError) -> JSONResponse:
-        return JSONResponse(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content={"detail": str(exc)})
+    async def business_rule_handler(
+        request: Request, exc: BusinessRuleViolationError
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            content={"detail": str(exc)},
+        )
 
     @app.exception_handler(DomainError)
     async def domain_error_handler(request: Request, exc: DomainError) -> JSONResponse:
         log.warning("domain_error_no_manejado", error=str(exc))
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"detail": str(exc)})
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST, content={"detail": str(exc)}
+        )
 
     # ── Routers ───────────────────────────────────────────────────────────────
 

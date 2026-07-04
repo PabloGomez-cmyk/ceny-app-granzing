@@ -1,12 +1,21 @@
 import secrets
 import uuid as _uuid_mod
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from centy.application.ports.auth import IPasswordHasher
-from centy.application.ports.email import EmailMessage, IEmailConfigRepository, IEmailSender, IGmailOAuthService
-from centy.application.ports.repositories import IPasswordResetTokenRepository, IUserRepository, PasswordResetToken
+from centy.application.ports.email import (
+    EmailMessage,
+    IEmailConfigRepository,
+    IEmailSender,
+    IGmailOAuthService,
+)
+from centy.application.ports.repositories import (
+    IPasswordResetTokenRepository,
+    IUserRepository,
+    PasswordResetToken,
+)
 from centy.domain.shared.exceptions import BusinessRuleViolationError, NotFoundError
 from centy.domain.shared.value_objects import Email, TenantId
 from centy.domain.users.value_objects import HashedPassword
@@ -50,7 +59,8 @@ class ForgotPasswordHandler:
 
     async def handle(self, cmd: ForgotPasswordCommand) -> None:
         tenant_uuid: UUID = (
-            UUID(cmd.tenant_id) if _is_uuid(cmd.tenant_id)
+            UUID(cmd.tenant_id)
+            if _is_uuid(cmd.tenant_id)
             else _uuid_mod.uuid5(_uuid_mod.NAMESPACE_DNS, cmd.tenant_id)
         )
         tenant_id = TenantId(tenant_uuid)
@@ -62,7 +72,7 @@ class ForgotPasswordHandler:
             return
 
         token_str = secrets.token_urlsafe(48)
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         token = PasswordResetToken(
             token=token_str,
             user_id=user.id,
@@ -76,7 +86,9 @@ class ForgotPasswordHandler:
         # Primero intentar con el Gmail del admin; si no tiene, usar cualquier Gmail del tenant
         admin_config = await self._email_config_repo.get_admin_config(tenant_id_str)
         if admin_config is None:
-            admin_config = await self._email_config_repo.get_any_for_tenant(tenant_id_str)
+            admin_config = await self._email_config_repo.get_any_for_tenant(
+                tenant_id_str
+            )
         if admin_config is None:
             # Ningún usuario del tenant tiene Gmail configurado — imposible enviar
             return
@@ -85,7 +97,9 @@ class ForgotPasswordHandler:
         if fresh_config.access_token != admin_config.access_token:
             await self._email_config_repo.save(fresh_config)
 
-        reset_url = f"{cmd.frontend_base_url.rstrip('/')}/reset-password?token={token_str}"
+        reset_url = (
+            f"{cmd.frontend_base_url.rstrip('/')}/reset-password?token={token_str}"
+        )
         html_body = _build_reset_email_html(
             user_name=user.full_name,
             reset_url=reset_url,
@@ -96,7 +110,7 @@ class ForgotPasswordHandler:
             config=fresh_config,
             message=EmailMessage(
                 to=cmd.email,
-                subject="Recuperación de contraseña – Glazing Platform",
+                subject="Recuperación de contraseña - Glazing Platform",
                 html_body=html_body,
                 from_name=user.company_name or "Glazing Platform",
             ),
@@ -104,7 +118,9 @@ class ForgotPasswordHandler:
 
 
 class ValidateResetTokenHandler:
-    def __init__(self, token_repo: IPasswordResetTokenRepository, user_repo: IUserRepository) -> None:
+    def __init__(
+        self, token_repo: IPasswordResetTokenRepository, user_repo: IUserRepository
+    ) -> None:
         self._token_repo = token_repo
         self._user_repo = user_repo
 
@@ -115,8 +131,8 @@ class ValidateResetTokenHandler:
 
         expires_at = token.expires_at
         if expires_at.tzinfo is None:
-            expires_at = expires_at.replace(tzinfo=timezone.utc)
-        if expires_at < datetime.now(tz=timezone.utc):
+            expires_at = expires_at.replace(tzinfo=UTC)
+        if expires_at < datetime.now(tz=UTC):
             return ValidateResetTokenResult(valid=False)
 
         tid = TenantId(UUID(token.tenant_id))
@@ -139,16 +155,20 @@ class ResetPasswordHandler:
     async def handle(self, cmd: ResetPasswordCommand) -> None:
         token = await self._token_repo.get(cmd.token)
         if token is None or token.used_at is not None:
-            raise BusinessRuleViolationError("El enlace es inválido o ya fue utilizado.")
+            raise BusinessRuleViolationError(
+                "El enlace es inválido o ya fue utilizado."
+            )
 
         expires_at = token.expires_at
         if expires_at.tzinfo is None:
-            expires_at = expires_at.replace(tzinfo=timezone.utc)
-        if expires_at < datetime.now(tz=timezone.utc):
+            expires_at = expires_at.replace(tzinfo=UTC)
+        if expires_at < datetime.now(tz=UTC):
             raise BusinessRuleViolationError("El enlace expiró. Solicitá uno nuevo.")
 
         if len(cmd.new_password) < 8:
-            raise BusinessRuleViolationError("La contraseña debe tener al menos 8 caracteres.")
+            raise BusinessRuleViolationError(
+                "La contraseña debe tener al menos 8 caracteres."
+            )
 
         tenant_id = TenantId(UUID(token.tenant_id))
         user = await self._user_repo.get_by_id(token.user_id, tenant_id)
@@ -197,7 +217,7 @@ def _build_reset_email_html(user_name: str, reset_url: str, ttl_hours: int) -> s
           Restablecer contraseña →
         </a>
         <p style="margin:24px 0 0;font-size:12px;color:#94a3b8">
-          Este enlace expira en {ttl_hours} hora{'s' if ttl_hours != 1 else ''}.
+          Este enlace expira en {ttl_hours} hora{"s" if ttl_hours != 1 else ""}.
           Si no solicitaste este cambio, podés ignorar este mensaje.
         </p>
       </td>

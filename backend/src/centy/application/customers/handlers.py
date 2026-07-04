@@ -14,7 +14,10 @@ from centy.application.customers.queries import (
     ListCustomerLabelsQuery,
     ListCustomersQuery,
 )
-from centy.application.ports.repositories import ICustomerLabelRepository, ICustomerRepository
+from centy.application.ports.repositories import (
+    ICustomerLabelRepository,
+    ICustomerRepository,
+)
 from centy.application.ports.unit_of_work import IUnitOfWork
 from centy.domain.customers.entities import Customer, CustomerLabel
 from centy.domain.shared.exceptions import AuthorizationError, NotFoundError
@@ -76,12 +79,15 @@ def _customer_result(c: Customer) -> CustomerResult:
     )
 
 
-def _assert_can_access_customer(customer: Customer, requester_user_id: UUID, requester_role: str) -> None:
+def _assert_can_access_customer(
+    customer: Customer, requester_user_id: UUID, requester_role: str
+) -> None:
     if customer.owner_user_id != requester_user_id:
         raise AuthorizationError("No tenés permiso para acceder a este cliente")
 
 
 # ── Customer handlers ─────────────────────────────────────────────────────────
+
 
 class CreateCustomerHandler:
     def __init__(self, uow: IUnitOfWork) -> None:
@@ -116,7 +122,9 @@ class GetCustomerHandler:
         customer = await self._repo.get_by_id(query.customer_id, query.tenant_id)
         if customer is None:
             raise NotFoundError(f"Cliente {query.customer_id} no encontrado")
-        _assert_can_access_customer(customer, query.requester_user_id, query.requester_role)
+        _assert_can_access_customer(
+            customer, query.requester_user_id, query.requester_role
+        )
         return _customer_result(customer)
 
 
@@ -125,7 +133,9 @@ class ListCustomersHandler:
         self._repo = repo
 
     async def handle(self, query: ListCustomersQuery) -> list[CustomerResult]:
-        customers = await self._repo.list_by_owner(query.requester_user_id, query.tenant_id)
+        customers = await self._repo.list_by_owner(
+            query.requester_user_id, query.tenant_id
+        )
         return [_customer_result(c) for c in customers]
 
 
@@ -135,10 +145,14 @@ class UpdateCustomerHandler:
 
     async def handle(self, command: UpdateCustomerCommand) -> CustomerResult:
         async with self._uow as uow:
-            customer = await uow.customers.get_by_id(command.customer_id, command.tenant_id)
+            customer = await uow.customers.get_by_id(
+                command.customer_id, command.tenant_id
+            )
             if customer is None:
                 raise NotFoundError(f"Cliente {command.customer_id} no encontrado")
-            _assert_can_access_customer(customer, command.requester_user_id, command.requester_role)
+            _assert_can_access_customer(
+                customer, command.requester_user_id, command.requester_role
+            )
             if command.is_active is not None:
                 if command.is_active and not customer.is_active:
                     customer.reactivate()
@@ -168,16 +182,21 @@ class DeactivateCustomerHandler:
 
     async def handle(self, command: DeactivateCustomerCommand) -> None:
         async with self._uow as uow:
-            customer = await uow.customers.get_by_id(command.customer_id, command.tenant_id)
+            customer = await uow.customers.get_by_id(
+                command.customer_id, command.tenant_id
+            )
             if customer is None:
                 raise NotFoundError(f"Cliente {command.customer_id} no encontrado")
-            _assert_can_access_customer(customer, command.requester_user_id, command.requester_role)
+            _assert_can_access_customer(
+                customer, command.requester_user_id, command.requester_role
+            )
             customer.deactivate()
             await uow.customers.save(customer)
             await uow.commit()
 
 
 # ── CustomerLabel handlers ────────────────────────────────────────────────────
+
 
 class CreateCustomerLabelHandler:
     def __init__(self, uow: IUnitOfWork) -> None:
@@ -211,11 +230,15 @@ class UpdateCustomerLabelHandler:
 
     async def handle(self, command: UpdateCustomerLabelCommand) -> CustomerLabelResult:
         async with self._uow as uow:
-            label = await uow.customer_labels.get_by_id(command.label_id, command.tenant_id)
+            label = await uow.customer_labels.get_by_id(
+                command.label_id, command.tenant_id
+            )
             if label is None:
                 raise NotFoundError(f"Etiqueta {command.label_id} no encontrada")
             if label.owner_user_id != command.owner_user_id:
-                raise AuthorizationError("No tenés permiso para modificar esta etiqueta")
+                raise AuthorizationError(
+                    "No tenés permiso para modificar esta etiqueta"
+                )
             if command.name is not None:
                 label.rename(command.name)
             if command.color is not None:
@@ -231,7 +254,9 @@ class DeleteCustomerLabelHandler:
 
     async def handle(self, command: DeleteCustomerLabelCommand) -> None:
         async with self._uow as uow:
-            label = await uow.customer_labels.get_by_id(command.label_id, command.tenant_id)
+            label = await uow.customer_labels.get_by_id(
+                command.label_id, command.tenant_id
+            )
             if label is None:
                 raise NotFoundError(f"Etiqueta {command.label_id} no encontrada")
             if label.owner_user_id != command.owner_user_id:

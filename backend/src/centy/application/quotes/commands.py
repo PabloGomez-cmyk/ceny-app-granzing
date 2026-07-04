@@ -1,5 +1,6 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from decimal import Decimal
+from typing import Any
 from uuid import UUID
 
 from centy.domain.quotes.value_objects import FilmMode, LocationType, QuoteStatus
@@ -22,7 +23,7 @@ class GlassPaneInput:
 @dataclass(frozen=True)
 class QuoteLineInput:
     product_id: UUID
-    product_snapshot: dict
+    product_snapshot: dict[str, Any]
     glass_pane_ids: list[str]
     price_per_m2: Decimal
     surface_m2: Decimal
@@ -34,7 +35,7 @@ class CreateQuoteCommand:
     tenant_id: TenantId
     created_by_user_id: UUID
     customer_id: UUID | None
-    customer_snapshot: dict | None
+    customer_snapshot: dict[str, Any] | None
     film_mode: FilmMode
     glass_panes: list[GlassPaneInput]
     lines: list[QuoteLineInput]
@@ -44,7 +45,7 @@ class CreateQuoteCommand:
     tax_pct: Decimal
     gap_cm: Decimal
     commercial_conditions: str
-    cut_plan_snapshot: dict
+    cut_plan_snapshot: dict[str, Any]
     valid_until: str
 
 
@@ -55,7 +56,7 @@ class UpdateQuoteCommand:
     requester_user_id: UUID
     requester_role: str
     customer_id: UUID | None
-    customer_snapshot: dict | None
+    customer_snapshot: dict[str, Any] | None
     film_mode: FilmMode
     glass_panes: list[GlassPaneInput]
     lines: list[QuoteLineInput]
@@ -65,7 +66,7 @@ class UpdateQuoteCommand:
     tax_pct: Decimal
     gap_cm: Decimal
     commercial_conditions: str
-    cut_plan_snapshot: dict
+    cut_plan_snapshot: dict[str, Any]
     valid_until: str
 
 

@@ -1,7 +1,8 @@
 """Tests para los use cases de CustomerLabel (CRUD de etiquetas)."""
 
-import pytest
 from uuid import uuid4
+
+import pytest
 
 from centy.application.customers.commands import (
     CreateCustomerLabelCommand,
@@ -19,8 +20,8 @@ from centy.domain.shared.exceptions import NotFoundError
 from centy.domain.shared.value_objects import TenantId
 from tests.conftest import FakeCustomerLabelRepository, FakeUnitOfWork
 
-
 # ── Fixtures ──────────────────────────────────────────────────────────────────
+
 
 @pytest.fixture
 def tenant_id() -> TenantId:
@@ -45,6 +46,7 @@ def uow(label_repo: FakeCustomerLabelRepository) -> FakeUnitOfWork:
 
 
 # ── CreateCustomerLabel ───────────────────────────────────────────────────────
+
 
 class TestCreateCustomerLabelHandler:
     async def test_crea_etiqueta_correctamente(
@@ -78,8 +80,11 @@ class TestCreateCustomerLabelHandler:
         assert uow.committed is True
 
     async def test_persiste_en_repositorio(
-        self, uow: FakeUnitOfWork, label_repo: FakeCustomerLabelRepository,
-        tenant_id: TenantId, owner_id: uuid4
+        self,
+        uow: FakeUnitOfWork,
+        label_repo: FakeCustomerLabelRepository,
+        tenant_id: TenantId,
+        owner_id: uuid4,
     ) -> None:
         handler = CreateCustomerLabelHandler(uow)
         result = await handler.handle(
@@ -97,10 +102,15 @@ class TestCreateCustomerLabelHandler:
 
 # ── UpdateCustomerLabel ───────────────────────────────────────────────────────
 
+
 class TestUpdateCustomerLabelHandler:
     async def _create_label(
-        self, uow: FakeUnitOfWork, tenant_id: TenantId, owner_id: uuid4,
-        name: str = "Original", color: str = "#10b981"
+        self,
+        uow: FakeUnitOfWork,
+        tenant_id: TenantId,
+        owner_id: uuid4,
+        name: str = "Original",
+        color: str = "#10b981",
     ):  # type: ignore[return]
         handler = CreateCustomerLabelHandler(uow)
         uow.committed = False
@@ -182,14 +192,21 @@ class TestUpdateCustomerLabelHandler:
 
 # ── DeleteCustomerLabel ───────────────────────────────────────────────────────
 
+
 class TestDeleteCustomerLabelHandler:
     async def test_elimina_etiqueta(
-        self, uow: FakeUnitOfWork, label_repo: FakeCustomerLabelRepository,
-        tenant_id: TenantId, owner_id: uuid4
+        self,
+        uow: FakeUnitOfWork,
+        label_repo: FakeCustomerLabelRepository,
+        tenant_id: TenantId,
+        owner_id: uuid4,
     ) -> None:
         created = await CreateCustomerLabelHandler(uow).handle(
             CreateCustomerLabelCommand(
-                tenant_id=tenant_id, owner_user_id=owner_id, name="Temporal", color="#10b981"
+                tenant_id=tenant_id,
+                owner_user_id=owner_id,
+                name="Temporal",
+                color="#10b981",
             )
         )
         uow.committed = False
@@ -219,6 +236,7 @@ class TestDeleteCustomerLabelHandler:
 
 # ── ListCustomerLabels ────────────────────────────────────────────────────────
 
+
 class TestListCustomerLabelsHandler:
     async def test_devuelve_solo_etiquetas_del_owner(
         self, uow: FakeUnitOfWork, tenant_id: TenantId
@@ -227,12 +245,26 @@ class TestListCustomerLabelsHandler:
         owner_b = uuid4()
         create = CreateCustomerLabelHandler(uow)
 
-        await create.handle(CreateCustomerLabelCommand(tenant_id=tenant_id, owner_user_id=owner_a, name="A1", color="#10b981"))
-        await create.handle(CreateCustomerLabelCommand(tenant_id=tenant_id, owner_user_id=owner_a, name="A2", color="#3b82f6"))
-        await create.handle(CreateCustomerLabelCommand(tenant_id=tenant_id, owner_user_id=owner_b, name="B1", color="#ef4444"))
+        await create.handle(
+            CreateCustomerLabelCommand(
+                tenant_id=tenant_id, owner_user_id=owner_a, name="A1", color="#10b981"
+            )
+        )
+        await create.handle(
+            CreateCustomerLabelCommand(
+                tenant_id=tenant_id, owner_user_id=owner_a, name="A2", color="#3b82f6"
+            )
+        )
+        await create.handle(
+            CreateCustomerLabelCommand(
+                tenant_id=tenant_id, owner_user_id=owner_b, name="B1", color="#ef4444"
+            )
+        )
 
         handler = ListCustomerLabelsHandler(uow.customer_labels)
-        results = await handler.handle(ListCustomerLabelsQuery(tenant_id=tenant_id, owner_user_id=owner_a))
+        results = await handler.handle(
+            ListCustomerLabelsQuery(tenant_id=tenant_id, owner_user_id=owner_a)
+        )
 
         assert len(results) == 2
         names = {r.name for r in results}

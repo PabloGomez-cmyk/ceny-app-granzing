@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import Any
 from uuid import UUID
 
 from centy.application.ports.email import (
@@ -34,6 +35,7 @@ from centy.domain.warranties.entities import Warranty
 
 # ── Result dataclasses ────────────────────────────────────────────────────────
 
+
 @dataclass(frozen=True)
 class WarrantyResult:
     warranty_id: str
@@ -41,9 +43,9 @@ class WarrantyResult:
     quote_id: str
     quote_line_id: str
     product_id: str
-    product_snapshot: dict
+    product_snapshot: dict[str, Any]
     warranty_number: str
-    customer_snapshot: dict | None
+    customer_snapshot: dict[str, Any] | None
     created_by_user_id: str
     warranty_years: int
     expires_at: str
@@ -81,6 +83,7 @@ def _build_warranty_number(seq: int) -> str:
 
 # ── Handlers ──────────────────────────────────────────────────────────────────
 
+
 class GenerateWarrantiesHandler:
     def __init__(self, uow: IUnitOfWork) -> None:
         self._uow = uow
@@ -90,8 +93,13 @@ class GenerateWarrantiesHandler:
             quote = await uow.quotes.get_by_id(command.quote_id, command.tenant_id)
             if quote is None:
                 raise NotFoundError(f"Presupuesto {command.quote_id} no encontrado")
-            if quote.created_by_user_id != command.requester_user_id and command.requester_role != "ADMIN":
-                raise AuthorizationError("No tiene permiso para generar garantías de esta venta")
+            if (
+                quote.created_by_user_id != command.requester_user_id
+                and command.requester_role != "ADMIN"
+            ):
+                raise AuthorizationError(
+                    "No tiene permiso para generar garantías de esta venta"
+                )
             if quote.status != QuoteStatus.COMPLETED:
                 raise BusinessRuleViolationError(
                     "Solo se pueden generar garantías de ventas terminadas"
@@ -105,7 +113,9 @@ class GenerateWarrantiesHandler:
 
             warranties: list[Warranty] = []
             for line in quote.lines:
-                product = await uow.products.get_by_id(line.product_id, command.tenant_id)
+                product = await uow.products.get_by_id(
+                    line.product_id, command.tenant_id
+                )
                 if product is None:
                     raise BusinessRuleViolationError(
                         f"El producto {line.product_id} de la línea ya no existe en el catálogo"
@@ -146,7 +156,9 @@ class ListWarrantiesHandler:
         if query.requester_role == "ADMIN":
             warranties = await self._repo.list_by_tenant(query.tenant_id)
         else:
-            warranties = await self._repo.list_by_user(query.requester_user_id, query.tenant_id)
+            warranties = await self._repo.list_by_user(
+                query.requester_user_id, query.tenant_id
+            )
         return [_warranty_result(w) for w in warranties]
 
 
@@ -156,7 +168,11 @@ class ListWarrantiesByQuoteHandler:
 
     async def handle(self, query: ListWarrantiesByQuoteQuery) -> list[WarrantyResult]:
         warranties = await self._repo.list_by_quote(query.quote_id, query.tenant_id)
-        visible = [w for w in warranties if _can_access(w, query.requester_user_id, query.requester_role)]
+        visible = [
+            w
+            for w in warranties
+            if _can_access(w, query.requester_user_id, query.requester_role)
+        ]
         return [_warranty_result(w) for w in visible]
 
 
@@ -193,7 +209,9 @@ class SendWarrantiesEmailHandler:
     async def handle(self, cmd: SendWarrantiesEmailCommand) -> None:
         tenant_id = TenantId(UUID(cmd.tenant_id))
 
-        config = await self._email_config_repo.get_by_user_id(cmd.sender_user_id, cmd.tenant_id)
+        config = await self._email_config_repo.get_by_user_id(
+            cmd.sender_user_id, cmd.tenant_id
+        )
         if config is None:
             raise BusinessRuleViolationError(
                 "No tenés Gmail configurado. Configuralo en Ajustes → Correo."
@@ -219,7 +237,9 @@ class SendWarrantiesEmailHandler:
             await self._email_config_repo.save(fresh_config)
 
         customer_name = (
-            quote.customer_snapshot.get("name", "Cliente") if quote.customer_snapshot else "Cliente"
+            quote.customer_snapshot.get("name", "Cliente")
+            if quote.customer_snapshot
+            else "Cliente"
         )
         recipient = cmd.recipient_name or customer_name
 
@@ -235,13 +255,13 @@ class SendWarrantiesEmailHandler:
             config=fresh_config,
             message=EmailMessage(
                 to=cmd.recipient_email,
-                subject=f"Garantía oficial – Presupuesto #{quote.quote_number} – {from_name or 'Glazing'}",
+                subject=f"Garantía oficial - Presupuesto #{quote.quote_number} - {from_name or 'Glazing'}",
                 html_body=html_body,
                 from_name=from_name,
             ),
         )
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         for w in warranties:
             w.sent_at = now
             await self._warranty_repo.save(w)
@@ -280,7 +300,7 @@ def _build_warranty_html(
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Garantía oficial – Presupuesto #{quote_number}</title>
+  <title>Garantía oficial - Presupuesto #{quote_number}</title>
 </head>
 <body style="margin:0;padding:0;background:#f0f4f8;font-family:Arial,Helvetica,sans-serif">
   <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:40px auto;background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);overflow:hidden">

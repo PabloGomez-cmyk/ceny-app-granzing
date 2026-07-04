@@ -36,11 +36,17 @@ class Brand(Entity):
     ) -> "Brand":
         name = name.strip()
         if not name:
-            raise BusinessRuleViolationError("El nombre de la marca no puede estar vacío")
+            raise BusinessRuleViolationError(
+                "El nombre de la marca no puede estar vacío"
+            )
         if len(name) > 100:
-            raise BusinessRuleViolationError("El nombre de la marca no puede superar 100 caracteres")
+            raise BusinessRuleViolationError(
+                "El nombre de la marca no puede superar 100 caracteres"
+            )
         if not _COLOR_RE.match(color):
-            raise ValidationError(f"Color inválido: '{color}'. Usar formato hex #RRGGBB")
+            raise ValidationError(
+                f"Color inválido: '{color}'. Usar formato hex #RRGGBB"
+            )
         return cls(tenant_id=tenant_id, name=name, color=color, logo_url=logo_url)
 
     def update(
@@ -54,9 +60,13 @@ class Brand(Entity):
         if name is not None:
             name = name.strip()
             if not name:
-                raise BusinessRuleViolationError("El nombre de la marca no puede estar vacío")
+                raise BusinessRuleViolationError(
+                    "El nombre de la marca no puede estar vacío"
+                )
             if len(name) > 100:
-                raise BusinessRuleViolationError("El nombre de la marca no puede superar 100 caracteres")
+                raise BusinessRuleViolationError(
+                    "El nombre de la marca no puede superar 100 caracteres"
+                )
             self.name = name
         if color is not None:
             if not _COLOR_RE.match(color):
@@ -94,17 +104,25 @@ class ProductCategory(Entity):
     def create(cls, *, tenant_id: TenantId, name: str) -> "ProductCategory":
         name = name.strip()
         if not name:
-            raise BusinessRuleViolationError("El nombre de la categoría no puede estar vacío")
+            raise BusinessRuleViolationError(
+                "El nombre de la categoría no puede estar vacío"
+            )
         if len(name) > 100:
-            raise BusinessRuleViolationError("El nombre de la categoría no puede superar 100 caracteres")
+            raise BusinessRuleViolationError(
+                "El nombre de la categoría no puede superar 100 caracteres"
+            )
         return cls(tenant_id=tenant_id, name=name)
 
     def rename(self, new_name: str) -> None:
         new_name = new_name.strip()
         if not new_name:
-            raise BusinessRuleViolationError("El nombre de la categoría no puede estar vacío")
+            raise BusinessRuleViolationError(
+                "El nombre de la categoría no puede estar vacío"
+            )
         if len(new_name) > 100:
-            raise BusinessRuleViolationError("El nombre de la categoría no puede superar 100 caracteres")
+            raise BusinessRuleViolationError(
+                "El nombre de la categoría no puede superar 100 caracteres"
+            )
         self.name = new_name
 
     def deactivate(self) -> None:
@@ -130,17 +148,25 @@ class GlassType(Entity):
     def create(cls, *, tenant_id: TenantId, name: str) -> "GlassType":
         name = name.strip()
         if not name:
-            raise BusinessRuleViolationError("El nombre del tipo de vidrio no puede estar vacío")
+            raise BusinessRuleViolationError(
+                "El nombre del tipo de vidrio no puede estar vacío"
+            )
         if len(name) > 100:
-            raise BusinessRuleViolationError("El nombre del tipo de vidrio no puede superar 100 caracteres")
+            raise BusinessRuleViolationError(
+                "El nombre del tipo de vidrio no puede superar 100 caracteres"
+            )
         return cls(tenant_id=tenant_id, name=name)
 
     def rename(self, new_name: str) -> None:
         new_name = new_name.strip()
         if not new_name:
-            raise BusinessRuleViolationError("El nombre del tipo de vidrio no puede estar vacío")
+            raise BusinessRuleViolationError(
+                "El nombre del tipo de vidrio no puede estar vacío"
+            )
         if len(new_name) > 100:
-            raise BusinessRuleViolationError("El nombre del tipo de vidrio no puede superar 100 caracteres")
+            raise BusinessRuleViolationError(
+                "El nombre del tipo de vidrio no puede superar 100 caracteres"
+            )
         self.name = new_name
 
     def deactivate(self) -> None:
@@ -203,11 +229,17 @@ class Product(Entity):
     ) -> "Product":
         name = name.strip()
         if not name:
-            raise BusinessRuleViolationError("El nombre del producto no puede estar vacío")
+            raise BusinessRuleViolationError(
+                "El nombre del producto no puede estar vacío"
+            )
         if len(name) > 200:
-            raise BusinessRuleViolationError("El nombre del producto no puede superar 200 caracteres")
+            raise BusinessRuleViolationError(
+                "El nombre del producto no puede superar 200 caracteres"
+            )
         if warranty_years < 0:
-            raise BusinessRuleViolationError("Los años de garantía no pueden ser negativos")
+            raise BusinessRuleViolationError(
+                "Los años de garantía no pueden ser negativos"
+            )
         if not application_types:
             raise BusinessRuleViolationError(
                 "El producto debe aplicarse a al menos una superficie (Ventana o Automóvil)"
@@ -217,8 +249,10 @@ class Product(Entity):
         for t in application_types:
             try:
                 parsed_types.append(ApplicationType(t))
-            except ValueError:
-                raise ValidationError(f"Tipo de aplicación inválido: '{t}'. Valores: WINDOW, AUTOMOTIVE")
+            except ValueError as exc:
+                raise ValidationError(
+                    f"Tipo de aplicación inválido: '{t}'. Valores: WINDOW, AUTOMOTIVE"
+                ) from exc
 
         if roll_width_cm <= 0:
             raise BusinessRuleViolationError("El ancho del rollo debe ser mayor a 0")
@@ -263,9 +297,13 @@ class Product(Entity):
         if name is not None:
             name = name.strip()
             if not name:
-                raise BusinessRuleViolationError("El nombre del producto no puede estar vacío")
+                raise BusinessRuleViolationError(
+                    "El nombre del producto no puede estar vacío"
+                )
             if len(name) > 200:
-                raise BusinessRuleViolationError("El nombre del producto no puede superar 200 caracteres")
+                raise BusinessRuleViolationError(
+                    "El nombre del producto no puede superar 200 caracteres"
+                )
             self.name = name
         if brand_id is not None:
             self.brand_id = brand_id
@@ -279,17 +317,23 @@ class Product(Entity):
             self.tser_percentage = Percentage(tser_percentage)
         if warranty_years is not None:
             if warranty_years < 0:
-                raise BusinessRuleViolationError("Los años de garantía no pueden ser negativos")
+                raise BusinessRuleViolationError(
+                    "Los años de garantía no pueden ser negativos"
+                )
             self.warranty_years = warranty_years
         if category_id is not None:
             self.category_id = category_id
         if roll_width_cm is not None:
             if roll_width_cm <= 0:
-                raise BusinessRuleViolationError("El ancho del rollo debe ser mayor a 0")
+                raise BusinessRuleViolationError(
+                    "El ancho del rollo debe ser mayor a 0"
+                )
             self.roll_width_cm = roll_width_cm
         if roll_length_m is not None:
             if roll_length_m <= 0:
-                raise BusinessRuleViolationError("El largo del rollo debe ser mayor a 0")
+                raise BusinessRuleViolationError(
+                    "El largo del rollo debe ser mayor a 0"
+                )
             self.roll_length_m = roll_length_m
         if application_types is not None:
             if not application_types:

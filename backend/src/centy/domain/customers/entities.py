@@ -46,11 +46,17 @@ class CustomerLabel(Entity):
     ) -> "CustomerLabel":
         name = name.strip()
         if not name:
-            raise BusinessRuleViolationError("El nombre de la etiqueta no puede estar vacío")
+            raise BusinessRuleViolationError(
+                "El nombre de la etiqueta no puede estar vacío"
+            )
         if len(name) > 50:
-            raise BusinessRuleViolationError("El nombre de la etiqueta no puede superar los 50 caracteres")
+            raise BusinessRuleViolationError(
+                "El nombre de la etiqueta no puede superar los 50 caracteres"
+            )
         if not _COLOR_RE.match(color):
-            raise ValidationError(f"Color inválido: '{color}'. Usar formato hex #RRGGBB")
+            raise ValidationError(
+                f"Color inválido: '{color}'. Usar formato hex #RRGGBB"
+            )
         return cls(
             tenant_id=tenant_id,
             owner_user_id=owner_user_id,
@@ -61,14 +67,20 @@ class CustomerLabel(Entity):
     def rename(self, new_name: str) -> None:
         new_name = new_name.strip()
         if not new_name:
-            raise BusinessRuleViolationError("El nombre de la etiqueta no puede estar vacío")
+            raise BusinessRuleViolationError(
+                "El nombre de la etiqueta no puede estar vacío"
+            )
         if len(new_name) > 50:
-            raise BusinessRuleViolationError("El nombre de la etiqueta no puede superar los 50 caracteres")
+            raise BusinessRuleViolationError(
+                "El nombre de la etiqueta no puede superar los 50 caracteres"
+            )
         self.name = new_name
 
     def change_color(self, new_color: str) -> None:
         if not _COLOR_RE.match(new_color):
-            raise ValidationError(f"Color inválido: '{new_color}'. Usar formato hex #RRGGBB")
+            raise ValidationError(
+                f"Color inválido: '{new_color}'. Usar formato hex #RRGGBB"
+            )
         self.color = new_color
 
     def deactivate(self) -> None:
@@ -86,7 +98,7 @@ class Customer(Entity):
     name: str
     email: Email | None = None
     phone: str | None = None
-    address: str | None = None      # Calle y número
+    address: str | None = None  # Calle y número
     city: str | None = None
     province: str | None = None
     neighborhood: str | None = None  # Barrio / Localidad
@@ -114,9 +126,13 @@ class Customer(Entity):
     ) -> "Customer":
         name = name.strip()
         if not name:
-            raise BusinessRuleViolationError("El nombre del cliente no puede estar vacío")
+            raise BusinessRuleViolationError(
+                "El nombre del cliente no puede estar vacío"
+            )
         if len(name) > 200:
-            raise BusinessRuleViolationError("El nombre del cliente no puede superar los 200 caracteres")
+            raise BusinessRuleViolationError(
+                "El nombre del cliente no puede superar los 200 caracteres"
+            )
         return cls(
             tenant_id=tenant_id,
             owner_user_id=owner_user_id,
@@ -150,9 +166,13 @@ class Customer(Entity):
         if name is not None:
             name = name.strip()
             if not name:
-                raise BusinessRuleViolationError("El nombre del cliente no puede estar vacío")
+                raise BusinessRuleViolationError(
+                    "El nombre del cliente no puede estar vacío"
+                )
             if len(name) > 200:
-                raise BusinessRuleViolationError("El nombre del cliente no puede superar los 200 caracteres")
+                raise BusinessRuleViolationError(
+                    "El nombre del cliente no puede superar los 200 caracteres"
+                )
             self.name = name
         if email is not None:
             self.email = Email(email) if email else None

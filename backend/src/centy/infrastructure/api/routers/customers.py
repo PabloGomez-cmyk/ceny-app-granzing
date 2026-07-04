@@ -2,6 +2,7 @@ import uuid
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
+from pydantic import BaseModel, Field
 
 from centy.application.customers.commands import (
     CreateCustomerCommand,
@@ -30,9 +31,9 @@ from centy.application.customers.queries import (
 from centy.domain.shared.value_objects import TenantId
 from centy.infrastructure.api.dependencies import (
     CurrentUser,
-    get_current_user,
     get_create_customer_handler,
     get_create_label_handler,
+    get_current_user,
     get_customer_handler,
     get_deactivate_customer_handler,
     get_delete_label_handler,
@@ -42,7 +43,6 @@ from centy.infrastructure.api.dependencies import (
     get_update_label_handler,
 )
 from centy.infrastructure.config.settings import get_settings
-from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/customers", tags=["customers"])
 
@@ -55,6 +55,7 @@ def _resolve_tenant(settings_tenant: str) -> TenantId:
 
 
 # ── Schemas ───────────────────────────────────────────────────────────────────
+
 
 class CustomerLabelResponse(BaseModel):
     id: str
@@ -121,6 +122,7 @@ class UpdateLabelBody(BaseModel):
 
 # ── Label routes ──────────────────────────────────────────────────────────────
 
+
 @router.get("/labels", response_model=list[CustomerLabelResponse])
 async def list_labels(
     current_user: CurrentUser = Depends(get_current_user),
@@ -133,12 +135,16 @@ async def list_labels(
         )
     )
     return [
-        CustomerLabelResponse(id=str(r.label_id), name=r.name, color=r.color, is_active=r.is_active)
+        CustomerLabelResponse(
+            id=str(r.label_id), name=r.name, color=r.color, is_active=r.is_active
+        )
         for r in results
     ]
 
 
-@router.post("/labels", response_model=CustomerLabelResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/labels", response_model=CustomerLabelResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_label(
     body: CreateLabelBody,
     current_user: CurrentUser = Depends(get_current_user),
@@ -152,7 +158,12 @@ async def create_label(
             color=body.color,
         )
     )
-    return CustomerLabelResponse(id=str(result.label_id), name=result.name, color=result.color, is_active=result.is_active)
+    return CustomerLabelResponse(
+        id=str(result.label_id),
+        name=result.name,
+        color=result.color,
+        is_active=result.is_active,
+    )
 
 
 @router.patch("/labels/{label_id}", response_model=CustomerLabelResponse)
@@ -171,7 +182,12 @@ async def update_label(
             color=body.color,
         )
     )
-    return CustomerLabelResponse(id=str(result.label_id), name=result.name, color=result.color, is_active=result.is_active)
+    return CustomerLabelResponse(
+        id=str(result.label_id),
+        name=result.name,
+        color=result.color,
+        is_active=result.is_active,
+    )
 
 
 @router.delete("/labels/{label_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -190,6 +206,7 @@ async def delete_label(
 
 
 # ── Customer routes ───────────────────────────────────────────────────────────
+
 
 @router.get("", response_model=list[CustomerResponse])
 async def list_customers(

@@ -34,6 +34,7 @@ router = APIRouter(tags=["gmail"])
 
 # ── Request bodies ─────────────────────────────────────────────────────────────
 
+
 class ConnectBody(BaseModel):
     code: str
     redirect_uri: str
@@ -47,6 +48,7 @@ class SendQuoteEmailBody(BaseModel):
 
 
 # ── Settings / Gmail endpoints ─────────────────────────────────────────────────
+
 
 @router.get("/settings/gmail/status")
 async def get_gmail_status(
@@ -100,6 +102,7 @@ async def disconnect_gmail(
 
 
 # ── Quotes / send-email endpoint ───────────────────────────────────────────────
+
 
 @router.post("/quotes/{quote_id}/send-email", status_code=status.HTTP_204_NO_CONTENT)
 async def send_quote_email(
