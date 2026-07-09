@@ -39,10 +39,10 @@ const PROVINCIAS = [
 // ── Helpers de UI ─────────────────────────────────────────────────────────────
 
 const INPUT_CLS =
-  "h-[36px] w-full rounded-[8px] border border-[#dde4ee] bg-white px-3 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#0f6e50] focus:outline-none focus:ring-1 focus:ring-[#0f6e50]/20";
+  "h-[36px] w-full rounded-[8px] border border-[#dde4ee] bg-white px-3 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#d9622c] focus:outline-none focus:ring-1 focus:ring-[#d9622c]/20";
 
 const SELECT_CLS =
-  "h-[36px] w-full rounded-[8px] border border-[#dde4ee] bg-white px-3 text-[13px] text-[#0f172a] focus:border-[#0f6e50] focus:outline-none focus:ring-1 focus:ring-[#0f6e50]/20 appearance-none";
+  "h-[36px] w-full rounded-[8px] border border-[#dde4ee] bg-white px-3 text-[13px] text-[#0f172a] focus:border-[#d9622c] focus:outline-none focus:ring-1 focus:ring-[#d9622c]/20 appearance-none";
 
 function Field({
   label,
@@ -104,7 +104,7 @@ function LabelPicker({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex h-[36px] w-full items-center justify-between rounded-[8px] border border-[#dde4ee] bg-white px-3 text-[13px] text-[#0f172a] focus:border-[#0f6e50] focus:outline-none focus:ring-1 focus:ring-[#0f6e50]/20"
+        className="flex h-[36px] w-full items-center justify-between rounded-[8px] border border-[#dde4ee] bg-white px-3 text-[13px] text-[#0f172a] focus:border-[#d9622c] focus:outline-none focus:ring-1 focus:ring-[#d9622c]/20"
       >
         {selected ? (
           <span className="flex items-center gap-2">
@@ -392,7 +392,7 @@ export default function CustomerFormModal({ mode, customer, onClose }: Props) {
               placeholder="Información adicional sobre el cliente..."
               rows={3}
               maxLength={2000}
-              className="w-full resize-none rounded-[8px] border border-[#dde4ee] bg-white px-3 py-2 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#0f6e50] focus:outline-none focus:ring-1 focus:ring-[#0f6e50]/20"
+              className="w-full resize-none rounded-[8px] border border-[#dde4ee] bg-white px-3 py-2 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#d9622c] focus:outline-none focus:ring-1 focus:ring-[#d9622c]/20"
             />
 
             {error && (
@@ -416,7 +416,7 @@ export default function CustomerFormModal({ mode, customer, onClose }: Props) {
             type="submit"
             form="customer-form"
             disabled={isPending || !name.trim()}
-            className="rounded-[8px] bg-[#0f6e50] px-5 py-2 text-[13px] font-semibold text-white hover:bg-[#0a5a40] disabled:opacity-50"
+            className="rounded-[8px] bg-[#d9622c] px-5 py-2 text-[13px] font-semibold text-white hover:bg-[#b74e1e] disabled:opacity-50"
           >
             {isPending
               ? mode === "create"

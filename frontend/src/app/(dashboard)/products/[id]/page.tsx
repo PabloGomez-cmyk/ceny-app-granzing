@@ -26,7 +26,7 @@ const APPLICATION_LABELS: Record<string, { label: string; icon: React.ElementTyp
 function SpecItem({ label, value, icon: Icon }: { label: string; value: string; icon: React.ElementType }) {
   return (
     <div className="flex flex-col items-center gap-1 rounded-[12px] border border-[#e8ecf2] bg-white p-4 text-center">
-      <Icon size={18} className="text-[#0f6e50]" />
+      <Icon size={18} className="text-[#d9622c]" />
       <p className="text-[22px] font-bold text-[#0f172a]">{value}</p>
       <p className="text-[11px] font-medium text-[#94a3b8]">{label}</p>
     </div>
@@ -61,7 +61,7 @@ export default function ProductDetailPage() {
       <div className="flex min-h-screen items-center justify-center bg-[#f0f4f8]">
         <div className="text-center">
           <p className="text-[14px] text-[#64748b]">Producto no encontrado.</p>
-          <Link href="/products" className="mt-3 inline-block text-[13px] text-[#0f6e50] underline">
+          <Link href="/products" className="mt-3 inline-block text-[13px] text-[#d9622c] underline">
             Volver al catálogo
           </Link>
         </div>
@@ -74,7 +74,7 @@ export default function ProductDetailPage() {
   return (
     <div className="flex min-h-screen flex-col bg-[#f0f4f8]">
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <header className="flex items-center justify-between bg-[#0f6e50] px-5 py-3">
+      <header className="flex items-center justify-between bg-[#d9622c] px-5 py-3">
         <div className="flex items-center gap-3">
           <Link
             href="/products"
@@ -164,7 +164,7 @@ export default function ProductDetailPage() {
         {/* ── Price ───────────────────────────────────────────────────────── */}
         <div className="rounded-[14px] border border-[#e8ecf2] bg-white p-6">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">Precio de venta</p>
-          <p className="mt-1 text-[32px] font-bold text-[#0f6e50]">
+          <p className="mt-1 text-[32px] font-bold text-[#d9622c]">
             ${Number(product.sale_price_per_m2).toLocaleString("es-AR", { minimumFractionDigits: 2 })}
             <span className="ml-1 text-[16px] font-normal text-[#94a3b8]">/m²</span>
           </p>
@@ -200,7 +200,7 @@ export default function ProductDetailPage() {
                 href={product.technical_sheet_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 rounded-[10px] border border-[#dde4ee] bg-[#f8fafc] p-3 hover:border-[#0f6e50]/40 hover:bg-[#f0faf6]"
+                className="flex items-center gap-3 rounded-[10px] border border-[#dde4ee] bg-[#f8fafc] p-3 hover:border-[#d9622c]/40 hover:bg-[#fbeee1]"
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-[8px] bg-red-50">
                   <FileText size={18} className="text-red-500" />

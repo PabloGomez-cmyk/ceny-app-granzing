@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
@@ -72,10 +73,10 @@ type CompanyValues = z.infer<typeof companySchema>;
 // ── Shared UI helpers ─────────────────────────────────────────────────────────
 
 const inputCls =
-  "h-[42px] w-full rounded-[10px] border border-[#cbd5e1] bg-[#f8fafc] px-3.5 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#0f6e50] focus:outline-none focus:ring-2 focus:ring-[#0f6e50]/20";
+  "h-[42px] w-full rounded-[10px] border border-[#cbd5e1] bg-[#f8fafc] px-3.5 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#d9622c] focus:outline-none focus:ring-2 focus:ring-[#d9622c]/20";
 
 const btnPrimary =
-  "h-[42px] w-full rounded-[10px] bg-[#0f6e50] text-[13px] font-semibold text-white transition-colors hover:bg-[#0a5a40] disabled:opacity-60";
+  "h-[42px] w-full rounded-[10px] bg-[#d9622c] text-[13px] font-semibold text-white transition-colors hover:bg-[#b74e1e] disabled:opacity-60";
 
 function Field({
   label,
@@ -154,7 +155,7 @@ function CompanySection({ userId }: { userId: string }) {
     useForm<CompanyValues>({ resolver: zodResolver(companySchema) });
 
   const logoUrl = watch("logoUrl", "");
-  const colorPrimary = watch("colorPrimary", "#0f6e50");
+  const colorPrimary = watch("colorPrimary", "#d9622c");
   const colorSecondary = watch("colorSecondary", "#e8f5f0");
 
   useEffect(() => {
@@ -167,7 +168,7 @@ function CompanySection({ userId }: { userId: string }) {
         province: userData.company_province ?? "",
         postalCode: userData.company_postal_code ?? "",
         cuit: userData.company_cuit ?? "",
-        colorPrimary: userData.company_color_primary ?? "#0f6e50",
+        colorPrimary: userData.company_color_primary ?? "#d9622c",
         colorSecondary: userData.company_color_secondary ?? "#e8f5f0",
         defaultConditions: userData.default_commercial_conditions ?? "",
       });
@@ -266,7 +267,7 @@ function CompanySection({ userId }: { userId: string }) {
               <input type="color" value={colorPrimary}
                 onChange={(e) => setValue("colorPrimary", e.target.value, { shouldDirty: true })}
                 className="h-[42px] w-10 shrink-0 cursor-pointer rounded-[8px] border border-[#cbd5e1] bg-[#f8fafc] p-0.5" />
-              <input {...register("colorPrimary")} placeholder="#0f6e50" className={inputCls} />
+              <input {...register("colorPrimary")} placeholder="#d9622c" className={inputCls} />
             </div>
           </Field>
           <Field label="Color secundario">
@@ -283,7 +284,7 @@ function CompanySection({ userId }: { userId: string }) {
       <div className="border-t border-[#f1f5f9] pt-4">
         <Field label="Condiciones comerciales predeterminadas">
           <textarea {...register("defaultConditions")} rows={4} placeholder="Ej: Validez del presupuesto: 30 días. Forma de pago: 50% anticipo, 50% contra entrega..."
-            className="w-full rounded-[10px] border border-[#cbd5e1] bg-[#f8fafc] px-3.5 py-2.5 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#0f6e50] focus:outline-none focus:ring-2 focus:ring-[#0f6e50]/20 resize-none" />
+            className="w-full rounded-[10px] border border-[#cbd5e1] bg-[#f8fafc] px-3.5 py-2.5 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#d9622c] focus:outline-none focus:ring-2 focus:ring-[#d9622c]/20 resize-none" />
           <p className="text-[11px] text-[#94a3b8]">Se pre-carga automáticamente en cada presupuesto nuevo.</p>
         </Field>
       </div>
@@ -364,7 +365,7 @@ function EmailSection() {
       {error && <p className="text-[12px] text-red-600">{error}</p>}
       {!status?.connected && (
         <button onClick={handleConnect} disabled={connecting || isLoading}
-          className="flex h-[44px] w-full items-center justify-center gap-2.5 rounded-[10px] border border-[#0f6e50] bg-white text-[13px] font-semibold text-[#0f6e50] hover:bg-[#f0faf6] disabled:opacity-60">
+          className="flex h-[44px] w-full items-center justify-center gap-2.5 rounded-[10px] border border-[#d9622c] bg-white text-[13px] font-semibold text-[#d9622c] hover:bg-[#fbeee1] disabled:opacity-60">
           {connecting ? <Loader2 size={15} className="animate-spin" /> : (
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -399,7 +400,7 @@ function getInitials(name: string): string {
 }
 
 const AVATAR_PALETTE = [
-  "#0f6e50", "#2563eb", "#7c3aed", "#dc2626", "#d97706",
+  "#d9622c", "#2563eb", "#7c3aed", "#dc2626", "#d97706",
   "#0891b2", "#059669", "#9333ea", "#be185d", "#1d4ed8",
 ];
 
@@ -480,7 +481,7 @@ function UsersSection() {
       {/* Toolbar */}
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <button onClick={() => setModal({ mode: "create" })}
-          className="flex items-center gap-1.5 rounded-[10px] bg-[#0f6e50] px-4 py-2 text-[12px] font-semibold text-white hover:bg-[#0a5a40]">
+          className="flex items-center gap-1.5 rounded-[10px] bg-[#d9622c] px-4 py-2 text-[12px] font-semibold text-white hover:bg-[#b74e1e]">
           <Plus size={14} />
           <span className="hidden sm:inline">Nuevo usuario</span>
           <span className="sm:hidden">Nuevo</span>
@@ -488,12 +489,12 @@ function UsersSection() {
         <div className="relative flex-1 sm:max-w-[260px]">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
           <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar usuario..."
-            className="h-[36px] w-full rounded-[10px] border border-[#dde4ee] bg-[#f8fafc] pl-8 pr-3 text-[13px] focus:border-[#0f6e50] focus:outline-none focus:ring-1 focus:ring-[#0f6e50]/20 placeholder:text-[#94a3b8]" />
+            className="h-[36px] w-full rounded-[10px] border border-[#dde4ee] bg-[#f8fafc] pl-8 pr-3 text-[13px] focus:border-[#d9622c] focus:outline-none focus:ring-1 focus:ring-[#d9622c]/20 placeholder:text-[#94a3b8]" />
         </div>
         <div className="flex overflow-hidden rounded-[10px] border border-[#dde4ee] bg-[#f8fafc]">
           {(["active", "all"] as const).map((tab) => (
             <button key={tab} onClick={() => setFilter(tab)}
-              className={`px-4 py-1.5 text-[12px] font-medium transition-colors ${filter === tab ? "bg-[#0f6e50] text-white" : "text-[#475569] hover:bg-[#f1f5f9]"}`}>
+              className={`px-4 py-1.5 text-[12px] font-medium transition-colors ${filter === tab ? "bg-[#d9622c] text-white" : "text-[#475569] hover:bg-[#f1f5f9]"}`}>
               {tab === "active" ? "Activos" : "Todos"}
             </button>
           ))}
@@ -525,7 +526,7 @@ function UsersSection() {
               ) : (
                 filtered.map((user) => (
                   <tr key={user.id} onClick={() => setSelectedId((p) => p === user.id ? null : user.id)}
-                    className={`cursor-pointer border-b border-[#f1f5f9] transition-colors hover:bg-[#f8fafb] ${selectedId === user.id ? "bg-[#f0faf6]" : ""}`}>
+                    className={`cursor-pointer border-b border-[#f1f5f9] transition-colors hover:bg-[#f8fafb] ${selectedId === user.id ? "bg-[#fbeee1]" : ""}`}>
                     <td className="py-3 pl-5 pr-3">
                       <div className="flex items-center gap-3">
                         <Avatar name={user.full_name} size={36} />
@@ -574,7 +575,7 @@ function UsersSection() {
               </div>
               <div className="mt-4 flex flex-wrap gap-3">
                 <button onClick={() => setModal({ mode: "edit", user: selectedUser })}
-                  className="flex items-center gap-1.5 rounded-[10px] bg-[#0f6e50] px-4 py-2 text-[12px] font-semibold text-white hover:bg-[#0a5a40]">
+                  className="flex items-center gap-1.5 rounded-[10px] bg-[#d9622c] px-4 py-2 text-[12px] font-semibold text-white hover:bg-[#b74e1e]">
                   <Pencil size={13} /> Editar usuario
                 </button>
                 <button onClick={() => setModal({ mode: "reset-password", user: selectedUser })}
@@ -660,12 +661,11 @@ export default function SettingsPage() {
         {/* Left: logo + breadcrumb */}
         <div className="flex items-center gap-3">
           <Link href="/dashboard" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-[#0f6e50]">
-              <span className="font-bold text-[15px] text-white">G</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-white">
+              <Image src="/logo.png" alt="Intermedios" width={26} height={26} className="object-contain" />
             </div>
-            <span className="hidden text-[15px] sm:inline">
-              <span className="font-semibold text-[#1a1a2e]">Glazing</span>
-              <span className="font-normal text-[#8898aa]"> Platform</span>
+            <span className="hidden text-[15px] font-semibold text-[#1a1a2e] sm:inline">
+              Intermedios
             </span>
           </Link>
           <span className="text-[#cbd5e1]">/</span>
@@ -681,7 +681,7 @@ export default function SettingsPage() {
               onClick={() => setSection("account")}
               className={`flex items-center gap-2 px-4 py-1.5 text-[13px] font-medium transition-colors ${
                 section === "account"
-                  ? "bg-[#0f6e50] text-white"
+                  ? "bg-[#d9622c] text-white"
                   : "text-[#475569] hover:bg-[#f1f5f9]"
               }`}
             >
@@ -692,7 +692,7 @@ export default function SettingsPage() {
               onClick={() => setSection("users")}
               className={`flex items-center gap-2 px-4 py-1.5 text-[13px] font-medium transition-colors ${
                 section === "users"
-                  ? "bg-[#0f6e50] text-white"
+                  ? "bg-[#d9622c] text-white"
                   : "text-[#475569] hover:bg-[#f1f5f9]"
               }`}
             >
@@ -730,7 +730,7 @@ export default function SettingsPage() {
                   onClick={() => setTab(id)}
                   className={`flex flex-1 items-center justify-center gap-2 py-3.5 text-[13px] font-medium transition-colors ${
                     tab === id
-                      ? "border-b-2 border-[#0f6e50] text-[#0f6e50]"
+                      ? "border-b-2 border-[#d9622c] text-[#d9622c]"
                       : "text-[#94a3b8] hover:text-[#475569]"
                   }`}
                 >

@@ -142,8 +142,8 @@ export default function SendQuoteEmailModal({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#e8ecf2] px-5 py-4">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-[#f0f9f6]">
-              <Mail size={15} className="text-[#0f6e50]" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-[#fbeee1]">
+              <Mail size={15} className="text-[#d9622c]" />
             </div>
             <div>
               <p className="text-[14px] font-bold text-[#0f172a]">Enviar presupuesto</p>
@@ -175,9 +175,9 @@ export default function SendQuoteEmailModal({
               </div>
             </div>
           ) : (
-            <div className="mb-4 flex items-center gap-2 rounded-[8px] bg-[#f0f9f6] px-3 py-2">
-              <div className="h-1.5 w-1.5 rounded-full bg-[#0f6e50]" />
-              <p className="text-[11px] text-[#0f6e50]">
+            <div className="mb-4 flex items-center gap-2 rounded-[8px] bg-[#fbeee1] px-3 py-2">
+              <div className="h-1.5 w-1.5 rounded-full bg-[#d9622c]" />
+              <p className="text-[11px] text-[#d9622c]">
                 Enviando desde <span className="font-semibold">{senderEmail}</span>
               </p>
             </div>
@@ -186,8 +186,8 @@ export default function SendQuoteEmailModal({
           {/* Resultado enviado */}
           {sent ? (
             <div className="flex flex-col items-center gap-3 py-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#f0f9f6]">
-                <CheckCircle2 size={24} className="text-[#0f6e50]" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#fbeee1]">
+                <CheckCircle2 size={24} className="text-[#d9622c]" />
               </div>
               <p className="text-[14px] font-semibold text-[#0f172a]">¡Correo enviado!</p>
               <p className="text-center text-[12px] text-[#64748b]">
@@ -196,7 +196,7 @@ export default function SendQuoteEmailModal({
               </p>
               <button
                 onClick={onClose}
-                className="mt-2 rounded-[10px] bg-[#0f6e50] px-6 py-2 text-[12px] font-semibold text-white hover:bg-[#0d5f44]"
+                className="mt-2 rounded-[10px] bg-[#d9622c] px-6 py-2 text-[12px] font-semibold text-white hover:bg-[#b74e1e]"
               >
                 Cerrar
               </button>
@@ -213,7 +213,7 @@ export default function SendQuoteEmailModal({
                   value={recipientEmail}
                   onChange={(e) => setRecipientEmail(e.target.value)}
                   placeholder="cliente@ejemplo.com"
-                  className="h-[38px] w-full rounded-[10px] border border-[#dde4ee] bg-[#f8fafc] px-3 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#0f6e50] focus:outline-none focus:ring-1 focus:ring-[#0f6e50]/20"
+                  className="h-[38px] w-full rounded-[10px] border border-[#dde4ee] bg-[#f8fafc] px-3 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#d9622c] focus:outline-none focus:ring-1 focus:ring-[#d9622c]/20"
                 />
               </div>
 
@@ -227,7 +227,7 @@ export default function SendQuoteEmailModal({
                   value={recipientName}
                   onChange={(e) => setRecipientName(e.target.value)}
                   placeholder="Juan Pérez"
-                  className="h-[38px] w-full rounded-[10px] border border-[#dde4ee] bg-[#f8fafc] px-3 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#0f6e50] focus:outline-none focus:ring-1 focus:ring-[#0f6e50]/20"
+                  className="h-[38px] w-full rounded-[10px] border border-[#dde4ee] bg-[#f8fafc] px-3 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#d9622c] focus:outline-none focus:ring-1 focus:ring-[#d9622c]/20"
                 />
               </div>
 
@@ -241,7 +241,7 @@ export default function SendQuoteEmailModal({
                   onChange={(e) => setCustomMessage(e.target.value)}
                   placeholder="Adjunto encontrará el presupuesto solicitado..."
                   rows={3}
-                  className="w-full resize-none rounded-[10px] border border-[#dde4ee] bg-[#f8fafc] px-3 py-2.5 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#0f6e50] focus:outline-none focus:ring-1 focus:ring-[#0f6e50]/20"
+                  className="w-full resize-none rounded-[10px] border border-[#dde4ee] bg-[#f8fafc] px-3 py-2.5 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#d9622c] focus:outline-none focus:ring-1 focus:ring-[#d9622c]/20"
                 />
               </div>
 
@@ -272,7 +272,7 @@ export default function SendQuoteEmailModal({
                 <button
                   type="submit"
                   disabled={!isConnected || isBusy}
-                  className="flex items-center gap-1.5 rounded-[10px] bg-[#0f6e50] px-4 py-2 text-[12px] font-semibold text-white hover:bg-[#0d5f44] disabled:opacity-50"
+                  className="flex items-center gap-1.5 rounded-[10px] bg-[#d9622c] px-4 py-2 text-[12px] font-semibold text-white hover:bg-[#b74e1e] disabled:opacity-50"
                 >
                   {isBusy ? (
                     <>

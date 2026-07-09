@@ -384,6 +384,8 @@ class UserQuoteStatResult:
     total_quotes: int
     quotes_this_month: int
     conversion_rate: float
+    total_revenue: Decimal
+    revenue_this_month: Decimal
 
 
 @dataclass(frozen=True)
@@ -391,6 +393,8 @@ class QuoteStatsResult:
     quotes_this_month: int
     total_quotes: int
     conversion_rate: float
+    total_revenue: Decimal
+    revenue_this_month: Decimal
     per_user: list[UserQuoteStatResult]
 
 
@@ -403,6 +407,15 @@ def _conversion(quotes: list[Quote]) -> float:
         in (QuoteStatus.ACCEPTED, QuoteStatus.INVOICED, QuoteStatus.COMPLETED)
     ]
     return round(len(converted) / len(non_cancelled) * 100, 1) if non_cancelled else 0.0
+
+
+def _revenue(quotes: list[Quote]) -> Decimal:
+    closed = (
+        q
+        for q in quotes
+        if q.status in (QuoteStatus.ACCEPTED, QuoteStatus.INVOICED, QuoteStatus.COMPLETED)
+    )
+    return sum((_calculator.calculate(q).total for q in closed), Decimal("0"))
 
 
 class GetQuoteStatsHandler:
@@ -435,6 +448,8 @@ class GetQuoteStatsHandler:
                 total_quotes=len(uq),
                 quotes_this_month=sum(1 for q in uq if is_this_month(q)),
                 conversion_rate=_conversion(uq),
+                total_revenue=_revenue(uq),
+                revenue_this_month=_revenue([q for q in uq if is_this_month(q)]),
             )
             for uid, uq in by_user.items()
         ]
@@ -443,5 +458,7 @@ class GetQuoteStatsHandler:
             quotes_this_month=quotes_this_month,
             total_quotes=len(quotes),
             conversion_rate=_conversion(quotes),
+            total_revenue=_revenue(quotes),
+            revenue_this_month=_revenue([q for q in quotes if is_this_month(q)]),
             per_user=per_user,
         )

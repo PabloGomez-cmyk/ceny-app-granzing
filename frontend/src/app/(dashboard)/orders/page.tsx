@@ -77,7 +77,7 @@ function OrderRow({
           type="checkbox"
           checked={selected}
           onChange={() => onToggle(order.id)}
-          className="h-4 w-4 cursor-pointer accent-[#0f6e50]"
+          className="h-4 w-4 cursor-pointer accent-[#d9622c]"
         />
       </td>
       <td
@@ -183,7 +183,7 @@ export default function OrdersPage() {
   return (
     <div className="flex min-h-screen flex-col bg-[#f0f4f8]">
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <header className="flex items-center justify-between bg-[#0f6e50] px-5 py-3">
+      <header className="flex items-center justify-between bg-[#d9622c] px-5 py-3">
         <div className="flex items-center gap-3">
           <Link href="/dashboard" className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-white/15 text-white hover:bg-white/25">
             <ArrowLeft size={16} />
@@ -206,7 +206,7 @@ export default function OrdersPage() {
       <div className="flex flex-wrap items-center gap-3 border-b border-[#e4eaf2] bg-white px-5 py-3">
         <Link
           href={"/orders/new" as never}
-          className="flex items-center gap-1.5 rounded-[10px] bg-[#0f6e50] px-4 py-2 text-[12px] font-semibold text-white hover:bg-[#0d5f44]"
+          className="flex items-center gap-1.5 rounded-[10px] bg-[#d9622c] px-4 py-2 text-[12px] font-semibold text-white hover:bg-[#b74e1e]"
         >
           <Plus size={14} />
           <span className="hidden sm:inline">Nuevo presupuesto</span>
@@ -219,7 +219,7 @@ export default function OrdersPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar orden o cliente..."
-            className="h-[36px] w-full rounded-[10px] border border-[#dde4ee] bg-[#f8fafc] pl-8 pr-3 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#0f6e50] focus:outline-none focus:ring-1 focus:ring-[#0f6e50]/20"
+            className="h-[36px] w-full rounded-[10px] border border-[#dde4ee] bg-[#f8fafc] pl-8 pr-3 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#d9622c] focus:outline-none focus:ring-1 focus:ring-[#d9622c]/20"
           />
         </div>
 
@@ -227,7 +227,7 @@ export default function OrdersPage() {
         <div className="flex overflow-x-auto overflow-y-hidden rounded-[10px] border border-[#dde4ee] bg-[#f8fafc]">
           <button
             onClick={() => setFilterStatus("ALL")}
-            className={`whitespace-nowrap px-3 py-1.5 text-[12px] font-medium transition-colors ${filterStatus === "ALL" ? "bg-[#0f6e50] text-white" : "text-[#475569] hover:bg-[#f1f5f9]"}`}
+            className={`whitespace-nowrap px-3 py-1.5 text-[12px] font-medium transition-colors ${filterStatus === "ALL" ? "bg-[#d9622c] text-white" : "text-[#475569] hover:bg-[#f1f5f9]"}`}
           >
             Todos
           </button>
@@ -235,7 +235,7 @@ export default function OrdersPage() {
             <button
               key={s}
               onClick={() => setFilterStatus(s)}
-              className={`whitespace-nowrap px-3 py-1.5 text-[12px] font-medium transition-colors ${filterStatus === s ? "bg-[#0f6e50] text-white" : "text-[#475569] hover:bg-[#f1f5f9]"}`}
+              className={`whitespace-nowrap px-3 py-1.5 text-[12px] font-medium transition-colors ${filterStatus === s ? "bg-[#d9622c] text-white" : "text-[#475569] hover:bg-[#f1f5f9]"}`}
             >
               {STATUS_CONFIG[s].label}
             </button>
@@ -334,7 +334,7 @@ export default function OrdersPage() {
                       type="checkbox"
                       checked={allFilteredSelected}
                       onChange={toggleAll}
-                      className="h-4 w-4 cursor-pointer accent-[#0f6e50]"
+                      className="h-4 w-4 cursor-pointer accent-[#d9622c]"
                       title={allFilteredSelected ? "Deseleccionar todos" : "Seleccionar todos"}
                     />
                   </th>
@@ -386,7 +386,7 @@ export default function OrdersPage() {
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => toggleOne(order.id)}
-                      className="mt-0.5 h-4 w-4 cursor-pointer accent-[#0f6e50]"
+                      className="mt-0.5 h-4 w-4 cursor-pointer accent-[#d9622c]"
                     />
                     <Link href={`/orders/${order.id}` as never} className="flex-1">
                       <div className="flex items-start justify-between">

@@ -28,6 +28,7 @@ import type { QuoteStatus } from "@/lib/api/quotes";
 import dynamic from "next/dynamic";
 import SendQuoteEmailModal from "@/components/email/SendQuoteEmailModal";
 import SendWarrantiesEmailModal from "@/components/warranties/SendWarrantiesEmailModal";
+import { CutDiagram, type CutRow } from "@/components/quotes/CutDiagram";
 
 const DownloadPDFButton = dynamic(() => import("@/components/pdf/DownloadPDFButton"), { ssr: false });
 
@@ -95,7 +96,7 @@ export default function QuoteDetailPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-[#f0f4f8]">
         <p className="text-[14px] text-[#475569]">Presupuesto no encontrado.</p>
-        <Link href="/orders" className="text-[13px] text-[#0f6e50] hover:underline">
+        <Link href="/orders" className="text-[13px] text-[#d9622c] hover:underline">
           Volver a órdenes
         </Link>
       </div>
@@ -108,7 +109,15 @@ export default function QuoteDetailPage() {
 
   const totalM2 = quote.glass_panes.reduce((s, p) => s + Number(p.surface_m2), 0);
   const cutPlan = quote.cut_plan_snapshot as {
-    materials?: { product_name: string; linear_m: number; rolls: number; efficiency_pct: number; cuts: { pieces: { label: string }[] }[] }[];
+    materials?: {
+      product_name: string;
+      linear_m: number;
+      rolls: number;
+      efficiency_pct: number;
+      area_useful_m2: number;
+      roll_width_cm: number;
+      cuts: CutRow[];
+    }[];
     total_linear_m?: number;
     total_rolls?: number;
   };
@@ -175,7 +184,7 @@ export default function QuoteDetailPage() {
             <button
               onClick={() => updateStatus.mutate({ id: quote.id, status: nextStatus })}
               disabled={updateStatus.isPending}
-              className="rounded-[10px] bg-[#0f6e50] px-4 py-2 text-[12px] font-semibold text-white disabled:opacity-50 hover:bg-[#0d5f44]"
+              className="rounded-[10px] bg-[#d9622c] px-4 py-2 text-[12px] font-semibold text-white disabled:opacity-50 hover:bg-[#b74e1e]"
             >
               {nextLabel}
             </button>
@@ -231,7 +240,7 @@ export default function QuoteDetailPage() {
             </Section>
 
             {/* Glass panes */}
-            <Section title="Vidrios del Proyecto" icon={<Layers size={15} className="text-[#0f6e50]" />}>
+            <Section title="Vidrios del Proyecto" icon={<Layers size={15} className="text-[#d9622c]" />}>
               <div className="mb-3 flex items-center gap-2">
                 <span className="rounded-full bg-blue-50 px-3 py-1 text-[12px] font-semibold text-blue-700">
                   {totalM2.toFixed(2)} m²
@@ -299,28 +308,39 @@ export default function QuoteDetailPage() {
                     <p className="text-[10px] text-[#94a3b8]">Estrategia</p>
                   </div>
                 </div>
-                {cutPlan.materials.map((mat, mi) => (
-                  <div key={mi} className={mi > 0 ? "mt-3 border-t border-[#f1f5f9] pt-3" : ""}>
-                    <div className="flex items-center justify-between rounded-[8px] bg-[#f8fafc] px-3 py-2">
-                      <p className="text-[12px] font-semibold text-[#0f172a]">
-                        {cutPlan.materials!.length > 1 ? `Corte ${mi + 1}: ${mat.product_name}` : `Corte #1`}
-                      </p>
-                      <p className="text-[11px] text-[#94a3b8]">{mat.linear_m}m · {mat.rolls} rollo{mat.rolls !== 1 ? "s" : ""}</p>
-                    </div>
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {mat.cuts.flatMap((row, ri) =>
-                        row.pieces.map((piece, pi) => (
-                          <span
-                            key={`${ri}-${pi}`}
-                            className="rounded-[6px] bg-[#f1f5f9] px-2 py-0.5 text-[11px] font-medium text-[#475569]"
-                          >
-                            {piece.label}
-                          </span>
-                        ))
+                {cutPlan.materials.map((mat, mi) => {
+                  const paneIds = mat.cuts.flatMap((row) => row.pieces.map((p) => p.pane_id));
+                  return (
+                    <div key={mi} className={mi > 0 ? "mt-5 border-t border-[#f1f5f9] pt-5" : ""}>
+                      {cutPlan.materials!.length > 1 && (
+                        <p className="mb-3 text-[12px] font-semibold text-[#0f172a]">
+                          Corte {mi + 1}: {mat.product_name}
+                        </p>
+                      )}
+                      <div className="mb-3 grid grid-cols-4 gap-2">
+                        <div className="rounded-[10px] bg-[#f0f4f8] p-3 text-center">
+                          <p className="text-[16px] font-bold text-[#0f172a]">{mat.linear_m}m</p>
+                          <p className="text-[10px] text-[#94a3b8]">Metros Lineales</p>
+                        </div>
+                        <div className="rounded-[10px] bg-emerald-50 p-3 text-center">
+                          <p className="text-[16px] font-bold text-emerald-700">{mat.rolls}</p>
+                          <p className="text-[10px] text-[#94a3b8]">Rollo{mat.rolls !== 1 ? "s" : ""}</p>
+                        </div>
+                        <div className="rounded-[10px] bg-[#f0f4f8] p-3 text-center">
+                          <p className="text-[16px] font-bold text-[#0f172a]">{mat.efficiency_pct}%</p>
+                          <p className="text-[10px] text-[#94a3b8]">Eficiencia</p>
+                        </div>
+                        <div className="rounded-[10px] bg-amber-50 p-3 text-center">
+                          <p className="text-[14px] font-bold text-amber-600">{mat.area_useful_m2}m²</p>
+                          <p className="text-[10px] text-[#94a3b8]">Área Útil</p>
+                        </div>
+                      </div>
+                      {mat.cuts.length > 0 && (
+                        <CutDiagram rows={mat.cuts} rollWidthCm={mat.roll_width_cm} paneIds={paneIds} gapCm={quote.gap_cm} />
                       )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </Section>
             )}
 
@@ -346,7 +366,7 @@ export default function QuoteDetailPage() {
                     <div
                       key={line.line_id}
                       className="rounded-[10px] border border-[#e8ecf2] px-4 py-3"
-                      style={{ borderLeftColor: String(snap.brand_color ?? "#0f6e50"), borderLeftWidth: 3 }}
+                      style={{ borderLeftColor: String(snap.brand_color ?? "#d9622c"), borderLeftWidth: 3 }}
                     >
                       <p className="text-[13px] font-semibold text-[#0f172a]">{String(snap.name ?? "")}</p>
                       <p className="text-[11px] text-[#94a3b8]">
@@ -400,7 +420,7 @@ export default function QuoteDetailPage() {
                   </div>
                 )}
               </div>
-              <div className="mt-4 flex items-center justify-between rounded-[12px] bg-[#0f6e50] px-4 py-3">
+              <div className="mt-4 flex items-center justify-between rounded-[12px] bg-[#d9622c] px-4 py-3">
                 <div>
                   <span className="text-[13px] font-bold text-white">TOTAL</span>
                   {Number(quote.tax_pct) > 0 && <p className="text-[10px] text-white/70">IVA {Number(quote.tax_pct)}% incluido</p>}

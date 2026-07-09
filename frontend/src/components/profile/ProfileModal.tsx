@@ -48,7 +48,7 @@ type CompanyValues = z.infer<typeof companySchema>;
 // ── Shared input style ────────────────────────────────────────────────────────
 
 const inputCls =
-  "h-[42px] w-full rounded-[10px] border border-[#cbd5e1] bg-[#f8fafc] px-3.5 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#0f6e50] focus:outline-none focus:ring-2 focus:ring-[#0f6e50]/20";
+  "h-[42px] w-full rounded-[10px] border border-[#cbd5e1] bg-[#f8fafc] px-3.5 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#d9622c] focus:outline-none focus:ring-2 focus:ring-[#d9622c]/20";
 
 function Field({
   label,
@@ -122,7 +122,7 @@ function PasswordSection({ userId }: { userId: string }) {
       <button
         type="submit"
         disabled={isPending}
-        className="mt-1 h-[42px] w-full rounded-[10px] bg-[#0f6e50] text-[13px] font-semibold text-white transition-colors hover:bg-[#0a5a40] disabled:opacity-60"
+        className="mt-1 h-[42px] w-full rounded-[10px] bg-[#d9622c] text-[13px] font-semibold text-white transition-colors hover:bg-[#b74e1e] disabled:opacity-60"
       >
         {isPending ? "Guardando..." : "Cambiar contraseña"}
       </button>
@@ -304,7 +304,7 @@ function CompanySection({ userId }: { userId: string }) {
       <button
         type="submit"
         disabled={isPending || uploading}
-        className="mt-1 h-[42px] w-full rounded-[10px] bg-[#0f6e50] text-[13px] font-semibold text-white transition-colors hover:bg-[#0a5a40] disabled:opacity-60"
+        className="mt-1 h-[42px] w-full rounded-[10px] bg-[#d9622c] text-[13px] font-semibold text-white transition-colors hover:bg-[#b74e1e] disabled:opacity-60"
       >
         {isPending ? "Guardando..." : "Guardar empresa"}
       </button>
@@ -348,7 +348,7 @@ export default function ProfileModal({ userId, userName, userEmail, onClose }: P
 
         {/* Avatar + info */}
         <div className="flex items-center gap-4 bg-[#f8fafc] px-6 py-5">
-          <div className="flex h-[56px] w-[56px] shrink-0 items-center justify-center rounded-full bg-[#0f6e50] text-[18px] font-bold text-white">
+          <div className="flex h-[56px] w-[56px] shrink-0 items-center justify-center rounded-full bg-[#d9622c] text-[18px] font-bold text-white">
             {initials}
           </div>
           <div>
@@ -367,7 +367,7 @@ export default function ProfileModal({ userId, userName, userEmail, onClose }: P
               onClick={() => setTab(id)}
               className={`flex flex-1 items-center justify-center gap-2 py-3 text-[13px] font-medium transition-colors ${
                 tab === id
-                  ? "border-b-2 border-[#0f6e50] text-[#0f6e50]"
+                  ? "border-b-2 border-[#d9622c] text-[#d9622c]"
                   : "text-[#94a3b8] hover:text-[#475569]"
               }`}
             >

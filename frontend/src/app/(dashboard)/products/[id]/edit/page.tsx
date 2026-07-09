@@ -56,10 +56,10 @@ function Input({
       <Label required={required}>{label}</Label>
       <input
         {...props}
-        className={`h-[42px] w-full rounded-[10px] border px-3 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#0f6e50]/20 ${
+        className={`h-[42px] w-full rounded-[10px] border px-3 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#d9622c]/20 ${
           error
             ? "border-red-400 bg-red-50 focus:border-red-400"
-            : "border-[#dde4ee] bg-[#f8fafc] focus:border-[#0f6e50]"
+            : "border-[#dde4ee] bg-[#f8fafc] focus:border-[#d9622c]"
         }`}
       />
       {hint && !error && <p className="mt-1 text-[11px] text-[#94a3b8]">{hint}</p>}
@@ -78,7 +78,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 }
 
 const PRESET_COLORS = [
-  "#0f6e50", "#10b981", "#3b82f6", "#8b5cf6",
+  "#d9622c", "#10b981", "#3b82f6", "#8b5cf6",
   "#f59e0b", "#ef4444", "#06b6d4", "#ec4899",
   "#84cc16", "#1d4ed8", "#7c3aed", "#0891b2",
 ];
@@ -90,7 +90,7 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (c: string)
       <div className="flex flex-wrap gap-2">
         {PRESET_COLORS.map((c) => (
           <button key={c} type="button" onClick={() => onChange(c)}
-            className={`h-7 w-7 rounded-full transition-transform hover:scale-110 ${value === c ? "ring-2 ring-offset-1 ring-[#0f6e50]" : ""}`}
+            className={`h-7 w-7 rounded-full transition-transform hover:scale-110 ${value === c ? "ring-2 ring-offset-1 ring-[#d9622c]" : ""}`}
             style={{ background: c }}
           />
         ))}
@@ -136,9 +136,9 @@ function FileUploadZone({
         </div>
       ) : (
         <button type="button" onClick={() => ref.current?.click()} disabled={isUploading}
-          className="flex w-full cursor-pointer flex-col items-center gap-2 rounded-[10px] border-2 border-dashed border-[#dde4ee] bg-[#f8fafc] px-4 py-6 text-center transition-colors hover:border-[#0f6e50]/50 hover:bg-[#f0faf6] disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex w-full cursor-pointer flex-col items-center gap-2 rounded-[10px] border-2 border-dashed border-[#dde4ee] bg-[#f8fafc] px-4 py-6 text-center transition-colors hover:border-[#d9622c]/50 hover:bg-[#fbeee1] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isUploading ? <Loader2 size={20} className="animate-spin text-[#0f6e50]" /> : <Icon size={20} className="text-[#94a3b8]" />}
+          {isUploading ? <Loader2 size={20} className="animate-spin text-[#d9622c]" /> : <Icon size={20} className="text-[#94a3b8]" />}
           <span className="text-[12px] font-medium text-[#475569]">{isUploading ? "Subiendo..." : "Hacer clic para subir"}</span>
           <span className="text-[11px] text-[#94a3b8]">{hint}</span>
         </button>
@@ -157,13 +157,13 @@ function InlineCreate({ placeholder, onConfirm, onCancel, isLoading }: {
 }) {
   const [val, setVal] = useState("");
   return (
-    <div className="mt-2 flex items-center gap-2 rounded-[8px] border border-[#0f6e50]/30 bg-[#f0faf6] p-2">
+    <div className="mt-2 flex items-center gap-2 rounded-[8px] border border-[#d9622c]/30 bg-[#fbeee1] p-2">
       <input autoFocus value={val} onChange={(e) => setVal(e.target.value)} placeholder={placeholder}
         onKeyDown={(e) => { if (e.key === "Enter" && val.trim()) onConfirm(val.trim()); if (e.key === "Escape") onCancel(); }}
         className="flex-1 bg-transparent text-[12px] text-[#0f172a] outline-none placeholder:text-[#94a3b8]"
       />
       <button type="button" onClick={() => val.trim() && onConfirm(val.trim())} disabled={isLoading || !val.trim()}
-        className="flex h-6 w-6 items-center justify-center rounded-full bg-[#0f6e50] text-white disabled:opacity-40"
+        className="flex h-6 w-6 items-center justify-center rounded-full bg-[#d9622c] text-white disabled:opacity-40"
       >
         {isLoading ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
       </button>
@@ -218,7 +218,7 @@ export default function EditProductPage() {
   const [techSheetUrl, setTechSheetUrl] = useState<string | null>(null);
 
   const [showNewBrand, setShowNewBrand] = useState(false);
-  const [newBrandColor, setNewBrandColor] = useState("#0f6e50");
+  const [newBrandColor, setNewBrandColor] = useState("#d9622c");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingSheet, setUploadingSheet] = useState(false);
@@ -268,7 +268,7 @@ export default function EditProductPage() {
       <div className="flex min-h-screen items-center justify-center bg-[#f0f4f8]">
         <div className="text-center">
           <p className="text-[14px] text-[#64748b]">Producto no encontrado.</p>
-          <Link href="/products" className="mt-3 inline-block text-[13px] text-[#0f6e50] underline">Volver al catálogo</Link>
+          <Link href="/products" className="mt-3 inline-block text-[13px] text-[#d9622c] underline">Volver al catálogo</Link>
         </div>
       </div>
     );
@@ -336,7 +336,7 @@ export default function EditProductPage() {
     setBrandId(created.id);
     setShowNewBrand(false);
     setLogoUrl(null);
-    setNewBrandColor("#0f6e50");
+    setNewBrandColor("#d9622c");
   }
 
   async function handleCreateCategory(catName: string) {
@@ -364,7 +364,7 @@ export default function EditProductPage() {
   return (
     <div className="flex min-h-screen flex-col bg-[#f0f4f8]">
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <header className="flex items-center justify-between bg-[#0f6e50] px-5 py-3">
+      <header className="flex items-center justify-between bg-[#d9622c] px-5 py-3">
         <div className="flex items-center gap-3">
           <Link
             href={`/products/${id}`}
@@ -404,7 +404,7 @@ export default function EditProductPage() {
                 <Label required>Marca</Label>
                 {!showNewBrand && (
                   <button type="button" onClick={() => setShowNewBrand(true)}
-                    className="mb-1.5 flex items-center gap-1 text-[11px] font-medium text-[#0f6e50] hover:underline"
+                    className="mb-1.5 flex items-center gap-1 text-[11px] font-medium text-[#d9622c] hover:underline"
                   >
                     <Plus size={11} /> Nueva marca
                   </button>
@@ -412,8 +412,8 @@ export default function EditProductPage() {
               </div>
               {!showNewBrand ? (
                 <select value={brandId} onChange={(e) => setBrandId(e.target.value)}
-                  className={`h-[42px] w-full rounded-[10px] border px-3 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0f6e50]/20 ${
-                    errors.brand ? "border-red-400 bg-red-50" : "border-[#dde4ee] bg-[#f8fafc] focus:border-[#0f6e50]"
+                  className={`h-[42px] w-full rounded-[10px] border px-3 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#d9622c]/20 ${
+                    errors.brand ? "border-red-400 bg-red-50" : "border-[#dde4ee] bg-[#f8fafc] focus:border-[#d9622c]"
                   }`}
                 >
                   <option value="">Seleccioná una marca...</option>
@@ -422,8 +422,8 @@ export default function EditProductPage() {
                   ))}
                 </select>
               ) : (
-                <div className="rounded-[12px] border border-[#0f6e50]/30 bg-[#f0faf6] p-4 space-y-4">
-                  <p className="text-[12px] font-semibold text-[#0f6e50]">Crear nueva marca</p>
+                <div className="rounded-[12px] border border-[#d9622c]/30 bg-[#fbeee1] p-4 space-y-4">
+                  <p className="text-[12px] font-semibold text-[#d9622c]">Crear nueva marca</p>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <Input label="Nombre de la marca" required placeholder="Ej: 3M, LLumar, SunTek" id="new-brand-name-edit" />
                     <ColorPicker value={newBrandColor} onChange={setNewBrandColor} />
@@ -435,7 +435,7 @@ export default function EditProductPage() {
                   <div className="flex gap-2">
                     <button type="button" disabled={creatingBrand}
                       onClick={() => { const inp = document.getElementById("new-brand-name-edit") as HTMLInputElement; if (inp?.value.trim()) handleCreateBrand(inp.value.trim()); }}
-                      className="flex items-center gap-1.5 rounded-[8px] bg-[#0f6e50] px-4 py-2 text-[12px] font-semibold text-white hover:bg-[#0a5a40] disabled:opacity-60"
+                      className="flex items-center gap-1.5 rounded-[8px] bg-[#d9622c] px-4 py-2 text-[12px] font-semibold text-white hover:bg-[#b74e1e] disabled:opacity-60"
                     >
                       {creatingBrand ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
                       Guardar marca
@@ -450,7 +450,7 @@ export default function EditProductPage() {
               )}
               {errors.brand && <p className="mt-1 text-[11px] text-red-500">{errors.brand}</p>}
               {selectedBrand && (
-                <div className="mt-2 flex items-center gap-2 rounded-[8px] bg-[#f0faf6] px-3 py-2">
+                <div className="mt-2 flex items-center gap-2 rounded-[8px] bg-[#fbeee1] px-3 py-2">
                   {selectedBrand.logo_url ? (
                     <img src={selectedBrand.logo_url} alt={selectedBrand.name} className="h-6 w-6 rounded-full object-cover" />
                   ) : (
@@ -458,7 +458,7 @@ export default function EditProductPage() {
                       {selectedBrand.name.charAt(0)}
                     </span>
                   )}
-                  <span className="text-[12px] font-medium text-[#0f6e50]">{selectedBrand.name}</span>
+                  <span className="text-[12px] font-medium text-[#d9622c]">{selectedBrand.name}</span>
                 </div>
               )}
             </div>
@@ -469,15 +469,15 @@ export default function EditProductPage() {
                 <Label required>Categoría</Label>
                 {!showNewCategory && (
                   <button type="button" onClick={() => setShowNewCategory(true)}
-                    className="mb-1.5 flex items-center gap-1 text-[11px] font-medium text-[#0f6e50] hover:underline"
+                    className="mb-1.5 flex items-center gap-1 text-[11px] font-medium text-[#d9622c] hover:underline"
                   >
                     <Plus size={11} /> Nueva categoría
                   </button>
                 )}
               </div>
               <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}
-                className={`h-[42px] w-full rounded-[10px] border px-3 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0f6e50]/20 ${
-                  errors.category ? "border-red-400 bg-red-50" : "border-[#dde4ee] bg-[#f8fafc] focus:border-[#0f6e50]"
+                className={`h-[42px] w-full rounded-[10px] border px-3 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#d9622c]/20 ${
+                  errors.category ? "border-red-400 bg-red-50" : "border-[#dde4ee] bg-[#f8fafc] focus:border-[#d9622c]"
                 }`}
               >
                 <option value="">Seleccioná una categoría...</option>
@@ -511,8 +511,8 @@ export default function EditProductPage() {
                     <button key={value} type="button" onClick={() => toggleAppType(value)}
                       className={`flex flex-1 items-center justify-center gap-2 rounded-[10px] border-2 py-3 text-[13px] font-semibold transition-colors ${
                         selected
-                          ? "border-[#0f6e50] bg-[#f0faf6] text-[#0f6e50]"
-                          : "border-[#dde4ee] bg-[#f8fafc] text-[#94a3b8] hover:border-[#0f6e50]/40 hover:text-[#475569]"
+                          ? "border-[#d9622c] bg-[#fbeee1] text-[#d9622c]"
+                          : "border-[#dde4ee] bg-[#f8fafc] text-[#94a3b8] hover:border-[#d9622c]/40 hover:text-[#475569]"
                       }`}
                     >
                       <Icon size={16} /> {label}
@@ -528,7 +528,7 @@ export default function EditProductPage() {
                 <Label>Vidrios compatibles</Label>
                 {!showNewGlassType && (
                   <button type="button" onClick={() => setShowNewGlassType(true)}
-                    className="mb-1.5 flex items-center gap-1 text-[11px] font-medium text-[#0f6e50] hover:underline"
+                    className="mb-1.5 flex items-center gap-1 text-[11px] font-medium text-[#d9622c] hover:underline"
                   >
                     <Plus size={11} /> Nuevo tipo
                   </button>
@@ -537,7 +537,7 @@ export default function EditProductPage() {
               {glassTypes.length === 0 && !showNewGlassType ? (
                 <p className="text-[12px] text-[#94a3b8]">
                   No hay tipos de vidrio.{" "}
-                  <button type="button" onClick={() => setShowNewGlassType(true)} className="text-[#0f6e50] underline">Crear el primero</button>
+                  <button type="button" onClick={() => setShowNewGlassType(true)} className="text-[#d9622c] underline">Crear el primero</button>
                 </p>
               ) : (
                 <div className="flex flex-wrap gap-2">
@@ -547,8 +547,8 @@ export default function EditProductPage() {
                       <button key={g.id} type="button" onClick={() => toggleGlass(g.id)}
                         className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors ${
                           selected
-                            ? "border-[#0f6e50] bg-[#0f6e50] text-white"
-                            : "border-[#dde4ee] bg-[#f8fafc] text-[#475569] hover:border-[#0f6e50]/40"
+                            ? "border-[#d9622c] bg-[#d9622c] text-white"
+                            : "border-[#dde4ee] bg-[#f8fafc] text-[#475569] hover:border-[#d9622c]/40"
                         }`}
                       >
                         {selected && <Check size={11} />} {g.name}
@@ -598,8 +598,8 @@ export default function EditProductPage() {
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-[#94a3b8]">$</span>
               <input type="number" min="0" step="0.01" placeholder="0.00" value={salePrice}
                 onChange={(e) => setSalePrice(e.target.value)}
-                className={`h-[42px] w-full rounded-[10px] border pl-7 pr-3 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#0f6e50]/20 ${
-                  errors.sale_price ? "border-red-400 bg-red-50" : "border-[#dde4ee] bg-[#f8fafc] focus:border-[#0f6e50]"
+                className={`h-[42px] w-full rounded-[10px] border pl-7 pr-3 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#d9622c]/20 ${
+                  errors.sale_price ? "border-red-400 bg-red-50" : "border-[#dde4ee] bg-[#f8fafc] focus:border-[#d9622c]"
                 }`}
               />
             </div>
@@ -627,7 +627,7 @@ export default function EditProductPage() {
             Cancelar
           </Link>
           <button type="submit" disabled={saving}
-            className="flex items-center gap-2 rounded-[10px] bg-[#0f6e50] px-6 py-2.5 text-[13px] font-semibold text-white hover:bg-[#0a5a40] disabled:opacity-60"
+            className="flex items-center gap-2 rounded-[10px] bg-[#d9622c] px-6 py-2.5 text-[13px] font-semibold text-white hover:bg-[#b74e1e] disabled:opacity-60"
           >
             {saving && <Loader2 size={14} className="animate-spin" />}
             {saving ? "Guardando..." : "Guardar cambios"}

@@ -24,10 +24,11 @@ from centy.application.quotes.handlers import (
     CreateQuoteHandler,
     DeleteQuoteHandler,
     GetQuoteHandler,
+    GetQuoteStatsHandler,
     UpdateQuoteHandler,
     UpdateQuoteStatusHandler,
 )
-from centy.application.quotes.queries import GetQuoteQuery
+from centy.application.quotes.queries import GetQuoteQuery, GetQuoteStatsQuery
 from centy.domain.quotes.entities import Quote
 from centy.domain.quotes.value_objects import FilmMode, LocationType, QuoteStatus
 from centy.domain.shared.exceptions import AuthorizationError, NotFoundError
@@ -511,3 +512,64 @@ class TestDeleteQuoteHandler:
                     requester_role="OPERATOR",
                 )
             )
+
+
+# ── GetQuoteStatsHandler ──────────────────────────────────────────────────────
+
+
+class TestGetQuoteStatsHandler:
+    @pytest.mark.asyncio
+    async def test_agrega_revenue_total_y_por_usuario(
+        self,
+        uow: FakeQuoteUnitOfWork,
+        quote_repo: FakeQuoteRepository,
+        tenant_id: TenantId,
+    ) -> None:
+        user_a = uuid4()
+        user_b = uuid4()
+
+        # user_a: una quote aceptada ($1000) y una cancelada (no cuenta)
+        accepted = await CreateQuoteHandler(uow).handle(_create_cmd(tenant_id, user_a))
+        await UpdateQuoteStatusHandler(uow).handle(
+            UpdateQuoteStatusCommand(
+                quote_id=UUID(accepted.quote_id),
+                tenant_id=tenant_id,
+                requester_user_id=user_a,
+                requester_role="OPERATOR",
+                new_status=QuoteStatus.SENT,
+            )
+        )
+        await UpdateQuoteStatusHandler(uow).handle(
+            UpdateQuoteStatusCommand(
+                quote_id=UUID(accepted.quote_id),
+                tenant_id=tenant_id,
+                requester_user_id=user_a,
+                requester_role="OPERATOR",
+                new_status=QuoteStatus.ACCEPTED,
+            )
+        )
+        cancelled = await CreateQuoteHandler(uow).handle(_create_cmd(tenant_id, user_a))
+        await UpdateQuoteStatusHandler(uow).handle(
+            UpdateQuoteStatusCommand(
+                quote_id=UUID(cancelled.quote_id),
+                tenant_id=tenant_id,
+                requester_user_id=user_a,
+                requester_role="OPERATOR",
+                new_status=QuoteStatus.CANCELLED,
+            )
+        )
+
+        # user_b: una quote en DRAFT (no cuenta como revenue)
+        await CreateQuoteHandler(uow).handle(_create_cmd(tenant_id, user_b))
+
+        result = await GetQuoteStatsHandler(quote_repo).handle(
+            GetQuoteStatsQuery(tenant_id=tenant_id)
+        )
+
+        assert result.total_quotes == 3
+        assert result.total_revenue == Decimal("1000.00")
+        assert result.revenue_this_month == Decimal("1000.00")
+
+        by_user = {u.user_id: u for u in result.per_user}
+        assert by_user[str(user_a)].total_revenue == Decimal("1000.00")
+        assert by_user[str(user_b)].total_revenue == Decimal("0")

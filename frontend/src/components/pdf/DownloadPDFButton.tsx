@@ -65,7 +65,7 @@ export default function DownloadPDFButton({
 
   const base =
     variant === "primary"
-      ? "flex items-center gap-1.5 rounded-[10px] bg-[#0f6e50] px-4 py-2 text-[12px] font-semibold text-white hover:bg-[#0d5f44] disabled:opacity-50"
+      ? "flex items-center gap-1.5 rounded-[10px] bg-[#d9622c] px-4 py-2 text-[12px] font-semibold text-white hover:bg-[#b74e1e] disabled:opacity-50"
       : "flex items-center gap-1.5 rounded-[10px] border border-[#dde4ee] px-4 py-2 text-[12px] font-semibold text-[#475569] hover:bg-[#f1f5f9] disabled:opacity-50";
 
   const cls = className ?? base;

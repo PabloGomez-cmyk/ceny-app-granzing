@@ -77,12 +77,12 @@ export default function UserMenu({
   const badgeCls =
     variant === "dark"
       ? "hidden max-w-[160px] truncate rounded-full border border-white/40 px-3 py-1 text-[12px] font-medium text-white hover:bg-white/10 sm:inline"
-      : "hidden max-w-[160px] truncate rounded-full border border-[#0f6e50] px-3 py-1 text-[12px] font-medium text-[#0f6e50] hover:bg-[#f0faf6] sm:inline";
+      : "hidden max-w-[160px] truncate rounded-full border border-[#d9622c] px-3 py-1 text-[12px] font-medium text-[#d9622c] hover:bg-[#fbeee1] sm:inline";
 
   const avatarCls =
     variant === "dark"
       ? "flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-[13px] font-bold text-white hover:bg-white/30"
-      : "flex h-9 w-9 items-center justify-center rounded-full bg-[#0f6e50] text-[13px] font-bold text-white hover:opacity-90";
+      : "flex h-9 w-9 items-center justify-center rounded-full bg-[#d9622c] text-[13px] font-bold text-white hover:opacity-90";
 
   return (
     <div ref={menuRef} className="relative">
@@ -100,7 +100,7 @@ export default function UserMenu({
         <div className="absolute right-0 top-full z-50 mt-2 w-[230px] overflow-hidden rounded-[14px] border border-[#e2e6f0] bg-white shadow-xl">
           {/* Info de usuario */}
           <div className="flex items-center gap-3 border-b border-[#f1f5f9] p-4">
-            <div className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-[#0f6e50] text-[14px] font-bold text-white">
+            <div className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-[#d9622c] text-[14px] font-bold text-white">
               {initials}
             </div>
             <div className="min-w-0">
@@ -110,7 +110,7 @@ export default function UserMenu({
                 </p>
               )}
               <p className="truncate text-[11px] text-[#94a3b8]">{email}</p>
-              <span className="mt-0.5 inline-block rounded-full bg-[#dcfce7] px-2 py-0.5 text-[10px] font-semibold text-[#0f6e50]">
+              <span className="mt-0.5 inline-block rounded-full bg-[#fbeee1] px-2 py-0.5 text-[10px] font-semibold text-[#d9622c]">
                 {roleLabel}
               </span>
             </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import {
@@ -30,10 +31,9 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { useQuotes, useQuoteStats } from "@/hooks/useQuotes";
+import { useQuotes } from "@/hooks/useQuotes";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useProducts, useCategories } from "@/hooks/useProducts";
-import { useUsers } from "@/hooks/useUsers";
 import UserMenu from "@/components/layout/UserMenu";
 import type { Quote } from "@/lib/api/quotes";
 
@@ -130,19 +130,19 @@ interface KpiCardProps {
 
 function KpiCard({ label, value, sub, icon, trend, accent, loading }: KpiCardProps) {
   return (
-    <div className={`rounded-[14px] border bg-white p-5 ${accent ? "border-l-4 border-l-[#0f6e50] border-[#e8ecf2]" : "border-[#e8ecf2]"}`}>
+    <div className={`rounded-[14px] border bg-white p-5 ${accent ? "border-l-4 border-l-[#d9622c] border-[#e8ecf2]" : "border-[#e8ecf2]"}`}>
       <div className="mb-3 flex items-center justify-between">
         <span className="text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">
           {label}
         </span>
-        <div className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-[#f0faf6] text-[#0f6e50]">
+        <div className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-[#fbeee1] text-[#d9622c]">
           {icon}
         </div>
       </div>
       {loading ? (
         <div className="h-8 w-24 animate-pulse rounded-[6px] bg-[#f1f5f9]" />
       ) : (
-        <p className={`text-[28px] font-bold leading-none ${accent ? "text-[#0f6e50]" : "text-[#0f172a]"}`}>
+        <p className={`text-[28px] font-bold leading-none ${accent ? "text-[#d9622c]" : "text-[#0f172a]"}`}>
           {value}
         </p>
       )}
@@ -257,7 +257,7 @@ function MonthlyChart({ quotes }: { quotes: Quote[] }) {
     return (
       <div className="rounded-[10px] border border-[#e2e8f0] bg-white px-4 py-3 shadow-lg">
         <p className="mb-1 text-[12px] font-semibold capitalize text-[#0f172a]">{label}</p>
-        <p className="text-[13px] font-bold text-[#0f6e50]">{moneyFull(payload[0].value)}</p>
+        <p className="text-[13px] font-bold text-[#d9622c]">{moneyFull(payload[0].value)}</p>
         <p className="text-[11px] text-[#94a3b8]">{payload[0].payload.count} orden{payload[0].payload.count !== 1 ? "es" : ""}</p>
       </div>
     );
@@ -265,7 +265,7 @@ function MonthlyChart({ quotes }: { quotes: Quote[] }) {
 
   return (
     <div className="rounded-[14px] border border-[#e8ecf2] bg-white p-5">
-      <p className="mb-1 text-[14px] font-bold text-[#0f6e50]">Ventas mensuales</p>
+      <p className="mb-1 text-[14px] font-bold text-[#d9622c]">Ventas mensuales</p>
       <p className="mb-5 text-[12px] text-[#94a3b8]">Presupuestos aceptados + facturados + terminados</p>
       {!hasData ? (
         <div className="flex h-[200px] items-center justify-center text-[13px] text-[#94a3b8]">
@@ -292,10 +292,10 @@ function MonthlyChart({ quotes }: { quotes: Quote[] }) {
             <Line
               type="monotone"
               dataKey="total"
-              stroke="#0f6e50"
+              stroke="#d9622c"
               strokeWidth={2.5}
-              dot={{ fill: "#0f6e50", r: 4, strokeWidth: 0 }}
-              activeDot={{ r: 6, fill: "#0f6e50" }}
+              dot={{ fill: "#d9622c", r: 4, strokeWidth: 0 }}
+              activeDot={{ r: 6, fill: "#d9622c" }}
             />
           </LineChart>
         </ResponsiveContainer>
@@ -383,7 +383,7 @@ function QuoteTable({
     <div className="rounded-[14px] border border-[#e8ecf2] bg-white">
       <div className="flex items-center justify-between border-b border-[#f1f5f9] px-5 py-4">
         <p className="text-[13px] font-semibold text-[#0f172a]">{title}</p>
-        <Link href="/orders" className="flex items-center gap-1 text-[12px] font-medium text-[#0f6e50] hover:text-[#0a5a40]">
+        <Link href="/orders" className="flex items-center gap-1 text-[12px] font-medium text-[#d9622c] hover:text-[#b74e1e]">
           Ver todas <ChevronRight size={13} />
         </Link>
       </div>
@@ -436,7 +436,7 @@ function RecentOrders({ quotes }: { quotes: Quote[] }) {
     <div className="rounded-[14px] border border-[#e8ecf2] bg-white">
       <div className="flex items-center justify-between border-b border-[#f1f5f9] px-5 py-4">
         <p className="text-[13px] font-semibold text-[#0f172a]">Últimas órdenes</p>
-        <Link href="/orders" className="flex items-center gap-1 text-[12px] font-medium text-[#0f6e50] hover:text-[#0a5a40]">
+        <Link href="/orders" className="flex items-center gap-1 text-[12px] font-medium text-[#d9622c] hover:text-[#b74e1e]">
           Ver todas <ChevronRight size={13} />
         </Link>
       </div>
@@ -480,51 +480,6 @@ function RecentOrders({ quotes }: { quotes: Quote[] }) {
   );
 }
 
-function TeamBreakdown({ perUser, users }: {
-  perUser: { user_id: string; total_quotes: number; quotes_this_month: number; conversion_rate: number }[];
-  users: { id: string; full_name: string; email: string }[];
-}) {
-  if (perUser.length === 0) return null;
-  const sorted = [...perUser].sort((a, b) => b.total_quotes - a.total_quotes);
-  return (
-    <div className="rounded-[14px] border border-[#e8ecf2] bg-white">
-      <div className="border-b border-[#f1f5f9] px-5 py-4">
-        <p className="text-[13px] font-semibold text-[#0f172a]">Actividad por usuario</p>
-      </div>
-      <div className="divide-y divide-[#f8fafc]">
-        {sorted.map((stat) => {
-          const user = users.find((u) => u.id === stat.user_id);
-          if (!user) return null;
-          const maxQuotes = sorted[0]?.total_quotes || 1;
-          return (
-            <div key={stat.user_id} className="flex items-center gap-4 px-5 py-3.5">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0f6e50] text-[11px] font-bold text-white">
-                {user.full_name.substring(0, 2).toUpperCase()}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between">
-                  <p className="truncate text-[13px] font-semibold text-[#0f172a]">{user.full_name}</p>
-                  <div className="flex shrink-0 items-center gap-4 pl-4 text-[12px] text-[#475569]">
-                    <span>{stat.quotes_this_month} este mes</span>
-                    <span>{stat.conversion_rate}% conv.</span>
-                    <span className="font-semibold">{stat.total_quotes} total</span>
-                  </div>
-                </div>
-                <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-[#f1f5f9]">
-                  <div
-                    className="h-full rounded-full bg-[#0f6e50]"
-                    style={{ width: `${(stat.total_quotes / maxQuotes) * 100}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function MetricsDashboardPage() {
@@ -532,14 +487,11 @@ export default function MetricsDashboardPage() {
   const email = session?.user?.email ?? "";
   const name = session?.user?.name ?? null;
   const role = session?.role;
-  const isAdmin = role === "ADMIN";
 
   const { data: quotes = [], isLoading: loadingQuotes } = useQuotes();
-  const { data: quoteStats, isLoading: loadingStats } = useQuoteStats();
   const { data: customers = [], isLoading: loadingCustomers } = useCustomers();
   const { data: products = [], isLoading: loadingProducts } = useProducts();
   const { data: categories = [] } = useCategories();
-  const { data: users = [] } = useUsers();
 
   const now = new Date();
   const monthName = now.toLocaleDateString("es-AR", { month: "long", year: "numeric" });
@@ -661,12 +613,11 @@ export default function MetricsDashboardPage() {
       <header className="flex items-center justify-between border-b border-[#e4eaf2] bg-white px-5 py-2.5">
         <div className="flex items-center gap-3">
           <Link href="/dashboard" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-[#0f6e50]">
-              <span className="font-bold text-[15px] text-white">G</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-white">
+              <Image src="/logo.png" alt="Intermedios" width={26} height={26} className="object-contain" />
             </div>
-            <span className="hidden text-[15px] sm:inline">
-              <span className="font-semibold text-[#1a1a2e]">Glazing</span>
-              <span className="font-normal text-[#8898aa]"> Platform</span>
+            <span className="hidden text-[15px] font-semibold text-[#1a1a2e] sm:inline">
+              Intermedios
             </span>
           </Link>
           <span className="text-[#cbd5e1]">/</span>
@@ -800,51 +751,10 @@ export default function MetricsDashboardPage() {
           />
         </div>
 
-        {/* ── Últimas órdenes + equipo (admin) ─────────────────────────────── */}
-        <div className={`mb-5 grid gap-5 ${isAdmin ? "lg:grid-cols-[1fr_420px]" : ""}`}>
+        {/* ── Últimas órdenes ───────────────────────────────────────────────── */}
+        <div className="mb-5">
           <RecentOrders quotes={quotes} />
-          {isAdmin && quoteStats && (
-            <TeamBreakdown
-              perUser={quoteStats.per_user}
-              users={users}
-            />
-          )}
         </div>
-
-        {/* ── Admin — totales plataforma ───────────────────────────────────── */}
-        {isAdmin && (
-          <div className="rounded-[14px] border border-[#e8ecf2] bg-white p-5">
-            <p className="mb-4 text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">
-              Resumen de plataforma
-            </p>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              <div>
-                <p className="text-[22px] font-bold text-[#0f172a]">
-                  {loadingStats ? "—" : quoteStats?.quotes_this_month ?? 0}
-                </p>
-                <p className="text-[12px] text-[#94a3b8]">Presupuestos del mes (plataforma)</p>
-              </div>
-              <div>
-                <p className="text-[22px] font-bold text-[#0f172a]">
-                  {loadingStats ? "—" : quoteStats?.total_quotes ?? 0}
-                </p>
-                <p className="text-[12px] text-[#94a3b8]">Total histórico</p>
-              </div>
-              <div>
-                <p className="text-[22px] font-bold text-[#0f6e50]">
-                  {loadingStats ? "—" : `${quoteStats?.conversion_rate ?? 0}%`}
-                </p>
-                <p className="text-[12px] text-[#94a3b8]">Conv. promedio plataforma</p>
-              </div>
-              <div>
-                <p className="text-[22px] font-bold text-[#0f172a]">
-                  {loadingStats ? "—" : (quoteStats?.per_user.length ?? 0)}
-                </p>
-                <p className="text-[12px] text-[#94a3b8]">Usuarios con actividad</p>
-              </div>
-            </div>
-          </div>
-        )}
       </main>
     </div>
   );

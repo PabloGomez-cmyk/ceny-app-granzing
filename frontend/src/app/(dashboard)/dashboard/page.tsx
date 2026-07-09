@@ -1,6 +1,7 @@
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   BarChart2,
@@ -106,15 +107,14 @@ export default function DashboardPage() {
       {/* Navbar */}
       <header className="flex items-center justify-between border-b border-[#e4eaf2] bg-white px-5 py-2.5">
         <Link href="/dashboard" className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-[#0f6e50]">
-            <span className="font-bold text-[15px] text-white">G</span>
+          <div className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-white">
+            <Image src="/logo.png" alt="Intermedios" width={26} height={26} className="object-contain" />
           </div>
-          <span className="hidden text-[15px] sm:inline">
-            <span className="font-semibold text-[#1a1a2e]">Glazing</span>
-            <span className="font-normal text-[#8898aa]"> Platform</span>
+          <span className="hidden text-[15px] font-semibold text-[#1a1a2e] sm:inline">
+            Intermedios
           </span>
           <span className="text-[15px] font-semibold text-[#1a1a2e] sm:hidden">
-            Glazing
+            Intermedios
           </span>
         </Link>
 
@@ -134,7 +134,7 @@ export default function DashboardPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar aplicaciones..."
-            className="w-full rounded-[10px] border border-[#dde4ee] bg-white px-4 py-2.5 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] shadow-sm focus:border-[#0f6e50] focus:outline-none focus:ring-2 focus:ring-[#0f6e50]/20"
+            className="w-full rounded-[10px] border border-[#dde4ee] bg-white px-4 py-2.5 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] shadow-sm focus:border-[#d9622c] focus:outline-none focus:ring-2 focus:ring-[#d9622c]/20"
           />
         </div>
 

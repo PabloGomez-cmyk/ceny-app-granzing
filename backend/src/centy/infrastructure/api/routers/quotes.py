@@ -101,12 +101,16 @@ class UserQuoteStatResponse(BaseModel):
     total_quotes: int
     quotes_this_month: int
     conversion_rate: float
+    total_revenue: Decimal
+    revenue_this_month: Decimal
 
 
 class QuoteStatsResponse(BaseModel):
     quotes_this_month: int
     total_quotes: int
     conversion_rate: float
+    total_revenue: Decimal
+    revenue_this_month: Decimal
     per_user: list[UserQuoteStatResponse]
 
 
@@ -290,12 +294,16 @@ async def get_quote_stats(
         quotes_this_month=result.quotes_this_month,
         total_quotes=result.total_quotes,
         conversion_rate=result.conversion_rate,
+        total_revenue=result.total_revenue,
+        revenue_this_month=result.revenue_this_month,
         per_user=[
             UserQuoteStatResponse(
                 user_id=u.user_id,
                 total_quotes=u.total_quotes,
                 quotes_this_month=u.quotes_this_month,
                 conversion_rate=u.conversion_rate,
+                total_revenue=u.total_revenue,
+                revenue_this_month=u.revenue_this_month,
             )
             for u in result.per_user
         ],

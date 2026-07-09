@@ -109,12 +109,16 @@ export interface UserQuoteStat {
   total_quotes: number;
   quotes_this_month: number;
   conversion_rate: number;
+  total_revenue: number;
+  revenue_this_month: number;
 }
 
 export interface QuoteStats {
   quotes_this_month: number;
   total_quotes: number;
   conversion_rate: number;
+  total_revenue: number;
+  revenue_this_month: number;
   per_user: UserQuoteStat[];
 }
 
