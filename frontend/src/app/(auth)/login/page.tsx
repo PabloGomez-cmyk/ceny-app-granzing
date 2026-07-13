@@ -3,6 +3,7 @@
 import { Eye, EyeOff, Lock } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -47,33 +48,33 @@ export default function LoginPage() {
     <div className="flex min-h-screen w-full flex-col bg-[#f4f6f9] lg:h-screen lg:flex-row lg:bg-white">
 
       {/* ── Header móvil — solo visible en small screens ────────────────────── */}
-      <div className="relative overflow-hidden bg-[#0f6e50] px-6 pb-10 pt-10 lg:hidden">
-        <div className="absolute -left-10 -top-10 h-[180px] w-[180px] rounded-full bg-[#0d6347] opacity-50" />
-        <div className="absolute -bottom-8 -right-8 h-[140px] w-[140px] rounded-full bg-[#0d6347] opacity-40" />
+      <div className="relative overflow-hidden bg-[#d9622c] px-6 pb-10 pt-10 lg:hidden">
+        <div className="absolute -left-10 -top-10 h-[180px] w-[180px] rounded-full bg-[#b74e1e] opacity-50" />
+        <div className="absolute -bottom-8 -right-8 h-[140px] w-[140px] rounded-full bg-[#b74e1e] opacity-40" />
         <div className="relative z-10 flex flex-col items-center text-center">
           <div className="flex h-[52px] w-[52px] items-center justify-center rounded-[14px] bg-white">
-            <span className="font-bold text-[28px] text-[#0f6e50]">G</span>
+            <Image src="/logo.png" alt="Intermedios" width={40} height={40} className="object-contain" />
           </div>
-          <span className="mt-3 font-bold text-[20px] text-white">Glazing Platform</span>
+          <span className="mt-3 font-bold text-[20px] text-white">Intermedios</span>
           <p className="mt-1 text-[13px] text-white/70">Plataforma para instaladores de láminas</p>
           <p className="mt-4 text-[11px] text-white/50">Presupuestos · Garantías </p>
         </div>
       </div>
 
       {/* ── Panel izquierdo — Marca (solo desktop) ──────────────────────────── */}
-      <div className="relative hidden w-[43%] overflow-hidden bg-[#0f6e50] lg:flex lg:flex-col">
+      <div className="relative hidden w-[43%] overflow-hidden bg-[#d9622c] lg:flex lg:flex-col">
         {/* Esferas decorativas */}
-        <div className="absolute -left-20 -top-20 h-[420px] w-[420px] rounded-full bg-[#0d6347] opacity-60" />
-        <div className="absolute bottom-[-60px] right-[-60px] h-[300px] w-[300px] rounded-full bg-[#0d6347] opacity-50" />
-        <div className="absolute right-[30px] top-[380px] h-[140px] w-[140px] rounded-full bg-[#0d6347] opacity-40" />
+        <div className="absolute -left-20 -top-20 h-[420px] w-[420px] rounded-full bg-[#b74e1e] opacity-60" />
+        <div className="absolute bottom-[-60px] right-[-60px] h-[300px] w-[300px] rounded-full bg-[#b74e1e] opacity-50" />
+        <div className="absolute right-[30px] top-[380px] h-[140px] w-[140px] rounded-full bg-[#b74e1e] opacity-40" />
 
         <div className="relative z-10 flex h-full flex-col px-[60px] pt-[56px] pb-[28px]">
           {/* Logo */}
           <div className="flex items-center gap-3">
             <div className="flex h-[52px] w-[52px] items-center justify-center rounded-[14px] bg-white">
-              <span className="font-bold text-[30px] text-[#0f6e50]">G</span>
+              <Image src="/logo.png" alt="Intermedios" width={40} height={40} className="object-contain" />
             </div>
-            <span className="font-bold text-[18px] text-white">Glazing Platform</span>
+            <span className="font-bold text-[18px] text-white">Intermedios</span>
           </div>
 
           <p className="mt-5 text-[12px] text-white/50">
@@ -109,21 +110,21 @@ export default function LoginPage() {
             ))}
           </div>
 
-          <p className="mt-auto text-[11px] text-white/70">© 2026 Glazing</p>
+          <p className="mt-auto text-[11px] text-white/70">© 2026 Intermedios</p>
         </div>
       </div>
 
       {/* ── Panel derecho — Formulario ──────────────────────────────────────── */}
       <div className="relative flex flex-1 items-center justify-center overflow-hidden px-4 py-8 lg:px-0 lg:py-0">
         {/* Esferas decorativas */}
-        <div className="absolute -right-10 -top-20 h-[260px] w-[260px] rounded-full bg-[#0f6e50]/5 opacity-30" />
-        <div className="absolute -bottom-14 -left-10 h-[200px] w-[200px] rounded-full bg-[#0f6e50]/5 opacity-20" />
+        <div className="absolute -right-10 -top-20 h-[260px] w-[260px] rounded-full bg-[#d9622c]/5 opacity-30" />
+        <div className="absolute -bottom-14 -left-10 h-[200px] w-[200px] rounded-full bg-[#d9622c]/5 opacity-20" />
 
         <div className="relative z-10 flex w-full max-w-[390px] flex-col gap-6">
           {/* Card */}
           <div className="rounded-[18px] border border-[#e2e6f0] bg-white shadow-sm">
             <div className="px-8 pt-8 pb-6">
-              <h1 className="font-bold text-[24px] text-[#0f172a]">Bienvenido de nuevo</h1>
+              <h1 className="font-bold text-[24px] text-[#0f172a]">Bienvenido</h1>
               <p className="mt-1 text-[13px] text-[#475569]">Ingresá a tu cuenta para continuar</p>
               <div className="mt-6 border-t border-[#e2e6f0]" />
 
@@ -138,7 +139,7 @@ export default function LoginPage() {
                     type="email"
                     placeholder="tu@email.com"
                     autoComplete="email"
-                    className="h-[44px] rounded-[10px] border border-[#cbd5e1] bg-[#f8fafc] px-3.5 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#0f6e50] focus:outline-none focus:ring-2 focus:ring-[#0f6e50]/20"
+                    className="h-[44px] rounded-[10px] border border-[#cbd5e1] bg-[#f8fafc] px-3.5 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#d9622c] focus:outline-none focus:ring-2 focus:ring-[#d9622c]/20"
                   />
                   {errors.email && (
                     <p className="text-[11px] text-[#be123c]">{errors.email.message}</p>
@@ -156,7 +157,7 @@ export default function LoginPage() {
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••••"
                       autoComplete="current-password"
-                      className="h-[44px] w-full rounded-[10px] border border-[#cbd5e1] bg-[#f8fafc] pl-3.5 pr-10 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#0f6e50] focus:outline-none focus:ring-2 focus:ring-[#0f6e50]/20"
+                      className="h-[44px] w-full rounded-[10px] border border-[#cbd5e1] bg-[#f8fafc] pl-3.5 pr-10 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#d9622c] focus:outline-none focus:ring-2 focus:ring-[#d9622c]/20"
                     />
                     <button
                       type="button"
@@ -182,7 +183,7 @@ export default function LoginPage() {
                   >
                     <span
                       className={`flex h-3.5 w-3.5 items-center justify-center rounded-full transition-colors ${
-                        rememberMe ? "bg-[#0f6e50]" : "border border-[#cbd5e1]"
+                        rememberMe ? "bg-[#d9622c]" : "border border-[#cbd5e1]"
                       }`}
                     >
                       {rememberMe && (
@@ -193,7 +194,7 @@ export default function LoginPage() {
                   </button>
                   <Link
                     href="/forgot-password"
-                    className="text-[12px] font-medium text-[#0f6e50] hover:underline"
+                    className="text-[12px] font-medium text-[#d9622c] hover:underline"
                   >
                     ¿Olvidaste tu contraseña?
                   </Link>
@@ -211,7 +212,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="mt-2 h-[50px] w-full rounded-[12px] bg-[#0f6e50] font-bold text-[15px] text-white transition-colors hover:bg-[#0a5a40] disabled:opacity-60"
+                  className="mt-2 h-[50px] w-full rounded-[12px] bg-[#d9622c] font-bold text-[15px] text-white transition-colors hover:bg-[#b74e1e] disabled:opacity-60"
                 >
                   {isSubmitting ? "Ingresando..." : "Ingresar"}
                 </button>
@@ -226,9 +227,9 @@ export default function LoginPage() {
           </div>
 
           {/* Footer de seguridad */}
-          <div className="flex items-center justify-center gap-1.5 rounded-[8px] bg-[#dcfce7] px-4 py-2">
-            <Lock size={12} className="text-[#1d9e75]" />
-            <p className="text-[11px] text-[#1d9e75]">
+          <div className="flex items-center justify-center gap-1.5 rounded-[8px] bg-[#fbeee1] px-4 py-2">
+            <Lock size={12} className="text-[#f0a24d]" />
+            <p className="text-[11px] text-[#f0a24d]">
               Datos protegidos con cifrado · v2.4.1
             </p>
           </div>

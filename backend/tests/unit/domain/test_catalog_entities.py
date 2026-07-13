@@ -54,6 +54,7 @@ def make_product(**overrides) -> Product:  # type: ignore[no-untyped-def]
         name="FX-5 Carbono",
         brand_id=uuid4(),
         sale_price_per_m2=Decimal("1500.00"),
+        purchase_price_per_m2=Decimal("800.00"),
         uv_percentage=Decimal("99"),
         irr_percentage=Decimal("72"),
         tser_percentage=Decimal("58"),
@@ -410,6 +411,20 @@ class TestProductCreate:
         p = make_product(sale_price_per_m2=Decimal("2500.50"))
         assert p.sale_price_per_m2.amount == Decimal("2500.50")
 
+    def test_purchase_price_se_guarda_correctamente(self) -> None:
+        p = make_product(purchase_price_per_m2=Decimal("900.25"))
+        assert p.purchase_price_per_m2.amount == Decimal("900.25")
+
+    def test_no_exige_purchase_price_menor_o_igual_a_sale_price(self) -> None:
+        # Decisión de producto: no hay validación de rango entre costo y
+        # precio de venta — un producto puede crearse con costo > precio
+        # de venta (por ejemplo, mientras se carga el catálogo).
+        p = make_product(
+            sale_price_per_m2=Decimal("100.00"),
+            purchase_price_per_m2=Decimal("500.00"),
+        )
+        assert p.purchase_price_per_m2.amount > p.sale_price_per_m2.amount
+
 
 # ── Product.update ────────────────────────────────────────────────────────────
 
@@ -424,6 +439,11 @@ class TestProductUpdate:
         p = make_product()
         p.update(sale_price_per_m2=Decimal("3000"))
         assert p.sale_price_per_m2.amount == Decimal("3000")
+
+    def test_actualiza_purchase_price(self) -> None:
+        p = make_product()
+        p.update(purchase_price_per_m2=Decimal("1200"))
+        assert p.purchase_price_per_m2.amount == Decimal("1200")
 
     def test_actualiza_porcentajes(self) -> None:
         p = make_product()

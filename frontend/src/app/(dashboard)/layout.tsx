@@ -1,7 +1,9 @@
+import TourProvider from "@/components/tour/TourProvider";
+
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return <TourProvider>{children}</TourProvider>;
 }

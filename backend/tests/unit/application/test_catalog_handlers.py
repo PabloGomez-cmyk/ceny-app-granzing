@@ -538,6 +538,7 @@ def _product_cmd(tenant_id: TenantId, **overrides) -> CreateProductCommand:  # t
         name="FX-5 Carbono",
         brand_id=uuid4(),
         sale_price_per_m2=Decimal("1500.00"),
+        purchase_price_per_m2=Decimal("800.00"),
         uv_percentage=Decimal("99"),
         irr_percentage=Decimal("72"),
         tser_percentage=Decimal("58"),

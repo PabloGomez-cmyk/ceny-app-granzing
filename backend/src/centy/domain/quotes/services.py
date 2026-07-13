@@ -58,3 +58,18 @@ class QuoteCalculator:
             tax_amount=tax_amount,
             total=total,
         )
+
+    def calculate_margin(self, quote: Quote) -> Decimal | None:
+        """Margen total de venta (venta - costo) de todas las líneas.
+
+        Devuelve None si alguna línea no tiene el costo snapshoteado
+        (presupuestos creados antes de este feature) — un dato incompleto
+        no debe mostrarse como margen 0 o parcial, sino como "no disponible".
+        """
+        total = Decimal("0")
+        for line in quote.lines:
+            cost = line.product_snapshot.get("purchase_price_per_m2")
+            if cost is None:
+                return None
+            total += (line.price_per_m2 - Decimal(str(cost))) * line.surface_m2
+        return total.quantize(Decimal("0.01"))

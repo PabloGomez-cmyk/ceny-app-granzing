@@ -101,12 +101,16 @@ class UserQuoteStatResponse(BaseModel):
     total_quotes: int
     quotes_this_month: int
     conversion_rate: float
+    total_revenue: Decimal
+    revenue_this_month: Decimal
 
 
 class QuoteStatsResponse(BaseModel):
     quotes_this_month: int
     total_quotes: int
     conversion_rate: float
+    total_revenue: Decimal
+    revenue_this_month: Decimal
     per_user: list[UserQuoteStatResponse]
 
 
@@ -166,6 +170,7 @@ class QuoteResponse(BaseModel):
     cut_plan_snapshot: dict
     valid_until: str
     totals: QuoteTotalsResponse
+    total_margin: Decimal | None
     has_altura: bool
     created_at: str
 
@@ -197,6 +202,7 @@ def _to_response(r: object) -> QuoteResponse:
         cut_plan_snapshot=r.cut_plan_snapshot,  # type: ignore[attr-defined]
         valid_until=r.valid_until,  # type: ignore[attr-defined]
         totals=QuoteTotalsResponse(**r.totals.__dict__),  # type: ignore[attr-defined]
+        total_margin=r.total_margin,  # type: ignore[attr-defined]
         has_altura=r.has_altura,  # type: ignore[attr-defined]
         created_at=r.created_at,  # type: ignore[attr-defined]
     )
@@ -290,12 +296,16 @@ async def get_quote_stats(
         quotes_this_month=result.quotes_this_month,
         total_quotes=result.total_quotes,
         conversion_rate=result.conversion_rate,
+        total_revenue=result.total_revenue,
+        revenue_this_month=result.revenue_this_month,
         per_user=[
             UserQuoteStatResponse(
                 user_id=u.user_id,
                 total_quotes=u.total_quotes,
                 quotes_this_month=u.quotes_this_month,
                 conversion_rate=u.conversion_rate,
+                total_revenue=u.total_revenue,
+                revenue_this_month=u.revenue_this_month,
             )
             for u in result.per_user
         ],

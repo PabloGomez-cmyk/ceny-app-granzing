@@ -41,7 +41,7 @@ const PALETTE = [
   "#10b981", "#3b82f6", "#8b5cf6", "#f59e0b",
   "#ef4444", "#06b6d4", "#ec4899", "#84cc16",
   "#f97316", "#6366f1", "#14b8a6", "#a855f7",
-  "#0f6e50", "#1e40af", "#9f1239", "#92400e",
+  "#d9622c", "#1e40af", "#9f1239", "#92400e",
 ];
 
 // ── ColorPicker ───────────────────────────────────────────────────────────────
@@ -119,7 +119,7 @@ function ColorPicker({ color, onChange }: { color: string; onChange: (c: string)
             <button
               type="button"
               onClick={() => { onChange(custom); setOpen(false); }}
-              className="rounded-[6px] bg-[#0f6e50] px-2 py-0.5 text-[11px] font-semibold text-white"
+              className="rounded-[6px] bg-[#d9622c] px-2 py-0.5 text-[11px] font-semibold text-white"
             >
               OK
             </button>
@@ -182,7 +182,7 @@ function BrandRow({
 
   if (editing) {
     return (
-      <tr className="border-b border-[#f1f5f9] bg-[#f0faf6]">
+      <tr className="border-b border-[#f1f5f9] bg-[#fbeee1]">
         <td className="py-3 pl-5 pr-3">
           <div className="flex items-center gap-2">
             {/* Logo */}
@@ -201,7 +201,7 @@ function BrandRow({
                 type="button"
                 onClick={() => fileRef.current?.click()}
                 disabled={uploading}
-                className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#0f6e50] text-white shadow"
+                className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#d9622c] text-white shadow"
               >
                 {uploading ? <span className="text-[8px]">…</span> : <Upload size={8} />}
               </button>
@@ -214,7 +214,7 @@ function BrandRow({
               onChange={(e) => setName(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") handleSave(); if (e.key === "Escape") handleCancel(); }}
               maxLength={100}
-              className="flex-1 rounded-[6px] border border-[#0f6e50] bg-white px-2 py-1 text-[13px] focus:outline-none focus:ring-1 focus:ring-[#0f6e50]/30"
+              className="flex-1 rounded-[6px] border border-[#d9622c] bg-white px-2 py-1 text-[13px] focus:outline-none focus:ring-1 focus:ring-[#d9622c]/30"
             />
           </div>
         </td>
@@ -227,7 +227,7 @@ function BrandRow({
               type="button"
               onClick={() => fileRef.current?.click()}
               disabled={uploading}
-              className="flex items-center gap-1 rounded-[6px] border border-[#dde4ee] bg-white px-2 py-1 text-[11px] text-[#64748b] hover:border-[#0f6e50]/40 hover:text-[#0f6e50] disabled:opacity-50"
+              className="flex items-center gap-1 rounded-[6px] border border-[#dde4ee] bg-white px-2 py-1 text-[11px] text-[#64748b] hover:border-[#d9622c]/40 hover:text-[#d9622c] disabled:opacity-50"
             >
               <Upload size={11} />
               {uploading ? "Subiendo..." : logoUrl ? "Cambiar logo" : "Subir logo"}
@@ -243,7 +243,7 @@ function BrandRow({
             )}
             <button
               onClick={handleSave}
-              className="rounded-[6px] bg-[#0f6e50] px-3 py-1 text-[11px] font-semibold text-white hover:bg-[#0a5a40]"
+              className="rounded-[6px] bg-[#d9622c] px-3 py-1 text-[11px] font-semibold text-white hover:bg-[#b74e1e]"
             >
               Guardar
             </button>
@@ -280,7 +280,7 @@ function BrandRow({
         <div className="flex items-center justify-end gap-2 opacity-0 transition-opacity group-hover:opacity-100">
           <button
             onClick={() => setEditing(true)}
-            className="flex h-7 w-7 items-center justify-center rounded-[6px] text-[#64748b] hover:bg-[#f0faf6] hover:text-[#0f6e50]"
+            className="flex h-7 w-7 items-center justify-center rounded-[6px] text-[#64748b] hover:bg-[#fbeee1] hover:text-[#d9622c]"
           >
             <Pencil size={13} />
           </button>
@@ -341,7 +341,7 @@ function NewBrandRow({
   }
 
   return (
-    <tr className="border-b border-[#f1f5f9] bg-[#f0faf6]">
+    <tr className="border-b border-[#f1f5f9] bg-[#fbeee1]">
       <td className="py-3 pl-5 pr-3">
         <div className="flex items-center gap-2">
           {/* Preview avatar */}
@@ -363,7 +363,7 @@ function NewBrandRow({
             onKeyDown={(e) => { if (e.key === "Enter") handleSave(); if (e.key === "Escape") onCancel(); }}
             placeholder="Nombre de la marca..."
             maxLength={100}
-            className="flex-1 rounded-[6px] border border-[#0f6e50] bg-white px-2 py-1 text-[13px] placeholder:text-[#94a3b8] focus:outline-none focus:ring-1 focus:ring-[#0f6e50]/30"
+            className="flex-1 rounded-[6px] border border-[#d9622c] bg-white px-2 py-1 text-[13px] placeholder:text-[#94a3b8] focus:outline-none focus:ring-1 focus:ring-[#d9622c]/30"
           />
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
         </div>
@@ -378,7 +378,7 @@ function NewBrandRow({
             type="button"
             onClick={() => fileRef.current?.click()}
             disabled={uploading}
-            className="flex items-center gap-1 rounded-[6px] border border-[#dde4ee] bg-white px-2 py-1 text-[11px] text-[#64748b] hover:border-[#0f6e50]/40 hover:text-[#0f6e50] disabled:opacity-50"
+            className="flex items-center gap-1 rounded-[6px] border border-[#dde4ee] bg-white px-2 py-1 text-[11px] text-[#64748b] hover:border-[#d9622c]/40 hover:text-[#d9622c] disabled:opacity-50"
           >
             <Upload size={11} />
             {uploading ? "Subiendo..." : logoUrl ? "Cambiar logo" : "Subir logo"}
@@ -386,7 +386,7 @@ function NewBrandRow({
           <button
             onClick={handleSave}
             disabled={!name.trim() || isSaving}
-            className="rounded-[6px] bg-[#0f6e50] px-3 py-1 text-[11px] font-semibold text-white hover:bg-[#0a5a40] disabled:opacity-50"
+            className="rounded-[6px] bg-[#d9622c] px-3 py-1 text-[11px] font-semibold text-white hover:bg-[#b74e1e] disabled:opacity-50"
           >
             {isSaving ? "..." : "Guardar"}
           </button>
@@ -423,7 +423,7 @@ function SimpleRow({
 
   return (
     <tr
-      className={`group border-b border-[#f1f5f9] transition-colors hover:bg-[#f8fafb] ${editing ? "bg-[#f0faf6]" : ""}`}
+      className={`group border-b border-[#f1f5f9] transition-colors hover:bg-[#f8fafb] ${editing ? "bg-[#fbeee1]" : ""}`}
       onClick={() => !editing && setEditing(true)}
     >
       <td className="py-3 pl-5 pr-3">
@@ -435,7 +435,7 @@ function SimpleRow({
             onKeyDown={(e) => { if (e.key === "Enter") handleSave(); if (e.key === "Escape") { setName(item.name); setEditing(false); } }}
             onBlur={handleSave}
             maxLength={100}
-            className="w-full max-w-[400px] rounded-[6px] border border-[#0f6e50] bg-white px-2 py-1 text-[13px] focus:outline-none focus:ring-1 focus:ring-[#0f6e50]/30"
+            className="w-full max-w-[400px] rounded-[6px] border border-[#d9622c] bg-white px-2 py-1 text-[13px] focus:outline-none focus:ring-1 focus:ring-[#d9622c]/30"
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
@@ -452,7 +452,7 @@ function SimpleRow({
           <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
             <button
               onClick={(e) => { e.stopPropagation(); setEditing(true); }}
-              className="flex h-7 w-7 items-center justify-center rounded-[6px] text-[#64748b] hover:bg-[#f0faf6] hover:text-[#0f6e50]"
+              className="flex h-7 w-7 items-center justify-center rounded-[6px] text-[#64748b] hover:bg-[#fbeee1] hover:text-[#d9622c]"
             >
               <Pencil size={13} />
             </button>
@@ -485,7 +485,7 @@ function NewSimpleRow({
   useEffect(() => { inputRef.current?.focus(); }, []);
 
   return (
-    <tr className="border-b border-[#f1f5f9] bg-[#f0faf6]">
+    <tr className="border-b border-[#f1f5f9] bg-[#fbeee1]">
       <td className="py-3 pl-5 pr-3">
         <input
           ref={inputRef}
@@ -494,7 +494,7 @@ function NewSimpleRow({
           onKeyDown={(e) => { if (e.key === "Enter" && name.trim()) onSave(name.trim()); if (e.key === "Escape") onCancel(); }}
           placeholder={placeholder}
           maxLength={100}
-          className="w-full max-w-[400px] rounded-[6px] border border-[#0f6e50] bg-white px-2 py-1 text-[13px] placeholder:text-[#94a3b8] focus:outline-none focus:ring-1 focus:ring-[#0f6e50]/30"
+          className="w-full max-w-[400px] rounded-[6px] border border-[#d9622c] bg-white px-2 py-1 text-[13px] placeholder:text-[#94a3b8] focus:outline-none focus:ring-1 focus:ring-[#d9622c]/30"
         />
       </td>
       <td className="py-3 pl-3 pr-5 text-right">
@@ -502,7 +502,7 @@ function NewSimpleRow({
           <button
             onClick={() => name.trim() && onSave(name.trim())}
             disabled={!name.trim() || isSaving}
-            className="rounded-[6px] bg-[#0f6e50] px-2.5 py-0.5 text-[11px] font-semibold text-white disabled:opacity-50"
+            className="rounded-[6px] bg-[#d9622c] px-2.5 py-0.5 text-[11px] font-semibold text-white disabled:opacity-50"
           >
             {isSaving ? "..." : "Guardar"}
           </button>
@@ -529,7 +529,7 @@ function Section({
   return (
     <div className="overflow-hidden rounded-[14px] border border-[#e8ecf2] bg-white">
       <div className="flex items-center gap-2.5 border-b border-[#f1f5f9] px-5 py-3">
-        <Icon size={15} className="text-[#0f6e50]" />
+        <Icon size={15} className="text-[#d9622c]" />
         <span className="text-[14px] font-semibold text-[#0f172a]">{title}</span>
         <span className="ml-1 rounded-full bg-[#f1f5f9] px-2 py-0.5 text-[11px] font-medium text-[#64748b]">{count}</span>
       </div>
@@ -591,7 +591,7 @@ export default function ProductSettingsPage() {
   return (
     <div className="flex min-h-screen flex-col bg-[#f0f4f8]">
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <header className="flex items-center justify-between bg-[#0f6e50] px-5 py-3">
+      <header className="flex items-center justify-between bg-[#d9622c] px-5 py-3">
         <div className="flex items-center gap-3">
           <Link
             href="/products"
@@ -624,7 +624,7 @@ export default function ProductSettingsPage() {
             <button
               onClick={() => setShowNewBrand(true)}
               disabled={showNewBrand}
-              className="flex items-center gap-1.5 rounded-[8px] bg-[#0f6e50] px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-[#0a5a40] disabled:opacity-50"
+              className="flex items-center gap-1.5 rounded-[8px] bg-[#d9622c] px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-[#b74e1e] disabled:opacity-50"
             >
               <Plus size={13} />
               Nueva marca
@@ -666,7 +666,7 @@ export default function ProductSettingsPage() {
             <button
               onClick={() => setShowNewCat(true)}
               disabled={showNewCat}
-              className="flex items-center gap-1.5 rounded-[8px] bg-[#0f6e50] px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-[#0a5a40] disabled:opacity-50"
+              className="flex items-center gap-1.5 rounded-[8px] bg-[#d9622c] px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-[#b74e1e] disabled:opacity-50"
             >
               <Plus size={13} />
               Nueva categoría
@@ -715,7 +715,7 @@ export default function ProductSettingsPage() {
             <button
               onClick={() => setShowNewGlass(true)}
               disabled={showNewGlass}
-              className="flex items-center gap-1.5 rounded-[8px] bg-[#0f6e50] px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-[#0a5a40] disabled:opacity-50"
+              className="flex items-center gap-1.5 rounded-[8px] bg-[#d9622c] px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-[#b74e1e] disabled:opacity-50"
             >
               <Plus size={13} />
               Nuevo tipo

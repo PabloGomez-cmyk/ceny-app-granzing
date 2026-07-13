@@ -188,10 +188,10 @@ function Field({
 // ── Shared styles ─────────────────────────────────────────────────────────────
 
 const inputCls =
-  "h-[42px] w-full rounded-[10px] border border-[#cbd5e1] bg-[#f8fafc] px-3.5 text-[13px] text-[#0f172a] focus:border-[#0f6e50] focus:outline-none focus:ring-2 focus:ring-[#0f6e50]/20";
+  "h-[42px] w-full rounded-[10px] border border-[#cbd5e1] bg-[#f8fafc] px-3.5 text-[13px] text-[#0f172a] focus:border-[#d9622c] focus:outline-none focus:ring-2 focus:ring-[#d9622c]/20";
 
 const submitBtn =
-  "rounded-[10px] bg-[#0f6e50] px-5 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#0a5a40] disabled:opacity-60";
+  "rounded-[10px] bg-[#d9622c] px-5 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#b74e1e] disabled:opacity-60";
 
 const cancelBtn =
   "rounded-[10px] border border-[#e2e6f0] px-5 py-2 text-[13px] font-medium text-[#475569] hover:bg-[#f8fafc]";

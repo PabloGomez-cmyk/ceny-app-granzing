@@ -144,6 +144,7 @@ class ProductResponse(BaseModel):
     name: str
     brand_id: str
     sale_price_per_m2: Decimal
+    purchase_price_per_m2: Decimal
     uv_percentage: Decimal
     irr_percentage: Decimal
     tser_percentage: Decimal
@@ -162,6 +163,7 @@ class CreateProductBody(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)
     brand_id: UUID
     sale_price_per_m2: Decimal = Field(..., ge=Decimal("0"))
+    purchase_price_per_m2: Decimal = Field(..., ge=Decimal("0"))
     uv_percentage: Decimal = Field(..., ge=Decimal("0"), le=Decimal("100"))
     irr_percentage: Decimal = Field(..., ge=Decimal("0"), le=Decimal("100"))
     tser_percentage: Decimal = Field(..., ge=Decimal("0"), le=Decimal("100"))
@@ -178,6 +180,7 @@ class UpdateProductBody(BaseModel):
     name: str | None = Field(None, max_length=200)
     brand_id: UUID | None = None
     sale_price_per_m2: Decimal | None = Field(None, ge=Decimal("0"))
+    purchase_price_per_m2: Decimal | None = Field(None, ge=Decimal("0"))
     uv_percentage: Decimal | None = Field(None, ge=Decimal("0"), le=Decimal("100"))
     irr_percentage: Decimal | None = Field(None, ge=Decimal("0"), le=Decimal("100"))
     tser_percentage: Decimal | None = Field(None, ge=Decimal("0"), le=Decimal("100"))
@@ -495,6 +498,7 @@ async def create_product(
             name=body.name,
             brand_id=body.brand_id,
             sale_price_per_m2=body.sale_price_per_m2,
+            purchase_price_per_m2=body.purchase_price_per_m2,
             uv_percentage=body.uv_percentage,
             irr_percentage=body.irr_percentage,
             tser_percentage=body.tser_percentage,
@@ -539,6 +543,7 @@ async def update_product(
             name=body.name,
             brand_id=body.brand_id,
             sale_price_per_m2=body.sale_price_per_m2,
+            purchase_price_per_m2=body.purchase_price_per_m2,
             uv_percentage=body.uv_percentage,
             irr_percentage=body.irr_percentage,
             tser_percentage=body.tser_percentage,
@@ -577,6 +582,7 @@ def _to_product_response(r: object) -> ProductResponse:
         name=r.name,  # type: ignore[attr-defined]
         brand_id=str(r.brand_id),  # type: ignore[attr-defined]
         sale_price_per_m2=r.sale_price_per_m2,  # type: ignore[attr-defined]
+        purchase_price_per_m2=r.purchase_price_per_m2,  # type: ignore[attr-defined]
         uv_percentage=r.uv_percentage,  # type: ignore[attr-defined]
         irr_percentage=r.irr_percentage,  # type: ignore[attr-defined]
         tser_percentage=r.tser_percentage,  # type: ignore[attr-defined]

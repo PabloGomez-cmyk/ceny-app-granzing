@@ -57,7 +57,7 @@ export default function WarrantiesPage() {
   return (
     <div className="flex min-h-screen flex-col bg-[#f0f4f8]">
       {/* Header */}
-      <header className="flex items-center justify-between bg-[#0f6e50] px-5 py-3">
+      <header className="flex items-center justify-between bg-[#d9622c] px-5 py-3">
         <div className="flex items-center gap-3">
           <Link href="/orders" className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-white/15 text-white hover:bg-white/25">
             <ArrowLeft size={16} />
@@ -75,7 +75,7 @@ export default function WarrantiesPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por número, producto o cliente..."
-            className="h-[36px] w-full rounded-[10px] border border-[#dde4ee] bg-[#f8fafc] pl-8 pr-3 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#0f6e50] focus:outline-none focus:ring-1 focus:ring-[#0f6e50]/20"
+            className="h-[36px] w-full rounded-[10px] border border-[#dde4ee] bg-[#f8fafc] pl-8 pr-3 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#d9622c] focus:outline-none focus:ring-1 focus:ring-[#d9622c]/20"
           />
         </div>
 
@@ -84,7 +84,7 @@ export default function WarrantiesPage() {
             <button
               key={v}
               onClick={() => setFilterValid(v)}
-              className={`whitespace-nowrap px-3 py-1.5 text-[12px] font-medium transition-colors ${filterValid === v ? "bg-[#0f6e50] text-white" : "text-[#475569] hover:bg-[#f1f5f9]"}`}
+              className={`whitespace-nowrap px-3 py-1.5 text-[12px] font-medium transition-colors ${filterValid === v ? "bg-[#d9622c] text-white" : "text-[#475569] hover:bg-[#f1f5f9]"}`}
             >
               {v === "ALL" ? "Todas" : v === "VALID" ? "Vigentes" : "Vencidas"}
             </button>
@@ -139,7 +139,7 @@ export default function WarrantiesPage() {
                       <tr key={w.id} className="border-b border-[#f1f5f9] hover:bg-[#f8fafb]">
                         <td className="py-3 pl-5 pr-4 text-[13px] font-bold text-[#0f172a]">{w.warranty_number}</td>
                         <td className="px-4 py-3 text-[13px]">
-                          <Link href={`/orders/${w.quote_id}` as never} className="text-[#0f6e50] hover:underline">
+                          <Link href={`/orders/${w.quote_id}` as never} className="text-[#d9622c] hover:underline">
                             Ver venta
                           </Link>
                         </td>

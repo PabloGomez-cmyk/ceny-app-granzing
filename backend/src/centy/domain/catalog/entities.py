@@ -185,8 +185,9 @@ class Product(Entity):
     """Lámina solar del catálogo.
 
     Los campos de porcentaje (UV, IRR, TSER) modelan propiedades ópticas
-    de la lámina. sale_price_per_m2 es fijo hasta que se implemente el
-    módulo de listas de precios por usuario.
+    de la lámina. sale_price_per_m2 y purchase_price_per_m2 son los valores
+    por defecto a nivel catálogo — el módulo de listas de precios por
+    operador (domain/pricing) puede pisarlos individualmente por usuario.
 
     compatible_glass_ids referencia IDs de GlassType — el dominio solo
     conoce las IDs; la join table es responsabilidad de infraestructura.
@@ -196,6 +197,7 @@ class Product(Entity):
     name: str
     brand_id: UUID
     sale_price_per_m2: Money
+    purchase_price_per_m2: Money
     uv_percentage: Percentage
     irr_percentage: Percentage
     tser_percentage: Percentage
@@ -216,6 +218,7 @@ class Product(Entity):
         name: str,
         brand_id: UUID,
         sale_price_per_m2: Decimal,
+        purchase_price_per_m2: Decimal,
         uv_percentage: Decimal,
         irr_percentage: Decimal,
         tser_percentage: Decimal,
@@ -264,6 +267,7 @@ class Product(Entity):
             name=name,
             brand_id=brand_id,
             sale_price_per_m2=Money(sale_price_per_m2),
+            purchase_price_per_m2=Money(purchase_price_per_m2),
             uv_percentage=Percentage(uv_percentage),
             irr_percentage=Percentage(irr_percentage),
             tser_percentage=Percentage(tser_percentage),
@@ -282,6 +286,7 @@ class Product(Entity):
         name: str | None = None,
         brand_id: UUID | None = None,
         sale_price_per_m2: Decimal | None = None,
+        purchase_price_per_m2: Decimal | None = None,
         uv_percentage: Decimal | None = None,
         irr_percentage: Decimal | None = None,
         tser_percentage: Decimal | None = None,
@@ -309,6 +314,8 @@ class Product(Entity):
             self.brand_id = brand_id
         if sale_price_per_m2 is not None:
             self.sale_price_per_m2 = Money(sale_price_per_m2)
+        if purchase_price_per_m2 is not None:
+            self.purchase_price_per_m2 = Money(purchase_price_per_m2)
         if uv_percentage is not None:
             self.uv_percentage = Percentage(uv_percentage)
         if irr_percentage is not None:

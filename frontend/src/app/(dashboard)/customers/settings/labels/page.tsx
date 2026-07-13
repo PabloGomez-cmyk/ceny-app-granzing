@@ -143,7 +143,7 @@ function LabelRow({
   return (
     <tr
       className={`group border-b border-[#f1f5f9] transition-colors hover:bg-[#f8fafb] ${
-        editing ? "bg-[#f0faf6]" : ""
+        editing ? "bg-[#fbeee1]" : ""
       }`}
       onClick={() => !editing && setEditing(true)}
     >
@@ -153,7 +153,7 @@ function LabelRow({
           type="checkbox"
           checked={selected}
           onChange={(e) => onSelect(label.id, e.target.checked)}
-          className="h-4 w-4 rounded border-[#cbd5e1] accent-[#0f6e50]"
+          className="h-4 w-4 rounded border-[#cbd5e1] accent-[#d9622c]"
         />
       </td>
 
@@ -170,7 +170,7 @@ function LabelRow({
             }}
             onBlur={handleSave}
             maxLength={50}
-            className="w-full max-w-[400px] rounded-[6px] border border-[#0f6e50] bg-white px-2 py-1 text-[13px] text-[#0f172a] focus:outline-none focus:ring-1 focus:ring-[#0f6e50]/30"
+            className="w-full max-w-[400px] rounded-[6px] border border-[#d9622c] bg-white px-2 py-1 text-[13px] text-[#0f172a] focus:outline-none focus:ring-1 focus:ring-[#d9622c]/30"
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
@@ -238,7 +238,7 @@ function NewLabelRow({
   }
 
   return (
-    <tr className="border-b border-[#f1f5f9] bg-[#f0faf6]">
+    <tr className="border-b border-[#f1f5f9] bg-[#fbeee1]">
       <td className="w-10 py-2.5 pl-4 pr-2">
         <div className="h-4 w-4" />
       </td>
@@ -253,7 +253,7 @@ function NewLabelRow({
           }}
           placeholder="Nombre de la etiqueta..."
           maxLength={50}
-          className="w-full max-w-[400px] rounded-[6px] border border-[#0f6e50] bg-white px-2 py-1 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:outline-none focus:ring-1 focus:ring-[#0f6e50]/30"
+          className="w-full max-w-[400px] rounded-[6px] border border-[#d9622c] bg-white px-2 py-1 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:outline-none focus:ring-1 focus:ring-[#d9622c]/30"
         />
       </td>
       <td className="w-24 py-2.5 pr-5 text-right">
@@ -262,7 +262,7 @@ function NewLabelRow({
           <button
             onClick={handleSave}
             disabled={!name.trim() || isSaving}
-            className="rounded-[6px] bg-[#0f6e50] px-2.5 py-0.5 text-[11px] font-semibold text-white hover:bg-[#0a5a40] disabled:opacity-50"
+            className="rounded-[6px] bg-[#d9622c] px-2.5 py-0.5 text-[11px] font-semibold text-white hover:bg-[#b74e1e] disabled:opacity-50"
           >
             {isSaving ? "..." : "Guardar"}
           </button>
@@ -346,7 +346,7 @@ export default function LabelsSettingsPage() {
   return (
     <div className="flex min-h-screen flex-col bg-[#f0f4f8]">
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <header className="flex items-center justify-between bg-[#0f6e50] px-5 py-3">
+      <header className="flex items-center justify-between bg-[#d9622c] px-5 py-3">
         <div className="flex items-center gap-3">
           <Link
             href="/customers"
@@ -381,7 +381,7 @@ export default function LabelsSettingsPage() {
         <button
           onClick={() => { setShowNewRow(true); setPage(1); }}
           disabled={showNewRow}
-          className="flex items-center gap-1.5 rounded-[10px] bg-[#0f6e50] px-4 py-2 text-[12px] font-semibold text-white hover:bg-[#0a5a40] disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-[10px] bg-[#d9622c] px-4 py-2 text-[12px] font-semibold text-white hover:bg-[#b74e1e] disabled:opacity-50"
         >
           <Plus size={14} />
           Nuevo
@@ -398,7 +398,7 @@ export default function LabelsSettingsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar..."
-            className="h-[34px] w-full rounded-[10px] border border-[#dde4ee] bg-[#f8fafc] pl-8 pr-3 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#0f6e50] focus:outline-none focus:ring-1 focus:ring-[#0f6e50]/20"
+            className="h-[34px] w-full rounded-[10px] border border-[#dde4ee] bg-[#f8fafc] pl-8 pr-3 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#d9622c] focus:outline-none focus:ring-1 focus:ring-[#d9622c]/20"
           />
         </div>
 
@@ -439,7 +439,7 @@ export default function LabelsSettingsPage() {
                     type="checkbox"
                     checked={allSelected}
                     onChange={(e) => toggleAll(e.target.checked)}
-                    className="h-4 w-4 rounded border-[#cbd5e1] accent-[#0f6e50]"
+                    className="h-4 w-4 rounded border-[#cbd5e1] accent-[#d9622c]"
                   />
                 </th>
                 <th className="py-2.5 pr-3 text-left text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">

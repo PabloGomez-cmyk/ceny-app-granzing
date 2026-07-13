@@ -13,6 +13,7 @@ from centy.application.ports.repositories import (
     ICustomerLabelRepository,
     ICustomerRepository,
     IGlassTypeRepository,
+    IPriceListItemRepository,
     IProductCategoryRepository,
     IProductRepository,
     IUserRepository,
@@ -20,6 +21,7 @@ from centy.application.ports.repositories import (
 from centy.application.ports.unit_of_work import IUnitOfWork
 from centy.domain.catalog.entities import Brand, GlassType, Product, ProductCategory
 from centy.domain.customers.entities import Customer, CustomerLabel
+from centy.domain.pricing.entities import PriceListItem
 from centy.domain.shared.value_objects import Email, TenantId
 from centy.domain.users.entities import Role, User
 from centy.domain.users.value_objects import HashedPassword
@@ -198,6 +200,36 @@ class FakeProductRepository(IProductRepository):
             del self._store[product_id]
 
 
+class FakePriceListItemRepository(IPriceListItemRepository):
+    def __init__(self) -> None:
+        self._store: dict[tuple[UUID, UUID], PriceListItem] = {}
+
+    async def get_by_user_and_product(
+        self, user_id: UUID, product_id: UUID, tenant_id: TenantId
+    ) -> PriceListItem | None:
+        item = self._store.get((user_id, product_id))
+        return item if item and item.tenant_id == tenant_id else None
+
+    async def save(self, item: PriceListItem) -> None:
+        self._store[(item.user_id, item.product_id)] = item
+
+    async def list_by_user(
+        self, user_id: UUID, tenant_id: TenantId
+    ) -> list[PriceListItem]:
+        return [
+            i
+            for i in self._store.values()
+            if i.user_id == user_id and i.tenant_id == tenant_id
+        ]
+
+    async def delete(
+        self, user_id: UUID, product_id: UUID, tenant_id: TenantId
+    ) -> None:
+        item = self._store.get((user_id, product_id))
+        if item and item.tenant_id == tenant_id:
+            del self._store[(user_id, product_id)]
+
+
 class FakeUnitOfWork(IUnitOfWork):
     def __init__(self, repo: FakeUserRepository | None = None) -> None:
         self.users: FakeUserRepository = repo or FakeUserRepository()
@@ -211,6 +243,9 @@ class FakeUnitOfWork(IUnitOfWork):
         )
         self.glass_types: FakeGlassTypeRepository = FakeGlassTypeRepository()
         self.products: FakeProductRepository = FakeProductRepository()
+        self.price_list_items: FakePriceListItemRepository = (
+            FakePriceListItemRepository()
+        )
         self.committed = False
 
     async def __aenter__(self) -> Self:

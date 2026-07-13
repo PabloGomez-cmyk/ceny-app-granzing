@@ -238,6 +238,7 @@ class SQLAlchemyProductRepository(IProductRepository):
             existing.brand_id = str(product.brand_id)
             existing.category_id = str(product.category_id)
             existing.sale_price_per_m2 = float(product.sale_price_per_m2.amount)
+            existing.purchase_price_per_m2 = float(product.purchase_price_per_m2.amount)
             existing.uv_percentage = float(product.uv_percentage.value)
             existing.irr_percentage = float(product.irr_percentage.value)
             existing.tser_percentage = float(product.tser_percentage.value)
@@ -256,6 +257,7 @@ class SQLAlchemyProductRepository(IProductRepository):
                     brand_id=str(product.brand_id),
                     category_id=str(product.category_id),
                     sale_price_per_m2=float(product.sale_price_per_m2.amount),
+                    purchase_price_per_m2=float(product.purchase_price_per_m2.amount),
                     uv_percentage=float(product.uv_percentage.value),
                     irr_percentage=float(product.irr_percentage.value),
                     tser_percentage=float(product.tser_percentage.value),
@@ -336,6 +338,7 @@ def _product_to_domain(row: ProductModel, glass_ids: list[UUID]) -> Product:
     p.brand_id = UUID(row.brand_id)
     p.category_id = UUID(row.category_id)
     p.sale_price_per_m2 = Money(Decimal(str(row.sale_price_per_m2)))
+    p.purchase_price_per_m2 = Money(Decimal(str(row.purchase_price_per_m2)))
     p.uv_percentage = Percentage(Decimal(str(row.uv_percentage)))
     p.irr_percentage = Percentage(Decimal(str(row.irr_percentage)))
     p.tser_percentage = Percentage(Decimal(str(row.tser_percentage)))

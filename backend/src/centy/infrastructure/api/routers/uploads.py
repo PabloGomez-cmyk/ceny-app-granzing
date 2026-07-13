@@ -27,11 +27,7 @@ async def upload_image(
     current_user: CurrentUser = Depends(get_current_user),
     storage: IObjectStorage = Depends(get_storage),
 ) -> UploadResponse:
-    """Sube una imagen (logo de marca). Solo ADMIN."""
-    if current_user.role != "ADMIN":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Se requiere rol ADMIN"
-        )
+    """Sube una imagen (logo de marca o logo de empresa del usuario)."""
     if file.content_type not in ALLOWED_IMAGE_TYPES:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,

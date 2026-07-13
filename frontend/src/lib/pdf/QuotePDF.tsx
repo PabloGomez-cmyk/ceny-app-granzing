@@ -313,7 +313,7 @@ export function QuotePDFDocument({ quote, company }: Props) {
   const logo = company?.company_logo_url ?? null;
 
   const s = makeStyles(
-    company?.company_color_primary ?? "#0f6e50",
+    company?.company_color_primary ?? "#d9622c",
     company?.company_color_secondary ?? "#e8f5f0",
   );
 

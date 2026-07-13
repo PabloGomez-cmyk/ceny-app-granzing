@@ -58,7 +58,7 @@ function LabelForm({
         onChange={(e) => setName(e.target.value)}
         placeholder="Nombre de la etiqueta..."
         maxLength={50}
-        className="mb-3 h-[36px] w-full rounded-[8px] border border-[#dde4ee] bg-white px-3 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#0f6e50] focus:outline-none focus:ring-1 focus:ring-[#0f6e50]/20"
+        className="mb-3 h-[36px] w-full rounded-[8px] border border-[#dde4ee] bg-white px-3 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#d9622c] focus:outline-none focus:ring-1 focus:ring-[#d9622c]/20"
       />
       <div className="mb-3 flex flex-wrap gap-2">
         {PALETTE.map((c) => (
@@ -93,7 +93,7 @@ function LabelForm({
           <button
             onClick={() => name.trim() && onSave(name.trim(), color)}
             disabled={!name.trim() || isSaving}
-            className="rounded-[8px] bg-[#0f6e50] px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-[#0a5a40] disabled:opacity-50"
+            className="rounded-[8px] bg-[#d9622c] px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-[#b74e1e] disabled:opacity-50"
           >
             {isSaving ? "Guardando..." : "Guardar"}
           </button>
@@ -231,7 +231,7 @@ export default function LabelsSettingsModal({ onClose }: { onClose: () => void }
                     setShowForm(true);
                     setEditingId(null);
                   }}
-                  className="flex w-full items-center justify-center gap-1.5 rounded-[10px] border border-dashed border-[#cbd5e1] py-2.5 text-[13px] font-medium text-[#64748b] transition-colors hover:border-[#0f6e50] hover:bg-[#f0faf6] hover:text-[#0f6e50]"
+                  className="flex w-full items-center justify-center gap-1.5 rounded-[10px] border border-dashed border-[#cbd5e1] py-2.5 text-[13px] font-medium text-[#64748b] transition-colors hover:border-[#d9622c] hover:bg-[#fbeee1] hover:text-[#d9622c]"
                 >
                   <Plus size={14} />
                   Nueva etiqueta

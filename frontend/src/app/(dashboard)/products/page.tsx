@@ -16,6 +16,7 @@ import {
   Settings2,
 } from "lucide-react";
 import { useProducts, useBrands, useCategories } from "@/hooks/useProducts";
+import { useEffectivePriceList } from "@/hooks/usePriceLists";
 import UserMenu from "@/components/layout/UserMenu";
 import ProfileModal from "@/components/profile/ProfileModal";
 import type { Brand, Product, ProductCategory } from "@/lib/api/products";
@@ -108,11 +109,15 @@ function ProductRow({
   brand,
   category,
   onClick,
+  effectivePrice,
+  tourAnchor,
 }: {
   product: Product;
   brand: Brand | undefined;
   category: ProductCategory | undefined;
   onClick: () => void;
+  effectivePrice?: number;
+  tourAnchor?: boolean;
 }) {
   return (
     <tr
@@ -154,8 +159,11 @@ function ProductRow({
           </span>
         </div>
       </td>
-      <td className="px-3 py-3 text-right text-[13px] font-bold text-[#0f6e50]">
-        ${Number(product.sale_price_per_m2).toLocaleString("es-AR", { minimumFractionDigits: 2 })}/m²
+      <td
+        className="px-3 py-3 text-right text-[13px] font-bold text-[#d9622c]"
+        data-tour={tourAnchor ? "products-price" : undefined}
+      >
+        ${Number(effectivePrice ?? product.sale_price_per_m2).toLocaleString("es-AR", { minimumFractionDigits: 2 })}/m²
       </td>
       <td className="px-3 py-3">
         <ActiveBadge active={product.is_active} />
@@ -174,16 +182,20 @@ function ProductCard({
   brand,
   category,
   onClick,
+  effectivePrice,
+  tourAnchor,
 }: {
   product: Product;
   brand: Brand | undefined;
   category: ProductCategory | undefined;
   onClick: () => void;
+  effectivePrice?: number;
+  tourAnchor?: boolean;
 }) {
   return (
     <div
       onClick={onClick}
-      className="cursor-pointer rounded-[12px] border border-[#e8ecf2] bg-white p-4 hover:border-[#0f6e50]/30"
+      className="cursor-pointer rounded-[12px] border border-[#e8ecf2] bg-white p-4 hover:border-[#d9622c]/30"
     >
       <div className="flex items-start justify-between gap-2">
         <div>
@@ -209,8 +221,11 @@ function ProductCard({
         <span className="text-[11px] text-[#64748b]">
           UV {product.uv_percentage}% · IRR {product.irr_percentage}% · TSER {product.tser_percentage}%
         </span>
-        <span className="text-[13px] font-bold text-[#0f6e50]">
-          ${Number(product.sale_price_per_m2).toLocaleString("es-AR", { minimumFractionDigits: 2 })}/m²
+        <span
+          className="text-[13px] font-bold text-[#d9622c]"
+          data-tour={tourAnchor ? "products-price" : undefined}
+        >
+          ${Number(effectivePrice ?? product.sale_price_per_m2).toLocaleString("es-AR", { minimumFractionDigits: 2 })}/m²
         </span>
       </div>
     </div>
@@ -230,6 +245,11 @@ export default function ProductsPage() {
   const { data: products = [], isLoading } = useProducts();
   const { data: brands = [] } = useBrands();
   const { data: categories = [] } = useCategories();
+  const { data: priceList = [] } = useEffectivePriceList(userId);
+  const priceByProduct = useMemo(
+    () => Object.fromEntries(priceList.map((i) => [i.product_id, i.effective_sale_price])),
+    [priceList]
+  );
 
   const [search, setSearch] = useState("");
   const [filterActive, setFilterActive] = useState<"active" | "all">("active");
@@ -267,7 +287,7 @@ export default function ProductsPage() {
   return (
     <div className="flex min-h-screen flex-col bg-[#f0f4f8]">
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <header className="flex items-center justify-between bg-[#0f6e50] px-5 py-3">
+      <header className="flex items-center justify-between bg-[#d9622c] px-5 py-3">
         <div className="flex items-center gap-3">
           <Link
             href="/dashboard"
@@ -302,7 +322,8 @@ export default function ProductsPage() {
         {isAdmin && (
           <Link
             href="/products/new"
-            className="flex items-center gap-1.5 rounded-[10px] bg-[#0f6e50] px-4 py-2 text-[12px] font-semibold text-white hover:bg-[#0a5a40]"
+            data-tour="products-new"
+            className="flex items-center gap-1.5 rounded-[10px] bg-[#d9622c] px-4 py-2 text-[12px] font-semibold text-white hover:bg-[#b74e1e]"
           >
             <Plus size={14} />
             <span className="hidden sm:inline">Nuevo producto</span>
@@ -316,7 +337,7 @@ export default function ProductsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar producto o marca..."
-            className="h-[36px] w-full rounded-[10px] border border-[#dde4ee] bg-[#f8fafc] pl-8 pr-3 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#0f6e50] focus:outline-none focus:ring-1 focus:ring-[#0f6e50]/20"
+            className="h-[36px] w-full rounded-[10px] border border-[#dde4ee] bg-[#f8fafc] pl-8 pr-3 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#d9622c] focus:outline-none focus:ring-1 focus:ring-[#d9622c]/20"
           />
         </div>
 
@@ -326,7 +347,7 @@ export default function ProductsPage() {
               key={tab}
               onClick={() => setFilterActive(tab)}
               className={`px-4 py-1.5 text-[12px] font-medium transition-colors ${
-                filterActive === tab ? "bg-[#0f6e50] text-white" : "text-[#475569] hover:bg-[#f1f5f9]"
+                filterActive === tab ? "bg-[#d9622c] text-white" : "text-[#475569] hover:bg-[#f1f5f9]"
               }`}
             >
               {tab === "active" ? "Activos" : "Todos"}
@@ -382,13 +403,15 @@ export default function ProductsPage() {
                     </td>
                   </tr>
                 ) : (
-                  filtered.map((product) => (
+                  filtered.map((product, i) => (
                     <ProductRow
                       key={product.id}
                       product={product}
                       brand={brandsMap.get(product.brand_id)}
                       category={categoriesMap.get(product.category_id)}
                       onClick={() => (window.location.href = `/products/${product.id}`)}
+                      effectivePrice={priceByProduct[product.id]}
+                      tourAnchor={i === 0}
                     />
                   ))
                 )}
@@ -405,13 +428,15 @@ export default function ProductsPage() {
                 {search ? "Sin resultados." : "No hay productos."}
               </p>
             ) : (
-              filtered.map((product) => (
+              filtered.map((product, i) => (
                 <ProductCard
                   key={product.id}
                   product={product}
                   brand={brandsMap.get(product.brand_id)}
                   category={categoriesMap.get(product.category_id)}
                   onClick={() => (window.location.href = `/products/${product.id}`)}
+                  effectivePrice={priceByProduct[product.id]}
+                  tourAnchor={i === 0}
                 />
               ))
             )}

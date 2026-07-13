@@ -30,7 +30,7 @@ function getInitials(name: string): string {
 }
 
 const AVATAR_PALETTE = [
-  "#0f6e50", "#2563eb", "#7c3aed", "#dc2626", "#d97706",
+  "#d9622c", "#2563eb", "#7c3aed", "#dc2626", "#d97706",
   "#0891b2", "#059669", "#9333ea", "#be185d", "#1d4ed8",
 ];
 
@@ -127,7 +127,7 @@ function UserRow({
     <tr
       onClick={onSelect}
       className={`cursor-pointer border-b border-[#f1f5f9] transition-colors hover:bg-[#f8fafb] ${
-        selected ? "bg-[#f0faf6]" : ""
+        selected ? "bg-[#fbeee1]" : ""
       }`}
     >
       <td className="py-3 pl-5 pr-3">
@@ -259,7 +259,7 @@ function UserDetailPanel({
       <div className="mt-4 flex flex-wrap gap-3">
         <button
           onClick={onEdit}
-          className="flex items-center gap-1.5 rounded-[10px] bg-[#0f6e50] px-4 py-2 text-[12px] font-semibold text-white hover:bg-[#0a5a40]"
+          className="flex items-center gap-1.5 rounded-[10px] bg-[#d9622c] px-4 py-2 text-[12px] font-semibold text-white hover:bg-[#b74e1e]"
         >
           <Pencil size={13} />
           Editar usuario
@@ -361,7 +361,7 @@ export default function UsersPage() {
   return (
     <div className="flex min-h-screen flex-col bg-[#f0f4f8]">
       {/* ── Header verde ────────────────────────────────────────────────── */}
-      <header className="flex items-center justify-between bg-[#0f6e50] px-5 py-3">
+      <header className="flex items-center justify-between bg-[#d9622c] px-5 py-3">
         <div className="flex items-center gap-3">
           <Link
             href="/dashboard"
@@ -384,7 +384,7 @@ export default function UsersPage() {
       <div className="flex flex-wrap items-center gap-3 border-b border-[#e4eaf2] bg-white px-5 py-3">
         <button
           onClick={() => setModal({ mode: "create" })}
-          className="flex items-center gap-1.5 rounded-[10px] bg-[#0f6e50] px-4 py-2 text-[12px] font-semibold text-white hover:bg-[#0a5a40]"
+          className="flex items-center gap-1.5 rounded-[10px] bg-[#d9622c] px-4 py-2 text-[12px] font-semibold text-white hover:bg-[#b74e1e]"
         >
           <Plus size={14} />
           <span className="hidden sm:inline">Nuevo usuario</span>
@@ -397,7 +397,7 @@ export default function UsersPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar usuario..."
-            className="h-[36px] w-full rounded-[10px] border border-[#dde4ee] bg-[#f8fafc] pl-8 pr-3 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#0f6e50] focus:outline-none focus:ring-1 focus:ring-[#0f6e50]/20"
+            className="h-[36px] w-full rounded-[10px] border border-[#dde4ee] bg-[#f8fafc] pl-8 pr-3 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#d9622c] focus:outline-none focus:ring-1 focus:ring-[#d9622c]/20"
           />
         </div>
 
@@ -408,7 +408,7 @@ export default function UsersPage() {
               onClick={() => setFilter(tab)}
               className={`px-4 py-1.5 text-[12px] font-medium transition-colors ${
                 filter === tab
-                  ? "bg-[#0f6e50] text-white"
+                  ? "bg-[#d9622c] text-white"
                   : "text-[#475569] hover:bg-[#f1f5f9]"
               }`}
             >

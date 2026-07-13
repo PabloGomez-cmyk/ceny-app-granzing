@@ -24,14 +24,20 @@ from centy.application.quotes.handlers import (
     CreateQuoteHandler,
     DeleteQuoteHandler,
     GetQuoteHandler,
+    GetQuoteStatsHandler,
     UpdateQuoteHandler,
     UpdateQuoteStatusHandler,
 )
-from centy.application.quotes.queries import GetQuoteQuery
+from centy.application.quotes.queries import GetQuoteQuery, GetQuoteStatsQuery
+from centy.domain.catalog.entities import Product
+from centy.domain.pricing.entities import PriceListItem
 from centy.domain.quotes.entities import Quote
 from centy.domain.quotes.value_objects import FilmMode, LocationType, QuoteStatus
 from centy.domain.shared.exceptions import AuthorizationError, NotFoundError
 from centy.domain.shared.value_objects import TenantId
+
+DEFAULT_PRODUCT_ID = uuid4()
+DEFAULT_PURCHASE_PRICE = Decimal("600.00")
 
 # ── Fake repo ─────────────────────────────────────────────────────────────────
 
@@ -73,6 +79,7 @@ class FakeQuoteUnitOfWork(IUnitOfWork):
             FakeCustomerLabelRepository,
             FakeCustomerRepository,
             FakeGlassTypeRepository,
+            FakePriceListItemRepository,
             FakeProductCategoryRepository,
             FakeProductRepository,
             FakeUserRepository,
@@ -85,6 +92,7 @@ class FakeQuoteUnitOfWork(IUnitOfWork):
         self.product_categories = FakeProductCategoryRepository()
         self.glass_types = FakeGlassTypeRepository()
         self.products = FakeProductRepository()
+        self.price_list_items = FakePriceListItemRepository()
         self.quotes = repo
         self.committed = False
 
@@ -120,8 +128,24 @@ def quote_repo() -> FakeQuoteRepository:
 
 
 @pytest.fixture
-def uow(quote_repo: FakeQuoteRepository) -> FakeQuoteUnitOfWork:
-    return FakeQuoteUnitOfWork(repo=quote_repo)
+def uow(quote_repo: FakeQuoteRepository, tenant_id: TenantId) -> FakeQuoteUnitOfWork:
+    u = FakeQuoteUnitOfWork(repo=quote_repo)
+    product = Product.create(
+        tenant_id=tenant_id,
+        name="Film Solar Test",
+        brand_id=uuid4(),
+        sale_price_per_m2=Decimal("1000.00"),
+        purchase_price_per_m2=DEFAULT_PURCHASE_PRICE,
+        uv_percentage=Decimal("90"),
+        irr_percentage=Decimal("70"),
+        tser_percentage=Decimal("50"),
+        warranty_years=5,
+        category_id=uuid4(),
+        application_types=["WINDOW"],
+    )
+    product.id = DEFAULT_PRODUCT_ID
+    u.products._store[product.id] = product  # type: ignore[attr-defined]
+    return u
 
 
 def _pane_input(
@@ -141,12 +165,15 @@ def _pane_input(
 
 
 def _line_input(
-    pane_ids: list[str] | None = None, price: float = 1000.0
+    pane_ids: list[str] | None = None,
+    price: float = 1000.0,
+    product_id: UUID | None = None,
+    product_snapshot: dict | None = None,
 ) -> QuoteLineInput:
     p = Decimal(str(price))
     return QuoteLineInput(
-        product_id=uuid4(),
-        product_snapshot={"name": "Film Solar"},
+        product_id=product_id or DEFAULT_PRODUCT_ID,
+        product_snapshot=product_snapshot or {"name": "Film Solar"},
         glass_pane_ids=pane_ids or ["v01"],
         price_per_m2=p,
         surface_m2=Decimal("1.00"),
@@ -511,3 +538,170 @@ class TestDeleteQuoteHandler:
                     requester_role="OPERATOR",
                 )
             )
+
+
+# ── GetQuoteStatsHandler ──────────────────────────────────────────────────────
+
+
+class TestGetQuoteStatsHandler:
+    @pytest.mark.asyncio
+    async def test_agrega_revenue_total_y_por_usuario(
+        self,
+        uow: FakeQuoteUnitOfWork,
+        quote_repo: FakeQuoteRepository,
+        tenant_id: TenantId,
+    ) -> None:
+        user_a = uuid4()
+        user_b = uuid4()
+
+        # user_a: una quote aceptada ($1000) y una cancelada (no cuenta)
+        accepted = await CreateQuoteHandler(uow).handle(_create_cmd(tenant_id, user_a))
+        await UpdateQuoteStatusHandler(uow).handle(
+            UpdateQuoteStatusCommand(
+                quote_id=UUID(accepted.quote_id),
+                tenant_id=tenant_id,
+                requester_user_id=user_a,
+                requester_role="OPERATOR",
+                new_status=QuoteStatus.SENT,
+            )
+        )
+        await UpdateQuoteStatusHandler(uow).handle(
+            UpdateQuoteStatusCommand(
+                quote_id=UUID(accepted.quote_id),
+                tenant_id=tenant_id,
+                requester_user_id=user_a,
+                requester_role="OPERATOR",
+                new_status=QuoteStatus.ACCEPTED,
+            )
+        )
+        cancelled = await CreateQuoteHandler(uow).handle(_create_cmd(tenant_id, user_a))
+        await UpdateQuoteStatusHandler(uow).handle(
+            UpdateQuoteStatusCommand(
+                quote_id=UUID(cancelled.quote_id),
+                tenant_id=tenant_id,
+                requester_user_id=user_a,
+                requester_role="OPERATOR",
+                new_status=QuoteStatus.CANCELLED,
+            )
+        )
+
+        # user_b: una quote en DRAFT (no cuenta como revenue)
+        await CreateQuoteHandler(uow).handle(_create_cmd(tenant_id, user_b))
+
+        result = await GetQuoteStatsHandler(quote_repo).handle(
+            GetQuoteStatsQuery(tenant_id=tenant_id)
+        )
+
+        assert result.total_quotes == 3
+        assert result.total_revenue == Decimal("1000.00")
+        assert result.revenue_this_month == Decimal("1000.00")
+
+        by_user = {u.user_id: u for u in result.per_user}
+        assert by_user[str(user_a)].total_revenue == Decimal("1000.00")
+        assert by_user[str(user_b)].total_revenue == Decimal("0")
+
+
+# ── Margen (costo snapshoteado + total_margin) ───────────────────────────────
+
+
+class TestQuoteMargin:
+    @pytest.mark.asyncio
+    async def test_snapshotea_costo_del_catalogo_al_crear(
+        self, uow: FakeQuoteUnitOfWork, tenant_id: TenantId
+    ) -> None:
+        # precio venta 1000, costo catálogo 600, 1m² → margen 400
+        result = await CreateQuoteHandler(uow).handle(_create_cmd(tenant_id, uuid4()))
+        assert result.total_margin == Decimal("400.00")
+
+    @pytest.mark.asyncio
+    async def test_ignora_costo_inyectado_por_el_cliente(
+        self, uow: FakeQuoteUnitOfWork, tenant_id: TenantId
+    ) -> None:
+        # el cliente intenta mandar un costo falso (0) para inflar el margen
+        # — el backend debe ignorarlo y usar el costo real del catálogo (600)
+        cmd = _create_cmd(tenant_id, uuid4())
+        cmd = CreateQuoteCommand(
+            **{
+                **cmd.__dict__,
+                "lines": [
+                    _line_input(
+                        product_snapshot={
+                            "name": "Film Solar",
+                            "purchase_price_per_m2": "0",
+                        }
+                    )
+                ],
+            }
+        )
+        result = await CreateQuoteHandler(uow).handle(cmd)
+        assert result.total_margin == Decimal("400.00")
+        assert result.lines[0].product_snapshot["purchase_price_per_m2"] == "600.00"
+
+    @pytest.mark.asyncio
+    async def test_usa_override_de_price_list_del_operador(
+        self, uow: FakeQuoteUnitOfWork, tenant_id: TenantId
+    ) -> None:
+        user_id = uuid4()
+        override = PriceListItem.create(
+            tenant_id=tenant_id,
+            user_id=user_id,
+            product_id=DEFAULT_PRODUCT_ID,
+            purchase_price=Decimal("200.00"),
+        )
+        await uow.price_list_items.save(override)
+
+        result = await CreateQuoteHandler(uow).handle(_create_cmd(tenant_id, user_id))
+        # precio venta 1000, costo override 200 (no el 600 del catálogo) → margen 800
+        assert result.total_margin == Decimal("800.00")
+
+    @pytest.mark.asyncio
+    async def test_producto_inexistente_lanza_not_found(
+        self, uow: FakeQuoteUnitOfWork, tenant_id: TenantId
+    ) -> None:
+        cmd = _create_cmd(tenant_id, uuid4())
+        cmd = CreateQuoteCommand(
+            **{**cmd.__dict__, "lines": [_line_input(product_id=uuid4())]}
+        )
+        with pytest.raises(NotFoundError):
+            await CreateQuoteHandler(uow).handle(cmd)
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("handler_name", ["get", "update_status"])
+    async def test_no_owner_no_admin_nunca_recibe_quote_result(
+        self,
+        handler_name: str,
+        uow: FakeQuoteUnitOfWork,
+        quote_repo: FakeQuoteRepository,
+        tenant_id: TenantId,
+    ) -> None:
+        """Contrato: _quote_result (y por lo tanto total_margin) solo se
+
+        construye para el dueño del presupuesto o el admin. Este test fija
+        ese invariante para Get y UpdateStatus — si se rompe, total_margin
+        se filtraría a un usuario sin permiso (ver comentario en
+        application/quotes/handlers.py::_quote_result).
+        """
+        owner_id = uuid4()
+        other_id = uuid4()
+        created = await CreateQuoteHandler(uow).handle(_create_cmd(tenant_id, owner_id))
+
+        with pytest.raises(AuthorizationError):
+            if handler_name == "get":
+                await GetQuoteHandler(quote_repo).handle(
+                    GetQuoteQuery(
+                        quote_id=UUID(created.quote_id),
+                        tenant_id=tenant_id,
+                        requester_user_id=other_id,
+                        requester_role="OPERATOR",
+                    )
+                )
+            else:
+                await UpdateQuoteStatusHandler(uow).handle(
+                    UpdateQuoteStatusCommand(
+                        quote_id=UUID(created.quote_id),
+                        tenant_id=tenant_id,
+                        requester_user_id=other_id,
+                        requester_role="OPERATOR",
+                        new_status=QuoteStatus.SENT,
+                    )
+                )

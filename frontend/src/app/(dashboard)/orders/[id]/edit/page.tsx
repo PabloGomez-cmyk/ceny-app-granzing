@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, use } from "react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -9,6 +10,8 @@ import { useCustomers } from "@/hooks/useCustomers";
 import { useProducts } from "@/hooks/useProducts";
 import type { FilmMode, LocationType } from "@/lib/api/quotes";
 import type { Product } from "@/lib/api/products";
+import { CutDiagram, type CutPiece, type CutRow } from "@/components/quotes/CutDiagram";
+import { useEffectivePriceList } from "@/hooks/usePriceLists";
 
 // ── Re-use shared logic from new/page via dynamic import workaround ────────────
 // Instead of duplicating, we import the building blocks directly.
@@ -35,22 +38,6 @@ interface QuoteLineLocal {
   price_per_m2: number;
   surface_m2: number;
   subtotal: number;
-}
-
-interface CutPiece {
-  pane_id: string;
-  label: string;
-  width_cm: number;
-  height_cm: number;
-  rotated: boolean;
-  pano_index?: number;
-  pano_total?: number;
-}
-
-interface CutRow {
-  pieces: CutPiece[];
-  row_height_cm: number;
-  used_width_cm: number;
 }
 
 interface MaterialCutPlan {
@@ -117,7 +104,7 @@ function computeCutPlan(glassPanes: GlassEntry[], lines: QuoteLineLocal[], produ
     const rollArea = totalLinearM * (rollWidthCm / 100);
     const efficiency = rollArea > 0 ? (usefulArea / rollArea) * 100 : 0;
     const snap = line.product_snapshot as Record<string, string | number>;
-    materials.push({ product_id: line.product_id, product_name: String(snap.name ?? ""), brand_name: String(snap.brand_name ?? ""), brand_color: String(snap.brand_color ?? "#0f6e50"), linear_m: Math.round(totalLinearM * 1000) / 1000, rolls, efficiency_pct: Math.round(efficiency * 10) / 10, area_useful_m2: Math.round(usefulArea * 1000) / 1000, cuts: rows, roll_width_cm: rollWidthCm, roll_length_m: rollLengthM });
+    materials.push({ product_id: line.product_id, product_name: String(snap.name ?? ""), brand_name: String(snap.brand_name ?? ""), brand_color: String(snap.brand_color ?? "#d9622c"), linear_m: Math.round(totalLinearM * 1000) / 1000, rolls, efficiency_pct: Math.round(efficiency * 10) / 10, area_useful_m2: Math.round(usefulArea * 1000) / 1000, cuts: rows, roll_width_cm: rollWidthCm, roll_length_m: rollLengthM });
   }
   return { materials, total_linear_m: materials.reduce((s, m) => s + m.linear_m, 0), total_rolls: materials.reduce((s, m) => s + m.rolls, 0) };
 }
@@ -133,7 +120,7 @@ function StepBar({ step }: { step: 1 | 2 | 3 }) {
         const active = step === n; const done = step > n;
         return (
           <div key={label} className="flex items-center gap-1">
-            <div className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold ${active ? "bg-[#0f6e50] text-white" : done ? "bg-[#0f6e50]/20 text-[#0f6e50]" : "bg-[#f1f5f9] text-[#94a3b8]"}`}>{n}</div>
+            <div className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold ${active ? "bg-[#d9622c] text-white" : done ? "bg-[#d9622c]/20 text-[#d9622c]" : "bg-[#f1f5f9] text-[#94a3b8]"}`}>{n}</div>
             <span className={`text-[12px] font-medium ${active ? "text-[#0f172a]" : "text-[#94a3b8]"}`}>{label}</span>
             {i < 2 && <div className="mx-1 h-px w-6 bg-[#e8ecf2]" />}
           </div>
@@ -151,6 +138,11 @@ export default function EditQuotePage({ params }: { params: Promise<{ id: string
   const { data: quote, isPending } = useQuote(id);
   const { data: customers = [] } = useCustomers();
   const { data: products = [] } = useProducts();
+  const { data: priceList = [] } = useEffectivePriceList(quote?.created_by_user_id);
+  const priceByProduct = useMemo(
+    () => Object.fromEntries(priceList.map((i) => [i.product_id, i])),
+    [priceList]
+  );
   const updateQuote = useUpdateQuote();
 
   // ── Wizard state (inicializado desde el quote existente) ──────────────────
@@ -229,8 +221,10 @@ export default function EditQuotePage({ params }: { params: Promise<{ id: string
       const product = activeProducts.find((p) => p.id === singleProductId);
       if (!product) return [];
       const totalM2 = glassPanes.reduce((s, p) => s + (p.width_cm / 100) * (p.height_cm / 100) * p.quantity, 0);
-      const price = Number(product.sale_price_per_m2);
-      return [{ glass_pane_ids: glassPanes.map((p) => p.pane_id), product_id: product.id, product_snapshot: { name: product.name, brand_name: "", brand_color: "#0f6e50", price_per_m2: price, uv_pct: product.uv_percentage, irr_pct: product.irr_percentage }, price_per_m2: price, surface_m2: Math.round(totalM2 * 10000) / 10000, subtotal: Math.round(totalM2 * price * 100) / 100 }];
+      const effective = priceByProduct[product.id];
+      const price = Number(effective ? effective.effective_sale_price : product.sale_price_per_m2);
+      const cost = Number(effective ? effective.effective_purchase_price : product.purchase_price_per_m2);
+      return [{ glass_pane_ids: glassPanes.map((p) => p.pane_id), product_id: product.id, product_snapshot: { name: product.name, brand_name: "", brand_color: "#d9622c", price_per_m2: price, uv_pct: product.uv_percentage, irr_pct: product.irr_percentage, purchase_price_per_m2: cost }, price_per_m2: price, surface_m2: Math.round(totalM2 * 10000) / 10000, subtotal: Math.round(totalM2 * price * 100) / 100 }];
     } else {
       const byProduct: Record<string, { pane_ids: string[]; m2: number }> = {};
       for (const pane of glassPanes) {
@@ -242,12 +236,14 @@ export default function EditQuotePage({ params }: { params: Promise<{ id: string
       }
       return Object.entries(byProduct).map(([pid, data]) => {
         const product = activeProducts.find((p) => p.id === pid)!;
-        const price = Number(product.sale_price_per_m2);
+        const effective = priceByProduct[pid];
+        const price = Number(effective ? effective.effective_sale_price : product.sale_price_per_m2);
+        const cost = Number(effective ? effective.effective_purchase_price : product.purchase_price_per_m2);
         const m2 = Math.round(data.m2 * 10000) / 10000;
-        return { glass_pane_ids: data.pane_ids, product_id: pid, product_snapshot: { name: product.name, brand_name: "", brand_color: "#0f6e50", price_per_m2: price, uv_pct: product.uv_percentage, irr_pct: product.irr_percentage }, price_per_m2: price, surface_m2: m2, subtotal: Math.round(m2 * price * 100) / 100 };
+        return { glass_pane_ids: data.pane_ids, product_id: pid, product_snapshot: { name: product.name, brand_name: "", brand_color: "#d9622c", price_per_m2: price, uv_pct: product.uv_percentage, irr_pct: product.irr_percentage, purchase_price_per_m2: cost }, price_per_m2: price, surface_m2: m2, subtotal: Math.round(m2 * price * 100) / 100 };
       });
     }
-  }, [filmMode, singleProductId, perGlassMap, glassPanes, products]);
+  }, [filmMode, singleProductId, perGlassMap, glassPanes, products, priceByProduct]);
 
   const activeLines = editableLines.length > 0 ? editableLines : derivedLines;
 
@@ -325,7 +321,7 @@ export default function EditQuotePage({ params }: { params: Promise<{ id: string
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-[#f0f4f8]">
         <p className="text-[14px] text-[#475569]">Presupuesto no encontrado.</p>
-        <Link href={"/orders" as never} className="text-[13px] text-[#0f6e50] hover:underline">Volver</Link>
+        <Link href={"/orders" as never} className="text-[13px] text-[#d9622c] hover:underline">Volver</Link>
       </div>
     );
   }
@@ -422,7 +418,7 @@ export default function EditQuotePage({ params }: { params: Promise<{ id: string
                   else if (step === 2 && canProceedStep2) goToStep3();
                 }}
                 disabled={(step === 1 && !canProceedStep1) || (step === 2 && !canProceedStep2)}
-                className="flex items-center gap-2 rounded-[10px] bg-[#0f6e50] px-5 py-2 text-[13px] font-semibold text-white disabled:opacity-40 hover:bg-[#0d5f44]"
+                className="flex items-center gap-2 rounded-[10px] bg-[#d9622c] px-5 py-2 text-[13px] font-semibold text-white disabled:opacity-40 hover:bg-[#b74e1e]"
               >
                 Siguiente →
               </button>
@@ -430,7 +426,7 @@ export default function EditQuotePage({ params }: { params: Promise<{ id: string
               <button
                 onClick={handleSave}
                 disabled={updateQuote.isPending}
-                className="flex items-center gap-2 rounded-[10px] bg-[#0f6e50] px-5 py-2 text-[13px] font-semibold text-white disabled:opacity-60 hover:bg-[#0d5f44]"
+                className="flex items-center gap-2 rounded-[10px] bg-[#d9622c] px-5 py-2 text-[13px] font-semibold text-white disabled:opacity-60 hover:bg-[#b74e1e]"
               >
                 {updateQuote.isPending ? "Guardando..." : "Guardar cambios"}
               </button>
@@ -446,72 +442,7 @@ export default function EditQuotePage({ params }: { params: Promise<{ id: string
 
 import { useGlassTypes } from "@/hooks/useProducts";
 import { useCreateCustomer, useCustomerLabels } from "@/hooks/useCustomers";
-import { Plus, Pencil, Trash2, Check, X, Layers, Users, Sun, DollarSign, Scissors, AlertTriangle } from "lucide-react";
-
-const PANE_COLORS = ["#22c55e", "#8b5cf6", "#3b82f6", "#f97316", "#ec4899", "#06b6d4", "#84cc16"];
-
-function CutDiagram({ rows, rollWidthCm = 152, paneIds, gapCm = 0 }: { rows: CutRow[]; rollWidthCm?: number; paneIds: string[]; gapCm?: number }) {
-  const COORD_W = 800;
-  const SCALE = COORD_W / rollWidthCm;
-  const gapPx = gapCm * SCALE;
-  const rowHeights = rows.map((r) => r.row_height_cm * SCALE);
-  const totalH = Math.max(rowHeights.reduce((s, h) => s + h, 0), 80);
-  const uniquePaneIds = [...new Set(paneIds)];
-  let yOffset = 0;
-  return (
-    <div className="overflow-hidden rounded-xl border border-[#e8ecf2] bg-[#f8fafc]">
-      <svg
-        viewBox={`0 0 ${COORD_W + 4} ${totalH + 4}`}
-        width="100%"
-        style={{ display: "block", minHeight: 220 }}
-        preserveAspectRatio="xMidYMid meet"
-      >
-        <rect x={0} y={0} width={COORD_W + 4} height={totalH + 4} fill="#f1f5f9" />
-        {rows.map((row, ri) => {
-          const rowY = yOffset;
-          const rowH = row.row_height_cm * SCALE;
-          yOffset += rowH;
-          let xStart = 2;
-          return row.pieces.map((piece, pi) => {
-            const pw = piece.width_cm * SCALE;
-            const ph = piece.height_cm * SCALE;
-            const pieceX = xStart;
-            const pieceY = rowY + (rowH - ph) / 2;
-            const cx = pieceX + pw / 2;
-            const cy = pieceY + ph / 2;
-            xStart += pw + gapPx;
-            const colorIdx = uniquePaneIds.indexOf(piece.pane_id) % PANE_COLORS.length;
-            const fill = PANE_COLORS[colorIdx] ?? "#94a3b8";
-            return (
-              <g key={`${ri}-${pi}`}>
-                <rect x={pieceX} y={pieceY} width={pw} height={ph} rx={4} fill={fill} fillOpacity={0.88} />
-                <text x={cx} y={cy - 10} textAnchor="middle" fontSize={18} fill="white" fontWeight="700">{piece.label}</text>
-                <text x={cx} y={cy + 12} textAnchor="middle" fontSize={14} fill="white" fillOpacity={0.9}>{piece.width_cm.toFixed(1)}×{piece.height_cm.toFixed(1)}cm</text>
-                {piece.rotated && (
-                  <text x={cx} y={cy + 30} textAnchor="middle" fontSize={12} fill="white" fillOpacity={0.75}>[rotado]</text>
-                )}
-              </g>
-            );
-          });
-        })}
-        <line x1={2} y1={14} x2={COORD_W + 2} y2={14} stroke="#94a3b8" strokeWidth={1} strokeDasharray="6,4" />
-        <text x={(COORD_W + 4) / 2} y={11} textAnchor="middle" fontSize={12} fill="#64748b">← {(rollWidthCm / 100).toFixed(2)} m →</text>
-      </svg>
-      <div className="flex flex-wrap gap-2 border-t border-[#e8ecf2] p-3">
-        {rows.flatMap((row) =>
-          row.pieces.map((piece, pi) => {
-            const colorIdx = uniquePaneIds.indexOf(piece.pane_id) % PANE_COLORS.length;
-            return (
-              <span key={`leg-${piece.label}-${pi}`} className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-semibold text-white" style={{ backgroundColor: PANE_COLORS[colorIdx] ?? "#94a3b8" }}>
-                {piece.label}: {piece.width_cm.toFixed(1)}×{piece.height_cm.toFixed(1)}cm{piece.rotated ? " [rot]" : ""}
-              </span>
-            );
-          })
-        )}
-      </div>
-    </div>
-  );
-}
+import { Plus, Pencil, Trash2, Check, X, Layers, Users, Sun, DollarSign, Scissors, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
 
 function EditStep1({
   glassPanes, setGlassPanes, customerId, setCustomerId, customers,
@@ -574,20 +505,20 @@ function EditStep1({
   }
 
   const selectedCustomer = customers.find((c) => c.id === customerId);
-  const inp = "w-full rounded-[8px] border border-[#dde4ee] bg-white px-2 py-2 text-[12px] text-[#0f172a] focus:border-[#0f6e50] focus:outline-none";
-  const cellInput = "w-full rounded-[6px] border border-[#0f6e50]/40 bg-white px-1.5 py-1 text-[12px] text-[#0f172a] focus:border-[#0f6e50] focus:outline-none";
+  const inp = "w-full rounded-[8px] border border-[#dde4ee] bg-white px-2 py-2 text-[12px] text-[#0f172a] focus:border-[#d9622c] focus:outline-none";
+  const cellInput = "w-full rounded-[6px] border border-[#d9622c]/40 bg-white px-1.5 py-1 text-[12px] text-[#0f172a] focus:border-[#d9622c] focus:outline-none";
 
   return (
     <div className="space-y-5">
       {/* Cliente */}
       <div className="rounded-[14px] border border-[#e8ecf2] bg-white p-5">
         <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-[14px] font-semibold text-[#0f172a]"><Users size={16} className="text-[#0f6e50]" />Cliente</div>
-          <button type="button" onClick={() => { setNewClientOpen(true); setNewClientError(""); setNewClientForm({ name: "", phone: "", email: "", address: "", city: "", province: "", neighborhood: "", postal_code: "", label_id: "", notes: "" }); }} className="flex items-center gap-1 text-[12px] font-semibold text-[#0f6e50] hover:text-[#0d5f44]"><Plus size={13} />Nuevo cliente</button>
+          <div className="flex items-center gap-2 text-[14px] font-semibold text-[#0f172a]"><Users size={16} className="text-[#d9622c]" />Cliente</div>
+          <button type="button" onClick={() => { setNewClientOpen(true); setNewClientError(""); setNewClientForm({ name: "", phone: "", email: "", address: "", city: "", province: "", neighborhood: "", postal_code: "", label_id: "", notes: "" }); }} className="flex items-center gap-1 text-[12px] font-semibold text-[#d9622c] hover:text-[#b74e1e]"><Plus size={13} />Nuevo cliente</button>
         </div>
         {newClientOpen && (
-          <div className="mb-4 rounded-[10px] border border-[#0f6e50]/20 bg-[#f0faf6] p-4">
-            <p className="mb-4 text-[12px] font-semibold text-[#0f6e50]">Crear nuevo cliente</p>
+          <div className="mb-4 rounded-[10px] border border-[#d9622c]/20 bg-[#fbeee1] p-4">
+            <p className="mb-4 text-[12px] font-semibold text-[#d9622c]">Crear nuevo cliente</p>
             <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
               <div><label className="mb-1 block text-[11px] font-medium text-[#64748b]">Nombre *</label><input type="text" value={newClientForm.name} onChange={(e) => setNewClientForm({ ...newClientForm, name: e.target.value })} placeholder="Juan Pérez" className={inp} /></div>
               <div><label className="mb-1 block text-[11px] font-medium text-[#64748b]">Teléfono</label><input type="text" value={newClientForm.phone} onChange={(e) => setNewClientForm({ ...newClientForm, phone: e.target.value })} placeholder="+54 9 11 ..." className={inp} /></div>
@@ -615,12 +546,12 @@ function EditStep1({
                   const created = await createCustomer.mutateAsync({ name: newClientForm.name.trim(), phone: newClientForm.phone.trim() || null, email: newClientForm.email.trim() || null, address: newClientForm.address.trim() || null, neighborhood: newClientForm.neighborhood.trim() || null, city: newClientForm.city.trim() || null, province: newClientForm.province.trim() || null, postal_code: newClientForm.postal_code.trim() || null, label_id: newClientForm.label_id || null, notes: newClientForm.notes.trim() || null });
                   setCustomerId(created.id); setNewClientOpen(false);
                 } catch (err) { setNewClientError(err instanceof Error ? err.message : "Error al crear cliente."); }
-              }} className="rounded-[8px] bg-[#0f6e50] px-4 py-1.5 text-[12px] font-semibold text-white disabled:opacity-60 hover:bg-[#0d5f44]">{createCustomer.isPending ? "Guardando..." : "Guardar cliente"}</button>
+              }} className="rounded-[8px] bg-[#d9622c] px-4 py-1.5 text-[12px] font-semibold text-white disabled:opacity-60 hover:bg-[#b74e1e]">{createCustomer.isPending ? "Guardando..." : "Guardar cliente"}</button>
               <button type="button" onClick={() => setNewClientOpen(false)} className="rounded-[8px] border border-[#dde4ee] px-4 py-1.5 text-[12px] text-[#64748b] hover:bg-[#f1f5f9]">Cancelar</button>
             </div>
           </div>
         )}
-        <select value={customerId} onChange={(e) => setCustomerId(e.target.value)} className="w-full rounded-[10px] border border-[#dde4ee] bg-[#f8fafc] px-3 py-2 text-[13px] text-[#0f172a] focus:border-[#0f6e50] focus:outline-none">
+        <select value={customerId} onChange={(e) => setCustomerId(e.target.value)} className="w-full rounded-[10px] border border-[#dde4ee] bg-[#f8fafc] px-3 py-2 text-[13px] text-[#0f172a] focus:border-[#d9622c] focus:outline-none">
           <option value="">Sin cliente asignado</option>
           {customers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
@@ -636,7 +567,7 @@ function EditStep1({
       {/* Vidrios */}
       <div className="rounded-[14px] border border-[#e8ecf2] bg-white p-5">
         <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-[14px] font-semibold text-[#0f172a]"><Layers size={16} className="text-[#0f6e50]" />Vidrios del Proyecto</div>
+          <div className="flex items-center gap-2 text-[14px] font-semibold text-[#0f172a]"><Layers size={16} className="text-[#d9622c]" />Vidrios del Proyecto</div>
           <div className="flex items-center gap-2">
             <span className="rounded-full bg-[#f1f5f9] px-3 py-1 text-[12px] font-semibold text-[#475569]">{glassPanes.length} vidrio{glassPanes.length !== 1 ? "s" : ""}</span>
             <span className="rounded-full bg-blue-50 px-3 py-1 text-[12px] font-semibold text-blue-700">{totalM2.toFixed(2)} m²</span>
@@ -653,9 +584,9 @@ function EditStep1({
             <div><label className="mb-1 block text-[11px] font-medium text-[#64748b]">Ubicación</label><select value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value as LocationType })} className={inp}><option value="SUPERFICIE">Superficie</option><option value="ALTURA">Altura</option></select></div>
             <div><label className="mb-1 block text-[11px] font-medium text-[#64748b]">Cantidad</label><input type="number" min={1} value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} className={inp} /></div>
           </div>
-          <div className="mt-3"><label className="mb-1 block text-[11px] font-medium text-[#64748b]">Observaciones</label><textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} placeholder="Observaciones del vidrio..." className="w-full resize-y rounded-[8px] border border-[#dde4ee] bg-white px-3 py-2 text-[12px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#0f6e50] focus:outline-none" /></div>
+          <div className="mt-3"><label className="mb-1 block text-[11px] font-medium text-[#64748b]">Observaciones</label><textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} placeholder="Observaciones del vidrio..." className="w-full resize-y rounded-[8px] border border-[#dde4ee] bg-white px-3 py-2 text-[12px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#d9622c] focus:outline-none" /></div>
           <div className="mt-3">
-            <button onClick={handleAdd} disabled={!form.glass_type_id || !form.width_cm || !form.height_cm} className="flex items-center gap-1.5 rounded-[8px] bg-[#0f6e50] px-4 py-2 text-[12px] font-semibold text-white disabled:opacity-40 hover:bg-[#0d5f44]"><Plus size={13} />Agregar</button>
+            <button onClick={handleAdd} disabled={!form.glass_type_id || !form.width_cm || !form.height_cm} className="flex items-center gap-1.5 rounded-[8px] bg-[#d9622c] px-4 py-2 text-[12px] font-semibold text-white disabled:opacity-40 hover:bg-[#b74e1e]"><Plus size={13} />Agregar</button>
           </div>
         </div>
 
@@ -669,7 +600,7 @@ function EditStep1({
                   const isEditing = inlineIdx === idx;
                   const m2 = isEditing ? (parseFloat(inlineForm.width_cm) / 100) * (parseFloat(inlineForm.height_cm) / 100) || 0 : (p.width_cm / 100) * (p.height_cm / 100);
                   return (
-                    <tr key={p.pane_id} className={`border-b border-[#f8fafc] ${isEditing ? "bg-[#f0faf6]" : ""}`}>
+                    <tr key={p.pane_id} className={`border-b border-[#f8fafc] ${isEditing ? "bg-[#fbeee1]" : ""}`}>
                       <td className="py-2 pl-1 font-bold text-[#0f172a]">{p.pane_id}</td>
                       <td className="py-2 pr-2">{isEditing ? <select value={inlineForm.glass_type_id} onChange={(e) => setInlineForm({ ...inlineForm, glass_type_id: e.target.value })} className={cellInput}><option value="">—</option>{glassTypes.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}</select> : <span className="rounded-[6px] bg-[#f1f5f9] px-2 py-0.5 text-[11px] font-medium text-[#475569]">{p.glass_type_name}</span>}</td>
                       <td className="py-2 pr-2">{isEditing ? <input type="number" value={inlineForm.width_cm} onChange={(e) => setInlineForm({ ...inlineForm, width_cm: e.target.value })} className={`${cellInput} w-20`} /> : <span className="font-medium text-[#0f172a]">{p.width_cm} cm</span>}</td>
@@ -677,7 +608,7 @@ function EditStep1({
                       <td className="py-2 pr-3 font-semibold text-[#0f172a]">{m2.toFixed(3)} m²</td>
                       <td className="py-2 pr-2">{isEditing ? <select value={inlineForm.location} onChange={(e) => setInlineForm({ ...inlineForm, location: e.target.value as LocationType })} className={cellInput}><option value="SUPERFICIE">Superficie</option><option value="ALTURA">Altura</option></select> : <span className={`rounded-[6px] px-2 py-0.5 text-[11px] font-medium ${p.location === "ALTURA" ? "bg-orange-100 text-orange-700" : "bg-sky-50 text-sky-700"}`}>{p.location === "ALTURA" ? "Altura" : "Superficie"}</span>}</td>
                       <td className="py-2 pr-2">{isEditing ? <input type="text" value={inlineForm.notes} onChange={(e) => setInlineForm({ ...inlineForm, notes: e.target.value })} className={`${cellInput} w-28`} /> : <span className="text-[#94a3b8]">{p.notes || "—"}</span>}</td>
-                      <td className="py-2"><div className="flex items-center gap-2">{isEditing ? (<><button onClick={() => handleInlineSave(idx)} className="flex h-6 w-6 items-center justify-center rounded-[6px] bg-[#0f6e50] text-white hover:bg-[#0d5f44]"><Check size={12} /></button><button onClick={() => setInlineIdx(null)} className="flex h-6 w-6 items-center justify-center rounded-[6px] border border-[#dde4ee] text-[#64748b] hover:bg-[#f1f5f9]"><X size={12} /></button></>) : (<><button onClick={() => { setInlineIdx(idx); setInlineForm({ glass_type_id: p.glass_type_id ?? "", width_cm: String(p.width_cm), height_cm: String(p.height_cm), location: p.location, notes: p.notes }); }} className="text-[#94a3b8] hover:text-[#0f6e50]"><Pencil size={13} /></button><button onClick={() => handleDelete(idx)} className="text-[#94a3b8] hover:text-red-500"><Trash2 size={13} /></button></>)}</div></td>
+                      <td className="py-2"><div className="flex items-center gap-2">{isEditing ? (<><button onClick={() => handleInlineSave(idx)} className="flex h-6 w-6 items-center justify-center rounded-[6px] bg-[#d9622c] text-white hover:bg-[#b74e1e]"><Check size={12} /></button><button onClick={() => setInlineIdx(null)} className="flex h-6 w-6 items-center justify-center rounded-[6px] border border-[#dde4ee] text-[#64748b] hover:bg-[#f1f5f9]"><X size={12} /></button></>) : (<><button onClick={() => { setInlineIdx(idx); setInlineForm({ glass_type_id: p.glass_type_id ?? "", width_cm: String(p.width_cm), height_cm: String(p.height_cm), location: p.location, notes: p.notes }); }} className="text-[#94a3b8] hover:text-[#d9622c]"><Pencil size={13} /></button><button onClick={() => handleDelete(idx)} className="text-[#94a3b8] hover:text-red-500"><Trash2 size={13} /></button></>)}</div></td>
                     </tr>
                   );
                 })}
@@ -688,7 +619,7 @@ function EditStep1({
                 <span className="text-[11px] text-[#94a3b8]">{panePage * PANES_PER_PAGE + 1}–{Math.min((panePage + 1) * PANES_PER_PAGE, glassPanes.length)} de {glassPanes.length}</span>
                 <div className="flex items-center gap-1">
                   <button disabled={panePage === 0} onClick={() => setPanePage((p) => p - 1)} className="rounded-[6px] border border-[#dde4ee] px-2.5 py-1 text-[11px] font-medium text-[#475569] disabled:opacity-40 hover:bg-[#f1f5f9]">‹ Anterior</button>
-                  {Array.from({ length: Math.ceil(glassPanes.length / PANES_PER_PAGE) }, (_, i) => <button key={i} onClick={() => setPanePage(i)} className={`h-6 w-6 rounded-[6px] text-[11px] font-semibold ${panePage === i ? "bg-[#0f6e50] text-white" : "border border-[#dde4ee] text-[#475569] hover:bg-[#f1f5f9]"}`}>{i + 1}</button>)}
+                  {Array.from({ length: Math.ceil(glassPanes.length / PANES_PER_PAGE) }, (_, i) => <button key={i} onClick={() => setPanePage(i)} className={`h-6 w-6 rounded-[6px] text-[11px] font-semibold ${panePage === i ? "bg-[#d9622c] text-white" : "border border-[#dde4ee] text-[#475569] hover:bg-[#f1f5f9]"}`}>{i + 1}</button>)}
                   <button disabled={panePage >= Math.ceil(glassPanes.length / PANES_PER_PAGE) - 1} onClick={() => setPanePage((p) => p + 1)} className="rounded-[6px] border border-[#dde4ee] px-2.5 py-1 text-[11px] font-medium text-[#475569] disabled:opacity-40 hover:bg-[#f1f5f9]">Siguiente ›</button>
                 </div>
               </div>
@@ -713,37 +644,137 @@ function EditStep2({
   setPerGlassMap: (m: Record<string, string>) => void;
   products: Product[];
 }) {
+  const { data: session } = useSession();
   const activeProducts = products.filter((p) => p.is_active);
+  const { data: priceList = [] } = useEffectivePriceList(session?.userId);
+  const priceByProduct = useMemo(
+    () => Object.fromEntries(priceList.map((i) => [i.product_id, i.effective_sale_price])),
+    [priceList]
+  );
+  function effectiveSalePrice(p: Product): number {
+    const override = priceByProduct[p.id];
+    return Number(override ?? p.sale_price_per_m2);
+  }
+
+  const glassTypeNames = [...new Set(glassPanes.map((p) => p.glass_type_name))].join(", ");
+
+  const materialSummary = useMemo(() => {
+    const map: Record<string, { product: Product; panes: GlassEntry[]; m2: number }> = {};
+    for (const pane of glassPanes) {
+      const pid = perGlassMap[pane.pane_id];
+      if (!pid) continue;
+      const product = activeProducts.find((p) => p.id === pid);
+      if (!product) continue;
+      if (!map[pid]) map[pid] = { product, panes: [], m2: 0 };
+      map[pid].panes.push(pane);
+      map[pid].m2 += (pane.width_cm / 100) * (pane.height_cm / 100) * pane.quantity;
+    }
+    return Object.values(map);
+  }, [glassPanes, perGlassMap, activeProducts]);
+
   return (
-    <div className="rounded-[14px] border border-[#e8ecf2] bg-white p-5">
-      <div className="mb-4 flex items-center gap-2 text-[14px] font-semibold text-[#0f172a]"><Sun size={16} className="text-[#0f6e50]" />Selección de Lámina</div>
-      <div className="mb-4 flex gap-2">
-        {(["SINGLE", "PER_GLASS"] as FilmMode[]).map((m) => (
-          <button key={m} onClick={() => setFilmMode(m)} className={`rounded-[8px] px-4 py-2 text-[12px] font-semibold transition-colors ${filmMode === m ? "bg-[#0f6e50] text-white" : "border border-[#dde4ee] text-[#475569] hover:bg-[#f1f5f9]"}`}>
-            {m === "SINGLE" ? "Una sola lámina" : "Láminas por vidrio"}
-          </button>
-        ))}
+    <div className="space-y-5">
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          onClick={() => setFilmMode("SINGLE")}
+          className={`flex items-center justify-center gap-2 rounded-[12px] border-2 px-4 py-3 text-[13px] font-semibold transition-all ${filmMode === "SINGLE" ? "border-[#d9622c] bg-[#fbeee1] text-[#d9622c]" : "border-[#e8ecf2] bg-white text-[#475569] hover:border-[#ead9c8]"}`}
+        >
+          <Sun size={15} />
+          Una sola lámina para todos los vidrios
+        </button>
+        <button
+          onClick={() => setFilmMode("PER_GLASS")}
+          className={`flex items-center justify-center gap-2 rounded-[12px] border-2 px-4 py-3 text-[13px] font-semibold transition-all ${filmMode === "PER_GLASS" ? "border-[#d9622c] bg-[#fbeee1] text-[#d9622c]" : "border-[#e8ecf2] bg-white text-[#475569] hover:border-[#ead9c8]"}`}
+        >
+          <Layers size={15} />
+          Láminas distintas por vidrio
+        </button>
       </div>
+
       {filmMode === "SINGLE" ? (
-        <div>
-          <label className="mb-1 block text-[11px] font-medium text-[#64748b]">Producto</label>
-          <select value={singleProductId} onChange={(e) => setSingleProductId(e.target.value)} className="w-full rounded-[10px] border border-[#dde4ee] bg-[#f8fafc] px-3 py-2 text-[13px] text-[#0f172a] focus:border-[#0f6e50] focus:outline-none">
-            <option value="">Seleccionar producto...</option>
-            {activeProducts.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
+        <div className="rounded-[14px] border border-[#e8ecf2] bg-white p-5">
+          <div className="mb-3 flex items-center gap-2 text-[13px] font-semibold text-[#0f172a]">
+            <Sun size={14} className="text-amber-500" />
+            Seleccionar Lámina
+          </div>
+          <p className="mb-3 text-[12px] text-[#94a3b8]">Vidrios: {glassTypeNames}</p>
+          <div className="space-y-2">
+            {activeProducts.map((p) => {
+              const selected = p.id === singleProductId;
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => setSingleProductId(p.id)}
+                  className={`w-full rounded-[10px] border-2 px-4 py-3 text-left transition-all ${selected ? "border-[#d9622c] bg-[#fbeee1]" : "border-[#e8ecf2] bg-white hover:border-[#ead9c8]"}`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Sun size={14} className="shrink-0 text-amber-500" />
+                      <div>
+                        <p className="text-[13px] font-semibold text-[#0f172a]">{p.name}</p>
+                        <p className="text-[11px] text-[#94a3b8]">
+                          ${effectiveSalePrice(p).toLocaleString("es-AR")}/m²&nbsp;&nbsp;UV {p.uv_percentage}%&nbsp;&nbsp;IRR {p.irr_percentage}%
+                        </p>
+                      </div>
+                    </div>
+                    {selected ? <ChevronUp size={14} className="text-[#d9622c]" /> : <ChevronDown size={14} className="text-[#94a3b8]" />}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
       ) : (
-        <div className="space-y-2">
-          {glassPanes.map((pane) => (
-            <div key={pane.pane_id} className="flex items-center gap-3 rounded-[8px] bg-[#f8fafc] p-3">
-              <span className="w-10 font-bold text-[12px] text-[#0f172a]">{pane.pane_id}</span>
-              <span className="flex-1 text-[11px] text-[#64748b]">{pane.width_cm}×{pane.height_cm} cm · {pane.glass_type_name}</span>
-              <select value={perGlassMap[pane.pane_id] ?? ""} onChange={(e) => setPerGlassMap({ ...perGlassMap, [pane.pane_id]: e.target.value })} className="rounded-[8px] border border-[#dde4ee] bg-white px-2 py-1.5 text-[12px] text-[#0f172a] focus:border-[#0f6e50] focus:outline-none">
-                <option value="">Seleccionar...</option>
-                {activeProducts.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
+        <div className="rounded-[14px] border border-[#e8ecf2] bg-white p-5">
+          <div className="mb-1 flex items-center gap-2 text-[13px] font-semibold text-[#0f172a]">
+            <Layers size={14} className="text-[#d9622c]" />
+            Asignar lámina por vidrio
+          </div>
+          <p className="mb-4 text-[12px] text-[#94a3b8]">Cada vidrio puede tener una lámina diferente</p>
+
+          <div className="overflow-hidden rounded-[10px] border border-[#e8ecf2]">
+            <div className="grid grid-cols-[60px_1fr_200px] border-b border-[#f1f5f9] bg-[#f8fafc] px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">
+              <span>Vidrio</span>
+              <span>Medidas</span>
+              <span>Lámina asignada</span>
             </div>
-          ))}
+            {glassPanes.map((pane) => (
+              <div key={pane.pane_id} className="grid grid-cols-[60px_1fr_200px] items-center border-b border-[#f8fafc] px-4 py-3">
+                <span className="text-[13px] font-bold text-[#0f172a]">{pane.pane_id}</span>
+                <div>
+                  <span className="text-[12px] text-[#475569]">
+                    {pane.width_cm} × {pane.height_cm} cm
+                  </span>
+                  <span className="ml-2 rounded bg-[#f1f5f9] px-1.5 py-0.5 text-[10px] text-[#64748b]">
+                    {pane.glass_type_name}
+                  </span>
+                </div>
+                <select
+                  value={perGlassMap[pane.pane_id] ?? ""}
+                  onChange={(e) => setPerGlassMap({ ...perGlassMap, [pane.pane_id]: e.target.value })}
+                  className="rounded-[8px] border border-[#dde4ee] bg-white px-2 py-1.5 text-[12px] text-[#0f172a] focus:border-[#d9622c] focus:outline-none"
+                >
+                  <option value="">Seleccionar lámina...</option>
+                  {activeProducts.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} — ${effectiveSalePrice(p).toLocaleString("es-AR")}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ))}
+          </div>
+
+          {materialSummary.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {materialSummary.map((ms) => (
+                <span key={ms.product.id} className="flex items-center gap-1.5 rounded-full border border-[#e8ecf2] bg-[#f8fafc] px-3 py-1 text-[11px] font-medium text-[#475569]">
+                  <Sun size={10} className="text-amber-500" />
+                  {ms.product.name} · {ms.panes.length} vidrio{ms.panes.length !== 1 ? "s" : ""} · {ms.m2.toFixed(2)} m²
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -763,7 +794,20 @@ function calcTotals(lines: QuoteLineLocal[], panes: GlassEntry[], hPct: number, 
   const taxableAmount = subtotal - discountAmount;
   const taxAmount = Math.round(taxableAmount * taxP) / 100;
   const total = taxableAmount + taxAmount;
-  return { materials, heightSurcharge, travel, subtotal, discountAmount, taxAmount, total };
+
+  let margin: number | null = 0;
+  for (const l of lines) {
+    const rawCost = l.product_snapshot?.purchase_price_per_m2;
+    if (margin === null) continue;
+    if (rawCost == null || (typeof rawCost !== "number" && typeof rawCost !== "string") || isNaN(Number(rawCost))) {
+      margin = null;
+      continue;
+    }
+    margin += (l.price_per_m2 - Number(rawCost)) * l.surface_m2;
+  }
+  if (margin !== null) margin = Math.round(margin * 100) / 100;
+
+  return { materials, heightSurcharge, travel, subtotal, discountAmount, taxAmount, total, margin };
 }
 
 function EditStep3({
@@ -790,20 +834,20 @@ function EditStep3({
   }
 
   const fmt = (n: number) => "$" + Math.round(n).toLocaleString("es-AR");
-  const inp3 = "rounded-[8px] border border-[#dde4ee] bg-white px-3 py-2 text-[13px] text-[#0f172a] focus:border-[#0f6e50] focus:outline-none";
+  const inp3 = "rounded-[8px] border border-[#dde4ee] bg-white px-3 py-2 text-[13px] text-[#0f172a] focus:border-[#d9622c] focus:outline-none";
 
   return (
     <div className="space-y-4">
       {/* Summary */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="rounded-[12px] border border-[#e8ecf2] bg-white p-4 text-center"><p className="text-[24px] font-bold text-[#0f6e50]">{glassPanes.length}</p><p className="text-[12px] text-[#94a3b8]">Vidrios</p></div>
+        <div className="rounded-[12px] border border-[#e8ecf2] bg-white p-4 text-center"><p className="text-[24px] font-bold text-[#d9622c]">{glassPanes.length}</p><p className="text-[12px] text-[#94a3b8]">Vidrios</p></div>
         <div className="rounded-[12px] border border-[#e8ecf2] bg-white p-4 text-center"><p className="text-[24px] font-bold text-blue-600">{totalM2.toFixed(1)}</p><p className="text-[12px] text-[#94a3b8]">m²</p></div>
         <div className="rounded-[12px] border border-[#e8ecf2] bg-white p-4 text-center"><p className="text-[24px] font-bold text-[#0f172a]">{lines.length}</p><p className="text-[12px] text-[#94a3b8]">Materiales</p></div>
       </div>
 
       {/* Precios por material */}
       <div className="rounded-[14px] border border-[#e8ecf2] bg-white p-5">
-        <div className="mb-3 flex items-center gap-2 text-[14px] font-semibold text-[#0f172a]"><DollarSign size={16} className="text-[#0f6e50]" />Precio por material</div>
+        <div className="mb-3 flex items-center gap-2 text-[14px] font-semibold text-[#0f172a]"><DollarSign size={16} className="text-[#d9622c]" />Precio por material</div>
         {lines.map((l) => {
           const snap = l.product_snapshot as Record<string, string | number>;
           return (
@@ -934,8 +978,25 @@ function EditStep3({
         </div>
       </div>
 
+      {/* Margen */}
+      {totals.margin != null && (
+        <div className="flex items-center justify-between rounded-[8px] bg-emerald-50 px-3 py-2">
+          <span className="text-[12px] font-medium text-emerald-700">
+            Margen
+            {totals.materials > 0 && (
+              <span className="ml-1 text-[11px] text-emerald-600">
+                ({((totals.margin / totals.materials) * 100).toFixed(1)}%)
+              </span>
+            )}
+          </span>
+          <span className="text-[13px] font-bold text-emerald-700">
+            $ {Math.round(totals.margin).toLocaleString("es-AR")}
+          </span>
+        </div>
+      )}
+
       {/* Total */}
-      <div className="flex items-center justify-between rounded-[12px] bg-[#0f6e50] px-5 py-4">
+      <div className="flex items-center justify-between rounded-[12px] bg-[#d9622c] px-5 py-4">
         <div className="space-y-0.5">
           <p className="text-[14px] font-bold tracking-wide text-white">TOTAL</p>
           {hasAltura && totals.heightSurcharge > 0 && <p className="text-[11px] text-white/70">Inc. recargo altura {heightSurchargePct}%</p>}
@@ -963,7 +1024,7 @@ function EditStep3({
                 type="number" min="0" step="0.5"
                 value={gapCm}
                 onChange={(e) => setGapCm(Number(e.target.value))}
-                className="w-16 rounded-[8px] border border-[#dde4ee] bg-[#f8fafc] px-2 py-1 text-center text-[12px] text-[#0f172a] focus:border-[#0f6e50] focus:outline-none"
+                className="w-16 rounded-[8px] border border-[#dde4ee] bg-[#f8fafc] px-2 py-1 text-center text-[12px] text-[#0f172a] focus:border-[#d9622c] focus:outline-none"
               />
               <span className="text-[11px]">cm</span>
             </label>
@@ -1009,7 +1070,7 @@ function EditStep3({
       {/* Condiciones comerciales */}
       <div className="rounded-[14px] border border-[#e8ecf2] bg-white p-5">
         <label className="mb-2 block text-[13px] font-semibold text-[#0f172a]">Condiciones comerciales</label>
-        <textarea value={conditions} onChange={(e) => setConditions(e.target.value)} rows={4} className="w-full resize-y rounded-[10px] border border-[#dde4ee] bg-[#f8fafc] px-3 py-2 text-[12px] text-[#0f172a] focus:border-[#0f6e50] focus:outline-none" />
+        <textarea value={conditions} onChange={(e) => setConditions(e.target.value)} rows={4} className="w-full resize-y rounded-[10px] border border-[#dde4ee] bg-[#f8fafc] px-3 py-2 text-[12px] text-[#0f172a] focus:border-[#d9622c] focus:outline-none" />
       </div>
     </div>
   );

@@ -33,6 +33,7 @@ export interface Product {
   name: string;
   brand_id: string;
   sale_price_per_m2: number;
+  purchase_price_per_m2: number;
   uv_percentage: number;
   irr_percentage: number;
   tser_percentage: number;
@@ -80,6 +81,7 @@ export interface CreateProductInput {
   name: string;
   brand_id: string;
   sale_price_per_m2: number;
+  purchase_price_per_m2: number;
   uv_percentage: number;
   irr_percentage: number;
   tser_percentage: number;
@@ -96,6 +98,7 @@ export interface UpdateProductInput {
   name?: string;
   brand_id?: string;
   sale_price_per_m2?: number;
+  purchase_price_per_m2?: number;
   uv_percentage?: number;
   irr_percentage?: number;
   tser_percentage?: number;

@@ -9,6 +9,7 @@ from centy.application.ports.unit_of_work import IUnitOfWork
 from centy.application.quotes.commands import (
     CreateQuoteCommand,
     DeleteQuoteCommand,
+    QuoteLineInput,
     UpdateQuoteCommand,
     UpdateQuoteStatusCommand,
 )
@@ -21,6 +22,7 @@ from centy.domain.quotes.entities import GlassPane, Quote, QuoteLine
 from centy.domain.quotes.services import QuoteCalculator
 from centy.domain.quotes.value_objects import QuoteStatus
 from centy.domain.shared.exceptions import AuthorizationError, NotFoundError
+from centy.domain.shared.value_objects import TenantId
 
 # ── Result dataclasses ────────────────────────────────────────────────────────
 
@@ -82,6 +84,7 @@ class QuoteResult:
     cut_plan_snapshot: dict[str, Any]
     valid_until: str
     totals: QuoteTotalsResult
+    total_margin: Decimal | None
     has_altura: bool
     created_at: str
 
@@ -119,6 +122,16 @@ def _line_result(line: QuoteLine) -> QuoteLineResult:
 
 
 def _quote_result(q: Quote) -> QuoteResult:
+    """Construye el DTO de respuesta, incluido total_margin.
+
+    PRECAUCIÓN: total_margin se calcula siempre acá, sin gating explícito de
+    rol — el invariante "solo el dueño o el admin llegan a construir un
+    QuoteResult" hoy lo garantizan los call-sites (Create: el creador es el
+    dueño; Get/Update/UpdateStatus: gateados por _can_access antes de llegar
+    acá; List: ya filtra por owner). Si se agrega un caller nuevo que NO
+    verifique acceso antes de invocar esta función, el margen se filtraría
+    sin que nada lo marque — ver test de contrato en test_quote_handlers.py.
+    """
     totals = _calculator.calculate(q)
     return QuoteResult(
         quote_id=str(q.id),
@@ -148,6 +161,7 @@ def _quote_result(q: Quote) -> QuoteResult:
             tax_amount=totals.tax_amount,
             total=totals.total,
         ),
+        total_margin=_calculator.calculate_margin(q),
         has_altura=q.has_altura_panes,
         created_at=q.created_at.isoformat(),
     )
@@ -159,6 +173,49 @@ def _build_quote_number(seq: int) -> str:
 
 def _can_access(quote: Quote, user_id: UUID, role: str) -> bool:
     return role == "ADMIN" or quote.created_by_user_id == user_id
+
+
+async def _build_lines_with_cost_snapshot(
+    uow: IUnitOfWork,
+    tenant_id: TenantId,
+    owner_user_id: UUID,
+    line_inputs: list[QuoteLineInput],
+) -> list[QuoteLine]:
+    """Construye las QuoteLine snapshoteando el costo efectivo del operador.
+
+    Nunca confía en un purchase_price_per_m2 que venga del cliente dentro de
+    product_snapshot — siempre lo sobreescribe con el costo real (override
+    del operador dueño de la venta, o default de catálogo) al momento de
+    guardar, igual que ya se hace con nombre/specs del producto.
+    """
+    lines: list[QuoteLine] = []
+    for line in line_inputs:
+        product = await uow.products.get_by_id(line.product_id, tenant_id)
+        if product is None:
+            raise NotFoundError(f"Producto {line.product_id} no encontrado")
+        override = await uow.price_list_items.get_by_user_and_product(
+            owner_user_id, line.product_id, tenant_id
+        )
+        effective_cost = (
+            override.purchase_price.amount
+            if override and override.purchase_price is not None
+            else product.purchase_price_per_m2.amount
+        )
+        snapshot = {
+            **line.product_snapshot,
+            "purchase_price_per_m2": str(effective_cost),
+        }
+        lines.append(
+            QuoteLine(
+                product_id=line.product_id,
+                product_snapshot=snapshot,
+                glass_pane_ids=line.glass_pane_ids,
+                price_per_m2=line.price_per_m2,
+                surface_m2=line.surface_m2,
+                subtotal=line.subtotal,
+            )
+        )
+    return lines
 
 
 # ── Handlers ──────────────────────────────────────────────────────────────────
@@ -190,17 +247,9 @@ class CreateQuoteHandler:
                 for p in command.glass_panes
             ]
 
-            lines = [
-                QuoteLine(
-                    product_id=line.product_id,
-                    product_snapshot=line.product_snapshot,
-                    glass_pane_ids=line.glass_pane_ids,
-                    price_per_m2=line.price_per_m2,
-                    surface_m2=line.surface_m2,
-                    subtotal=line.subtotal,
-                )
-                for line in command.lines
-            ]
+            lines = await _build_lines_with_cost_snapshot(
+                uow, command.tenant_id, command.created_by_user_id, command.lines
+            )
 
             quote = Quote.create(
                 tenant_id=command.tenant_id,
@@ -316,17 +365,9 @@ class UpdateQuoteHandler:
                 )
                 for p in command.glass_panes
             ]
-            lines = [
-                QuoteLine(
-                    product_id=line.product_id,
-                    product_snapshot=line.product_snapshot,
-                    glass_pane_ids=line.glass_pane_ids,
-                    price_per_m2=line.price_per_m2,
-                    surface_m2=line.surface_m2,
-                    subtotal=line.subtotal,
-                )
-                for line in command.lines
-            ]
+            lines = await _build_lines_with_cost_snapshot(
+                uow, command.tenant_id, quote.created_by_user_id, command.lines
+            )
 
             updated = Quote(
                 id=quote.id,
@@ -384,6 +425,8 @@ class UserQuoteStatResult:
     total_quotes: int
     quotes_this_month: int
     conversion_rate: float
+    total_revenue: Decimal
+    revenue_this_month: Decimal
 
 
 @dataclass(frozen=True)
@@ -391,6 +434,8 @@ class QuoteStatsResult:
     quotes_this_month: int
     total_quotes: int
     conversion_rate: float
+    total_revenue: Decimal
+    revenue_this_month: Decimal
     per_user: list[UserQuoteStatResult]
 
 
@@ -403,6 +448,16 @@ def _conversion(quotes: list[Quote]) -> float:
         in (QuoteStatus.ACCEPTED, QuoteStatus.INVOICED, QuoteStatus.COMPLETED)
     ]
     return round(len(converted) / len(non_cancelled) * 100, 1) if non_cancelled else 0.0
+
+
+def _revenue(quotes: list[Quote]) -> Decimal:
+    closed = (
+        q
+        for q in quotes
+        if q.status
+        in (QuoteStatus.ACCEPTED, QuoteStatus.INVOICED, QuoteStatus.COMPLETED)
+    )
+    return sum((_calculator.calculate(q).total for q in closed), Decimal("0"))
 
 
 class GetQuoteStatsHandler:
@@ -435,6 +490,8 @@ class GetQuoteStatsHandler:
                 total_quotes=len(uq),
                 quotes_this_month=sum(1 for q in uq if is_this_month(q)),
                 conversion_rate=_conversion(uq),
+                total_revenue=_revenue(uq),
+                revenue_this_month=_revenue([q for q in uq if is_this_month(q)]),
             )
             for uid, uq in by_user.items()
         ]
@@ -443,5 +500,7 @@ class GetQuoteStatsHandler:
             quotes_this_month=quotes_this_month,
             total_quotes=len(quotes),
             conversion_rate=_conversion(quotes),
+            total_revenue=_revenue(quotes),
+            revenue_this_month=_revenue([q for q in quotes if is_this_month(q)]),
             per_user=per_user,
         )

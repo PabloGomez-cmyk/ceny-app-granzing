@@ -72,6 +72,7 @@ class ProductResult:
     name: str
     brand_id: UUID
     sale_price_per_m2: Decimal
+    purchase_price_per_m2: Decimal
     uv_percentage: Decimal
     irr_percentage: Decimal
     tser_percentage: Decimal
@@ -125,6 +126,7 @@ def _product_result(p: Product) -> ProductResult:
         name=p.name,
         brand_id=p.brand_id,
         sale_price_per_m2=p.sale_price_per_m2.amount,
+        purchase_price_per_m2=p.purchase_price_per_m2.amount,
         uv_percentage=p.uv_percentage.value,
         irr_percentage=p.irr_percentage.value,
         tser_percentage=p.tser_percentage.value,
@@ -373,6 +375,7 @@ class CreateProductHandler:
                 name=command.name,
                 brand_id=command.brand_id,
                 sale_price_per_m2=command.sale_price_per_m2,
+                purchase_price_per_m2=command.purchase_price_per_m2,
                 uv_percentage=command.uv_percentage,
                 irr_percentage=command.irr_percentage,
                 tser_percentage=command.tser_percentage,
@@ -429,6 +432,7 @@ class UpdateProductHandler:
                 name=command.name,
                 brand_id=command.brand_id,
                 sale_price_per_m2=command.sale_price_per_m2,
+                purchase_price_per_m2=command.purchase_price_per_m2,
                 uv_percentage=command.uv_percentage,
                 irr_percentage=command.irr_percentage,
                 tser_percentage=command.tser_percentage,

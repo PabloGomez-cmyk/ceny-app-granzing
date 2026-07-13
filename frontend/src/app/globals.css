@@ -3,8 +3,109 @@
 @tailwind utilities;
 
 :root {
-  --primary: #0f6e50;
-  --primary-dark: #0a5a40;
-  --primary-light: #1d9e75;
+  --primary: #d9622c;
+  --primary-dark: #b74e1e;
+  --primary-light: #f0a24d;
+  --primary-tint: #fbeee1;
   --background: #f7f9fc;
 }
+
+/* Los formularios ya traen su propio botón de mostrar/ocultar contraseña
+   (ícono de ojo); se oculta el ícono nativo de Edge para que no se dupliquen. */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
+/* ── Modo oscuro ───────────────────────────────────────────────────────────────
+   La UI usa colores hex fijos en className (no tokens semánticos), así que en
+   vez de reescribir cada página, se sobrescribe acá cada clase de Tailwind que
+   ya existe en el HTML generado, calzando por selector bajo `.dark` (la clase
+   que UserMenu.tsx pone en <html>). Agrupado por rol: si aparece un color nuevo
+   en alguna pantalla, sumarlo al bloque que corresponda. */
+
+/* Fondos de página */
+.dark .bg-\[\#f0f4f8\],
+.dark .bg-\[\#f4f6f9\] {
+  background-color: #0b1220;
+}
+
+/* Fondos de tarjeta / superficie */
+.dark .bg-white,
+.dark .bg-\[\#f8fafc\],
+.dark .bg-\[\#f8fafb\],
+.dark .bg-\[\#e8ecf2\] {
+  background-color: #161f2e;
+}
+.dark .bg-\[\#f1f5f9\] {
+  background-color: #1e293b;
+}
+.dark .divide-\[\#f8fafc\] > :not([hidden]) ~ :not([hidden]) {
+  border-color: #2a3648;
+}
+
+/* Fondos naranja tenues (íconos, chips) */
+.dark .bg-\[\#fbeee1\] {
+  background-color: rgba(217, 98, 44, 0.18);
+}
+
+/* Bordes */
+.dark .border-\[\#e8ecf2\],
+.dark .border-\[\#dde4ee\],
+.dark .border-\[\#e2e6f0\],
+.dark .border-\[\#e4eaf2\],
+.dark .border-\[\#e2e8f0\],
+.dark .border-\[\#f8fafc\],
+.dark .border-\[\#ead9c8\] {
+  border-color: #2a3648;
+}
+.dark .border-\[\#f1f5f9\] {
+  border-color: #233044;
+}
+.dark .border-\[\#cbd5e1\] {
+  border-color: #334155;
+}
+
+/* Texto */
+.dark .text-\[\#0f172a\],
+.dark .text-\[\#1a1a2e\] {
+  color: #f1f5f9;
+}
+.dark .text-\[\#374151\],
+.dark .text-\[\#475569\] {
+  color: #cbd5e1;
+}
+.dark .text-\[\#64748b\],
+.dark .text-\[\#8898aa\] {
+  color: #94a3b8;
+}
+.dark .text-\[\#cbd5e1\],
+.dark .text-\[\#e2e8f0\] {
+  color: #64748b;
+}
+
+/* Badges de estado (fondo claro + texto oscuro → fondo translúcido + texto claro) */
+.dark .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.15); }
+.dark .text-emerald-700, .dark .text-emerald-600 { color: #34d399; }
+.dark .bg-red-50 { background-color: rgba(239, 68, 68, 0.15); }
+.dark .text-red-700, .dark .text-red-600, .dark .text-red-500 { color: #f87171; }
+.dark .border-red-200 { border-color: rgba(239, 68, 68, 0.35); }
+.dark .bg-blue-50 { background-color: rgba(59, 130, 246, 0.15); }
+.dark .text-blue-700, .dark .text-blue-600 { color: #60a5fa; }
+.dark .bg-amber-50 { background-color: rgba(245, 158, 11, 0.15); }
+.dark .text-amber-700, .dark .text-amber-600, .dark .text-amber-500 { color: #fbbf24; }
+.dark .border-amber-300 { border-color: rgba(245, 158, 11, 0.35); }
+.dark .bg-violet-50 { background-color: rgba(139, 92, 246, 0.15); }
+.dark .text-violet-700, .dark .text-violet-600 { color: #a78bfa; }
+.dark .bg-teal-50 { background-color: rgba(20, 184, 166, 0.15); }
+.dark .text-teal-700 { color: #2dd4bf; }
+.dark .bg-slate-100 { background-color: #334155; }
+.dark .text-slate-600, .dark .text-slate-500 { color: #cbd5e1; }
+
+/* Panel Admin / alertas puntuales */
+.dark .bg-\[\#ffe4ec\] { background-color: rgba(190, 18, 60, 0.15); }
+.dark .text-\[\#be123c\] { color: #fb7185; }
+.dark .border-\[\#be123c\] { border-color: rgba(190, 18, 60, 0.4); }
+.dark .bg-\[\#f0c520\] { background-color: rgba(240, 197, 32, 0.25); }
+.dark .text-\[\#7a5800\] { color: #f0c520; }
+.dark .bg-\[\#fdf6e3\] { background-color: rgba(240, 197, 32, 0.15); }

@@ -13,7 +13,7 @@ export default function GmailCallbackPage() {
     <Suspense
       fallback={
         <div className="flex min-h-screen items-center justify-center bg-[#f0f4f8]">
-          <Loader2 size={40} className="animate-spin text-[#0f6e50]" />
+          <Loader2 size={40} className="animate-spin text-[#d9622c]" />
         </div>
       }
     >
@@ -69,7 +69,7 @@ function GmailCallbackContent() {
       <div className="w-full max-w-[380px] rounded-[20px] border border-[#e2e6f0] bg-white p-8 text-center shadow-sm">
         {state === "loading" && (
           <>
-            <Loader2 size={40} className="mx-auto mb-4 animate-spin text-[#0f6e50]" />
+            <Loader2 size={40} className="mx-auto mb-4 animate-spin text-[#d9622c]" />
             <p className="font-semibold text-[#0f172a]">Conectando Gmail...</p>
             <p className="mt-1 text-[13px] text-[#94a3b8]">
               Estamos guardando tus credenciales de forma segura.
@@ -92,7 +92,7 @@ function GmailCallbackContent() {
             <p className="mt-1 text-[13px] text-[#94a3b8]">{errorMsg}</p>
             <button
               onClick={() => router.replace("/settings?tab=email")}
-              className="mt-5 h-[40px] w-full rounded-[10px] bg-[#0f6e50] text-[13px] font-semibold text-white hover:bg-[#0a5a40]"
+              className="mt-5 h-[40px] w-full rounded-[10px] bg-[#d9622c] text-[13px] font-semibold text-white hover:bg-[#b74e1e]"
             >
               Volver a Ajustes
             </button>

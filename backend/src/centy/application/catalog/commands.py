@@ -84,6 +84,7 @@ class CreateProductCommand:
     name: str
     brand_id: UUID
     sale_price_per_m2: Decimal
+    purchase_price_per_m2: Decimal
     uv_percentage: Decimal
     irr_percentage: Decimal
     tser_percentage: Decimal
@@ -103,6 +104,7 @@ class UpdateProductCommand:
     name: str | None = None
     brand_id: UUID | None = None
     sale_price_per_m2: Decimal | None = None
+    purchase_price_per_m2: Decimal | None = None
     uv_percentage: Decimal | None = None
     irr_percentage: Decimal | None = None
     tser_percentage: Decimal | None = None
