@@ -75,6 +75,9 @@ class ProductModel(Base):
         nullable=False,
     )
     sale_price_per_m2: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    purchase_price_per_m2: Mapped[float] = mapped_column(
+        Numeric(12, 2), nullable=False, server_default="0"
+    )
     uv_percentage: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False)
     irr_percentage: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False)
     tser_percentage: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False)

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { Sun, Moon, LogOut, UserCircle } from "lucide-react";
+import { Sun, Moon, LogOut, UserCircle, HelpCircle } from "lucide-react";
+import { useTourStore } from "@/stores/tourStore";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -39,6 +40,8 @@ export default function UserMenu({
   variant = "light",
 }: UserMenuProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const startTour = useTourStore((s) => s.start);
   const [open, setOpen] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const menuRef = useRef<HTMLDivElement>(null);
@@ -91,6 +94,7 @@ export default function UserMenu({
         className="flex items-center gap-2.5"
         aria-expanded={open}
         aria-haspopup="true"
+        data-tour="user-menu"
       >
         <span className={badgeCls}>{displayName}</span>
         <div className={avatarCls}>{initials}</div>
@@ -123,6 +127,19 @@ export default function UserMenu({
           >
             <UserCircle size={15} className="text-[#475569]" />
             Mi perfil y ajustes
+          </button>
+
+          {/* Ver recorrido */}
+          <button
+            onClick={() => {
+              setOpen(false);
+              if (pathname !== "/dashboard") router.push("/dashboard");
+              startTour();
+            }}
+            className="flex w-full items-center gap-3 px-4 py-3 text-left text-[13px] text-[#374151] transition-colors hover:bg-[#f8fafc]"
+          >
+            <HelpCircle size={15} className="text-[#475569]" />
+            Ver recorrido
           </button>
 
           {/* Toggle de tema */}

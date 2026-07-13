@@ -29,6 +29,7 @@ import { useUser } from "@/hooks/useUsers";
 import type { LocationType, FilmMode, GlassPaneInput, QuoteLineInput } from "@/lib/api/quotes";
 import type { Product } from "@/lib/api/products";
 import { CutDiagram, type CutPiece, type CutRow } from "@/components/quotes/CutDiagram";
+import { useEffectivePriceList } from "@/hooks/usePriceLists";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -195,7 +196,13 @@ function computeCutPlan(
 // ── Financial helpers ─────────────────────────────────────────────────────────
 
 function calcTotals(
-  lines: { glass_pane_ids: string[]; price_per_m2: number; surface_m2: number; subtotal: number }[],
+  lines: {
+    glass_pane_ids: string[];
+    price_per_m2: number;
+    surface_m2: number;
+    subtotal: number;
+    product_snapshot?: Record<string, unknown>;
+  }[],
   glassPanes: GlassEntry[],
   heightSurchargePct: number,
   travelCost: number,
@@ -223,7 +230,20 @@ function calcTotals(
   const taxableAmount = subtotal - discountAmount;
   const taxAmount = Math.round(taxableAmount * taxPct) / 100;
   const total = taxableAmount + taxAmount;
-  return { materialsSub, heightSurcharge, subtotal, discountAmount, taxAmount, total };
+
+  let margin: number | null = 0;
+  for (const line of lines) {
+    const rawCost = line.product_snapshot?.purchase_price_per_m2;
+    if (margin === null) continue;
+    if (rawCost == null || (typeof rawCost !== "number" && typeof rawCost !== "string") || isNaN(Number(rawCost))) {
+      margin = null;
+      continue;
+    }
+    margin += (line.price_per_m2 - Number(rawCost)) * line.surface_m2;
+  }
+  if (margin !== null) margin = Math.round(margin * 100) / 100;
+
+  return { materialsSub, heightSurcharge, subtotal, discountAmount, taxAmount, total, margin };
 }
 
 function fmt(n: number) {
@@ -909,8 +929,18 @@ function Step2({
   perGlassMap: Record<string, string>;
   setPerGlassMap: (m: Record<string, string>) => void;
 }) {
+  const { data: session } = useSession();
   const { data: products = [] } = useProducts();
   const activeProducts = products.filter((p) => p.is_active);
+  const { data: priceList = [] } = useEffectivePriceList(session?.userId);
+  const priceByProduct = useMemo(
+    () => Object.fromEntries(priceList.map((i) => [i.product_id, i.effective_sale_price])),
+    [priceList]
+  );
+  function effectiveSalePrice(p: Product): number {
+    const override = priceByProduct[p.id];
+    return Number(override ?? p.sale_price_per_m2);
+  }
 
   const glassTypeNames = [...new Set(glassPanes.map((p) => p.glass_type_name))].join(", ");
 
@@ -979,7 +1009,7 @@ function Step2({
                       <div>
                         <p className="text-[13px] font-semibold text-[#0f172a]">{p.name}</p>
                         <p className="text-[11px] text-[#94a3b8]">
-                          ${Number(p.sale_price_per_m2).toLocaleString("es-AR")}/m²&nbsp;&nbsp;UV {p.uv_percentage}%&nbsp;&nbsp;IRR {p.irr_percentage}%
+                          ${effectiveSalePrice(p).toLocaleString("es-AR")}/m²&nbsp;&nbsp;UV {p.uv_percentage}%&nbsp;&nbsp;IRR {p.irr_percentage}%
                         </p>
                       </div>
                     </div>
@@ -1027,7 +1057,7 @@ function Step2({
                     <option value="">Seleccionar lámina...</option>
                     {activeProducts.map((p) => (
                       <option key={p.id} value={p.id}>
-                        {p.name} — ${Number(p.sale_price_per_m2).toLocaleString("es-AR")}
+                        {p.name} — ${effectiveSalePrice(p).toLocaleString("es-AR")}
                       </option>
                     ))}
                   </select>
@@ -1337,6 +1367,21 @@ function Step3({
             </div>
           </div>
 
+          {/* Margen */}
+          {totals.margin != null && (
+            <div className="flex items-center justify-between rounded-[8px] bg-emerald-50 px-3 py-2">
+              <span className="text-[12px] font-medium text-emerald-700">
+                Margen
+                {totals.materialsSub > 0 && (
+                  <span className="ml-1 text-[11px] text-emerald-600">
+                    ({((totals.margin / totals.materialsSub) * 100).toFixed(1)}%)
+                  </span>
+                )}
+              </span>
+              <span className="text-[13px] font-bold text-emerald-700">{fmt(totals.margin)}</span>
+            </div>
+          )}
+
           {/* Total */}
           <div className="flex items-center justify-between rounded-[12px] bg-[#d9622c] px-5 py-4">
             <div className="space-y-0.5">
@@ -1447,6 +1492,11 @@ export default function NewQuotePage() {
   const { data: userData } = useUser(userId ?? "");
   const { data: customers = [] } = useCustomers();
   const { data: products = [] } = useProducts();
+  const { data: priceList = [] } = useEffectivePriceList(userId);
+  const priceByProduct = useMemo(
+    () => Object.fromEntries(priceList.map((i) => [i.product_id, i])),
+    [priceList]
+  );
   const createQuote = useCreateQuote();
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -1481,7 +1531,9 @@ export default function NewQuotePage() {
       const product = activeProducts.find((p) => p.id === singleProductId);
       if (!product) return [];
       const totalM2 = glassPanes.reduce((s, p) => s + (p.width_cm / 100) * (p.height_cm / 100) * p.quantity, 0);
-      const price = Number(product.sale_price_per_m2);
+      const effective = priceByProduct[product.id];
+      const price = Number(effective ? effective.effective_sale_price : product.sale_price_per_m2);
+      const cost = Number(effective ? effective.effective_purchase_price : product.purchase_price_per_m2);
       return [
         {
           glass_pane_ids: glassPanes.map((p) => p.pane_id),
@@ -1493,6 +1545,7 @@ export default function NewQuotePage() {
             price_per_m2: price,
             uv_pct: product.uv_percentage,
             irr_pct: product.irr_percentage,
+            purchase_price_per_m2: cost,
           },
           price_per_m2: price,
           surface_m2: Math.round(totalM2 * 10000) / 10000,
@@ -1510,7 +1563,9 @@ export default function NewQuotePage() {
       }
       return Object.entries(byProduct).map(([pid, data]) => {
         const product = activeProducts.find((p) => p.id === pid)!;
-        const price = Number(product.sale_price_per_m2);
+        const effective = priceByProduct[pid];
+        const price = Number(effective ? effective.effective_sale_price : product.sale_price_per_m2);
+        const cost = Number(effective ? effective.effective_purchase_price : product.purchase_price_per_m2);
         const m2 = Math.round(data.m2 * 10000) / 10000;
         return {
           glass_pane_ids: data.pane_ids,
@@ -1522,6 +1577,7 @@ export default function NewQuotePage() {
             price_per_m2: price,
             uv_pct: product.uv_percentage,
             irr_pct: product.irr_percentage,
+            purchase_price_per_m2: cost,
           },
           price_per_m2: price,
           surface_m2: m2,
@@ -1529,7 +1585,7 @@ export default function NewQuotePage() {
         };
       });
     }
-  }, [filmMode, singleProductId, perGlassMap, glassPanes, products]);
+  }, [filmMode, singleProductId, perGlassMap, glassPanes, products, priceByProduct]);
 
   const [editableLines, setEditableLines] = useState<QuoteLineLocal[]>([]);
   const activeLines = editableLines.length > 0 ? editableLines : lines;

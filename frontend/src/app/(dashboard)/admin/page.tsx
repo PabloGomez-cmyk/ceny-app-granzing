@@ -253,6 +253,7 @@ export default function AdminPanelPage() {
           </p>
           <Link
             href="/users"
+            data-tour="admin-users-link"
             className="flex items-center gap-1 text-[12px] font-medium text-[#d9622c] hover:text-[#b74e1e]"
           >
             Gestionar usuarios <ChevronRight size={13} />
@@ -327,9 +328,18 @@ export default function AdminPanelPage() {
         </div>
 
         {/* ── Catálogo ──────────────────────────────────────────────────────── */}
-        <p className="mb-3 text-[12px] font-semibold uppercase tracking-wide text-[#94a3b8]">
-          Catálogo
-        </p>
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-[12px] font-semibold uppercase tracking-wide text-[#94a3b8]">
+            Catálogo
+          </p>
+          <Link
+            href="/price-lists"
+            data-tour="admin-pricelists-link"
+            className="flex items-center gap-1 text-[12px] font-medium text-[#d9622c] hover:text-[#b74e1e]"
+          >
+            Listas de precios <ChevronRight size={13} />
+          </Link>
+        </div>
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <KpiCard
             label="Productos activos"

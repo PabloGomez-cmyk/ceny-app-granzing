@@ -419,6 +419,19 @@ export default function QuoteDetailPage() {
                     <span className="font-semibold text-violet-700">+{fmt(quote.totals.tax_amount)}</span>
                   </div>
                 )}
+                {quote.total_margin != null && (
+                  <div className="flex justify-between rounded-[8px] bg-emerald-50 px-2 py-1.5">
+                    <span className="text-emerald-700 font-medium">
+                      Margen
+                      {Number(quote.totals.materials_subtotal) > 0 && (
+                        <span className="ml-1 text-[11px] text-emerald-600">
+                          ({((Number(quote.total_margin) / Number(quote.totals.materials_subtotal)) * 100).toFixed(1)}%)
+                        </span>
+                      )}
+                    </span>
+                    <span className="font-semibold text-emerald-700">{fmt(quote.total_margin)}</span>
+                  </div>
+                )}
               </div>
               <div className="mt-4 flex items-center justify-between rounded-[12px] bg-[#d9622c] px-4 py-3">
                 <div>

@@ -17,6 +17,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { useProduct, useBrands, useCategories, useGlassTypes } from "@/hooks/useProducts";
+import { useEffectivePriceList } from "@/hooks/usePriceLists";
 
 const APPLICATION_LABELS: Record<string, { label: string; icon: React.ElementType }> = {
   WINDOW: { label: "Ventanas", icon: Building2 },
@@ -38,11 +39,14 @@ export default function ProductDetailPage() {
   const { data: session } = useSession();
   const role = session?.role;
   const isAdmin = role === "ADMIN";
+  const userId = session?.userId;
 
   const { data: product, isPending, error } = useProduct(id);
   const { data: brands = [] } = useBrands();
   const { data: categories = [] } = useCategories();
   const { data: glassTypes = [] } = useGlassTypes();
+  const { data: priceList = [] } = useEffectivePriceList(userId);
+  const myPrice = priceList.find((p) => p.product_id === id);
 
   const brand = brands.find((b) => b.id === product?.brand_id);
   const category = categories.find((c) => c.id === product?.category_id);
@@ -163,10 +167,43 @@ export default function ProductDetailPage() {
 
         {/* ── Price ───────────────────────────────────────────────────────── */}
         <div className="rounded-[14px] border border-[#e8ecf2] bg-white p-6">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">Precio de venta</p>
-          <p className="mt-1 text-[32px] font-bold text-[#d9622c]">
-            ${Number(product.sale_price_per_m2).toLocaleString("es-AR", { minimumFractionDigits: 2 })}
-            <span className="ml-1 text-[16px] font-normal text-[#94a3b8]">/m²</span>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">
+                Precio de venta sugerido
+                {myPrice?.has_sale_override && (
+                  <span className="ml-1.5 rounded-full bg-[#fbeee1] px-1.5 py-0.5 text-[9px] font-semibold normal-case text-[#d9622c]">
+                    Personalizado
+                  </span>
+                )}
+              </p>
+              <p className="mt-1 text-[28px] font-bold text-[#d9622c]">
+                ${Number(myPrice?.effective_sale_price ?? product.sale_price_per_m2).toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+                <span className="ml-1 text-[14px] font-normal text-[#94a3b8]">/m²</span>
+              </p>
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">
+                Costo de compra
+                {myPrice?.has_purchase_override && (
+                  <span className="ml-1.5 rounded-full bg-[#fbeee1] px-1.5 py-0.5 text-[9px] font-semibold normal-case text-[#d9622c]">
+                    Personalizado
+                  </span>
+                )}
+              </p>
+              <p className="mt-1 text-[28px] font-bold text-[#475569]">
+                ${Number(myPrice?.effective_purchase_price ?? product.purchase_price_per_m2).toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+                <span className="ml-1 text-[14px] font-normal text-[#94a3b8]">/m²</span>
+              </p>
+              {Number(myPrice?.effective_purchase_price ?? product.purchase_price_per_m2) === 0 && (
+                <p className="mt-1 text-[11px] font-medium text-amber-600">Sin costo configurado</p>
+              )}
+            </div>
+          </div>
+          <p className="mt-3 text-[11px] text-[#94a3b8]">
+            {myPrice?.has_sale_override || myPrice?.has_purchase_override
+              ? "Estos son tus valores personalizados para este producto."
+              : "Valor por defecto de catálogo — el admin puede personalizarlo por operador en Listas de precios."}
           </p>
         </div>
 

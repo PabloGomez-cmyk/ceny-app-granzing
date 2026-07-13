@@ -5,6 +5,7 @@ from uuid import UUID
 
 from centy.domain.catalog.entities import Brand, GlassType, Product, ProductCategory
 from centy.domain.customers.entities import Customer, CustomerLabel
+from centy.domain.pricing.entities import PriceListItem
 from centy.domain.quotes.entities import Quote
 from centy.domain.shared.value_objects import Email, TenantId
 from centy.domain.users.entities import User
@@ -149,6 +150,28 @@ class IProductRepository(ABC):
 
     @abstractmethod
     async def delete(self, product_id: UUID, tenant_id: TenantId) -> None: ...
+
+
+class IPriceListItemRepository(ABC):
+    """Puerto de salida para overrides de costo/precio por operador."""
+
+    @abstractmethod
+    async def get_by_user_and_product(
+        self, user_id: UUID, product_id: UUID, tenant_id: TenantId
+    ) -> PriceListItem | None: ...
+
+    @abstractmethod
+    async def save(self, item: PriceListItem) -> None: ...
+
+    @abstractmethod
+    async def list_by_user(
+        self, user_id: UUID, tenant_id: TenantId
+    ) -> list[PriceListItem]: ...
+
+    @abstractmethod
+    async def delete(
+        self, user_id: UUID, product_id: UUID, tenant_id: TenantId
+    ) -> None: ...
 
 
 class IQuoteRepository(ABC):

@@ -452,6 +452,7 @@ export default function CustomersPage() {
       <div className="flex flex-wrap items-center gap-3 border-b border-[#e4eaf2] bg-white px-5 py-3">
         <button
           onClick={() => setModal({ mode: "create" })}
+          data-tour="customers-new"
           className="flex items-center gap-1.5 rounded-[10px] bg-[#d9622c] px-4 py-2 text-[12px] font-semibold text-white hover:bg-[#b74e1e]"
         >
           <Plus size={14} />

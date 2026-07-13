@@ -40,12 +40,16 @@ def make_line(
     pane_ids: list[str] | None = None,
     price_per_m2: float = 1000,
     surface_m2: float = 1.0,
+    purchase_price_per_m2: float | None = None,
 ) -> QuoteLine:
     s = Decimal(str(surface_m2))
     p = Decimal(str(price_per_m2))
+    snapshot: dict = {"name": "Film Solar"}
+    if purchase_price_per_m2 is not None:
+        snapshot["purchase_price_per_m2"] = str(purchase_price_per_m2)
     return QuoteLine(
         product_id=uuid4(),
-        product_snapshot={"name": "Film Solar"},
+        product_snapshot=snapshot,
         glass_pane_ids=pane_ids or ["v01"],
         price_per_m2=p,
         surface_m2=s,
@@ -332,3 +336,50 @@ class TestQuoteCalculator:
         assert totals.subtotal == Decimal("1300.00")
         assert totals.tax_amount == Decimal("273.00")
         assert totals.total == Decimal("1573.00")
+
+
+# ── QuoteCalculator.calculate_margin ─────────────────────────────────────────
+
+
+class TestQuoteCalculatorMargin:
+    calc = QuoteCalculator()
+
+    def test_todas_las_lineas_con_costo_calcula_margen(self) -> None:
+        # línea 1: venta 1000, costo 600, 1m² → margen 400
+        # línea 2: venta 500, costo 300, 2m² → margen 400
+        q = make_quote(
+            glass_panes=[make_pane("v01"), make_pane("v02")],
+            lines=[
+                make_line(
+                    pane_ids=["v01"],
+                    price_per_m2=1000,
+                    surface_m2=1.0,
+                    purchase_price_per_m2=600,
+                ),
+                make_line(
+                    pane_ids=["v02"],
+                    price_per_m2=500,
+                    surface_m2=2.0,
+                    purchase_price_per_m2=300,
+                ),
+            ],
+        )
+        assert self.calc.calculate_margin(q) == Decimal("800.00")
+
+    def test_alguna_linea_sin_costo_devuelve_none(self) -> None:
+        # quote creado antes de este feature: falta el snapshot de costo
+        q = make_quote(
+            lines=[
+                make_line(price_per_m2=1000, surface_m2=1.0, purchase_price_per_m2=None)
+            ]
+        )
+        assert self.calc.calculate_margin(q) is None
+
+    def test_quote_sin_lineas_no_existe_pero_una_linea_sin_costo_es_none(self) -> None:
+        # Quote.create ya exige al menos una línea (ver TestQuoteCreate), así
+        # que "sin líneas" no es un estado alcanzable — se cubre el caso
+        # límite de una única línea incompleta en su lugar.
+        q = make_quote(
+            lines=[make_line(purchase_price_per_m2=None)],
+        )
+        assert self.calc.calculate_margin(q) is None

@@ -60,6 +60,11 @@ from centy.application.email.handlers import (
 from centy.application.ports.auth import IPasswordHasher, ITokenService
 from centy.application.ports.cache import ICacheService
 from centy.application.ports.storage import IObjectStorage
+from centy.application.pricing.handlers import (
+    DeletePriceOverrideHandler,
+    GetEffectivePriceListHandler,
+    SetPriceOverrideHandler,
+)
 from centy.application.quotes.handlers import (
     CreateQuoteHandler,
     DeleteQuoteHandler,
@@ -101,6 +106,9 @@ from centy.infrastructure.persistence.repositories.email_config_repo import (
 )
 from centy.infrastructure.persistence.repositories.password_reset_repo import (
     SQLAlchemyPasswordResetTokenRepository,
+)
+from centy.infrastructure.persistence.repositories.price_list_repo import (
+    SQLAlchemyPriceListItemRepository,
 )
 from centy.infrastructure.persistence.repositories.product_repo import (
     SQLAlchemyBrandRepository,
@@ -316,6 +324,28 @@ def get_update_label_handler() -> UpdateCustomerLabelHandler:
 
 def get_delete_label_handler() -> DeleteCustomerLabelHandler:
     return DeleteCustomerLabelHandler(uow=get_uow())
+
+
+# ── Pricing handlers ─────────────────────────────────────────────────────────
+
+
+async def get_effective_price_list_handler(
+    session: AsyncSession = Depends(get_session),
+) -> GetEffectivePriceListHandler:
+    return GetEffectivePriceListHandler(
+        products_repo=SQLAlchemyProductRepository(session),
+        brands_repo=SQLAlchemyBrandRepository(session),
+        price_list_repo=SQLAlchemyPriceListItemRepository(session),
+        users_repo=SQLAlchemyUserRepository(session),
+    )
+
+
+def get_set_price_override_handler() -> SetPriceOverrideHandler:
+    return SetPriceOverrideHandler(uow=get_uow())
+
+
+def get_delete_price_override_handler() -> DeletePriceOverrideHandler:
+    return DeletePriceOverrideHandler(uow=get_uow())
 
 
 # ── RBAC ─────────────────────────────────────────────────────────────────────

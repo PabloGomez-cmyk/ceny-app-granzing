@@ -19,6 +19,7 @@ from centy.domain.shared.exceptions import (
 )
 from centy.infrastructure.api.routers import auth, customers, users
 from centy.infrastructure.api.routers import gmail as gmail_router
+from centy.infrastructure.api.routers import price_lists as price_lists_router
 from centy.infrastructure.api.routers import products as products_router
 from centy.infrastructure.api.routers import quotes as quotes_router
 from centy.infrastructure.api.routers import uploads as uploads_router
@@ -32,6 +33,7 @@ from centy.infrastructure.persistence.models import (  # noqa: F401
     GlassPaneModel,
     GlassTypeModel,
     PasswordResetTokenModel,
+    PriceListItemModel,
     ProductCategoryModel,
     ProductGlassTypeModel,
     ProductModel,
@@ -128,6 +130,7 @@ def create_app() -> FastAPI:
     app.include_router(users.router, prefix="/api/v1")
     app.include_router(customers.router, prefix="/api/v1")
     app.include_router(products_router.router, prefix="/api/v1")
+    app.include_router(price_lists_router.router, prefix="/api/v1")
     app.include_router(uploads_router.router, prefix="/api/v1")
     app.include_router(quotes_router.router, prefix="/api/v1")
     app.include_router(warranties_router.router, prefix="/api/v1")

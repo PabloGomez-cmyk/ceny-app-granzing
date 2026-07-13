@@ -723,7 +723,7 @@ export default function SettingsPage() {
               <p className="mt-1 text-[13px] text-[#94a3b8]">{email}</p>
             </div>
 
-            <div className="flex border-b border-[#f1f5f9]">
+            <div className="flex border-b border-[#f1f5f9]" data-tour="settings-tabs">
               {accountTabs.map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}

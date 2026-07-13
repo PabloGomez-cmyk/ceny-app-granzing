@@ -7,6 +7,7 @@ from centy.application.ports.repositories import (
     ICustomerLabelRepository,
     ICustomerRepository,
     IGlassTypeRepository,
+    IPriceListItemRepository,
     IProductCategoryRepository,
     IProductRepository,
     IQuoteRepository,
@@ -25,6 +26,7 @@ class IUnitOfWork(ABC):
     product_categories: IProductCategoryRepository
     glass_types: IGlassTypeRepository
     products: IProductRepository
+    price_list_items: IPriceListItemRepository
     quotes: IQuoteRepository
     warranties: IWarrantyRepository
 

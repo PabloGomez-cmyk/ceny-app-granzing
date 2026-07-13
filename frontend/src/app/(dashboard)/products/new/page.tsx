@@ -280,6 +280,7 @@ interface FormErrors {
   category?: string;
   application_types?: string;
   sale_price?: string;
+  purchase_price?: string;
 }
 
 export default function NewProductPage() {
@@ -301,6 +302,7 @@ export default function NewProductPage() {
   const [brandId, setBrandId] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [salePrice, setSalePrice] = useState("");
+  const [purchasePrice, setPurchasePrice] = useState("");
   const [uv, setUv] = useState("");
   const [irr, setIrr] = useState("");
   const [tser, setTser] = useState("");
@@ -340,6 +342,8 @@ export default function NewProductPage() {
     if (!categoryId) errs.category = "Seleccioná una categoría";
     if (!salePrice || isNaN(Number(salePrice)) || Number(salePrice) < 0)
       errs.sale_price = "Ingresá un precio válido";
+    if (purchasePrice && (isNaN(Number(purchasePrice)) || Number(purchasePrice) < 0))
+      errs.purchase_price = "Ingresá un costo válido";
     if (appTypes.length === 0)
       errs.application_types = "Seleccioná al menos una aplicación";
     setErrors(errs);
@@ -356,6 +360,7 @@ export default function NewProductPage() {
         name: name.trim(),
         brand_id: brandId,
         sale_price_per_m2: Number(salePrice),
+        purchase_price_per_m2: Number(purchasePrice) || 0,
         uv_percentage: Number(uv) || 0,
         irr_percentage: Number(irr) || 0,
         tser_percentage: Number(tser) || 0,
@@ -771,9 +776,9 @@ export default function NewProductPage() {
         {/* ── Sección 4: Precio ───────────────────────────────────────────── */}
         <div className="rounded-[14px] border border-[#e8ecf2] bg-white p-6">
           <SectionTitle>Precio</SectionTitle>
-          <div className="max-w-xs">
+          <div className="grid max-w-xl grid-cols-2 gap-4">
             <div>
-              <Label required>Precio de venta por m²</Label>
+              <Label required>Precio de venta sugerido por m²</Label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-[#94a3b8]">
                   $
@@ -791,11 +796,31 @@ export default function NewProductPage() {
                 />
               </div>
               {errors.sale_price && <p className="mt-1 text-[11px] text-red-500">{errors.sale_price}</p>}
-              <p className="mt-1 text-[11px] text-[#94a3b8]">
-                Precio fijo por ahora. Las listas de precios por usuario se implementarán próximamente.
-              </p>
+            </div>
+            <div>
+              <Label>Costo de compra por m²</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-[#94a3b8]">
+                  $
+                </span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={purchasePrice}
+                  onChange={(e) => setPurchasePrice(e.target.value)}
+                  className={`h-[42px] w-full rounded-[10px] border pl-7 pr-3 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#d9622c]/20 ${
+                    errors.purchase_price ? "border-red-400 bg-red-50" : "border-[#dde4ee] bg-[#f8fafc] focus:border-[#d9622c]"
+                  }`}
+                />
+              </div>
+              {errors.purchase_price && <p className="mt-1 text-[11px] text-red-500">{errors.purchase_price}</p>}
             </div>
           </div>
+          <p className="mt-3 text-[11px] text-[#94a3b8]">
+            Ambos valores son el default de catálogo. Desde <span className="font-medium">Listas de precios</span> el admin puede asignarle a cada operador un costo y/o precio de venta propios, que pisan este default.
+          </p>
         </div>
 
         {/* ── Sección 5: Documentación ────────────────────────────────────── */}

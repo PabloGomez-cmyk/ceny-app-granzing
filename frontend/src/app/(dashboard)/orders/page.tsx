@@ -206,6 +206,7 @@ export default function OrdersPage() {
       <div className="flex flex-wrap items-center gap-3 border-b border-[#e4eaf2] bg-white px-5 py-3">
         <Link
           href={"/orders/new" as never}
+          data-tour="orders-new"
           className="flex items-center gap-1.5 rounded-[10px] bg-[#d9622c] px-4 py-2 text-[12px] font-semibold text-white hover:bg-[#b74e1e]"
         >
           <Plus size={14} />

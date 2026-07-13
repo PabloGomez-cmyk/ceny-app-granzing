@@ -16,6 +16,7 @@ import {
   Settings2,
 } from "lucide-react";
 import { useProducts, useBrands, useCategories } from "@/hooks/useProducts";
+import { useEffectivePriceList } from "@/hooks/usePriceLists";
 import UserMenu from "@/components/layout/UserMenu";
 import ProfileModal from "@/components/profile/ProfileModal";
 import type { Brand, Product, ProductCategory } from "@/lib/api/products";
@@ -108,11 +109,15 @@ function ProductRow({
   brand,
   category,
   onClick,
+  effectivePrice,
+  tourAnchor,
 }: {
   product: Product;
   brand: Brand | undefined;
   category: ProductCategory | undefined;
   onClick: () => void;
+  effectivePrice?: number;
+  tourAnchor?: boolean;
 }) {
   return (
     <tr
@@ -154,8 +159,11 @@ function ProductRow({
           </span>
         </div>
       </td>
-      <td className="px-3 py-3 text-right text-[13px] font-bold text-[#d9622c]">
-        ${Number(product.sale_price_per_m2).toLocaleString("es-AR", { minimumFractionDigits: 2 })}/m²
+      <td
+        className="px-3 py-3 text-right text-[13px] font-bold text-[#d9622c]"
+        data-tour={tourAnchor ? "products-price" : undefined}
+      >
+        ${Number(effectivePrice ?? product.sale_price_per_m2).toLocaleString("es-AR", { minimumFractionDigits: 2 })}/m²
       </td>
       <td className="px-3 py-3">
         <ActiveBadge active={product.is_active} />
@@ -174,11 +182,15 @@ function ProductCard({
   brand,
   category,
   onClick,
+  effectivePrice,
+  tourAnchor,
 }: {
   product: Product;
   brand: Brand | undefined;
   category: ProductCategory | undefined;
   onClick: () => void;
+  effectivePrice?: number;
+  tourAnchor?: boolean;
 }) {
   return (
     <div
@@ -209,8 +221,11 @@ function ProductCard({
         <span className="text-[11px] text-[#64748b]">
           UV {product.uv_percentage}% · IRR {product.irr_percentage}% · TSER {product.tser_percentage}%
         </span>
-        <span className="text-[13px] font-bold text-[#d9622c]">
-          ${Number(product.sale_price_per_m2).toLocaleString("es-AR", { minimumFractionDigits: 2 })}/m²
+        <span
+          className="text-[13px] font-bold text-[#d9622c]"
+          data-tour={tourAnchor ? "products-price" : undefined}
+        >
+          ${Number(effectivePrice ?? product.sale_price_per_m2).toLocaleString("es-AR", { minimumFractionDigits: 2 })}/m²
         </span>
       </div>
     </div>
@@ -230,6 +245,11 @@ export default function ProductsPage() {
   const { data: products = [], isLoading } = useProducts();
   const { data: brands = [] } = useBrands();
   const { data: categories = [] } = useCategories();
+  const { data: priceList = [] } = useEffectivePriceList(userId);
+  const priceByProduct = useMemo(
+    () => Object.fromEntries(priceList.map((i) => [i.product_id, i.effective_sale_price])),
+    [priceList]
+  );
 
   const [search, setSearch] = useState("");
   const [filterActive, setFilterActive] = useState<"active" | "all">("active");
@@ -302,6 +322,7 @@ export default function ProductsPage() {
         {isAdmin && (
           <Link
             href="/products/new"
+            data-tour="products-new"
             className="flex items-center gap-1.5 rounded-[10px] bg-[#d9622c] px-4 py-2 text-[12px] font-semibold text-white hover:bg-[#b74e1e]"
           >
             <Plus size={14} />
@@ -382,13 +403,15 @@ export default function ProductsPage() {
                     </td>
                   </tr>
                 ) : (
-                  filtered.map((product) => (
+                  filtered.map((product, i) => (
                     <ProductRow
                       key={product.id}
                       product={product}
                       brand={brandsMap.get(product.brand_id)}
                       category={categoriesMap.get(product.category_id)}
                       onClick={() => (window.location.href = `/products/${product.id}`)}
+                      effectivePrice={priceByProduct[product.id]}
+                      tourAnchor={i === 0}
                     />
                   ))
                 )}
@@ -405,13 +428,15 @@ export default function ProductsPage() {
                 {search ? "Sin resultados." : "No hay productos."}
               </p>
             ) : (
-              filtered.map((product) => (
+              filtered.map((product, i) => (
                 <ProductCard
                   key={product.id}
                   product={product}
                   brand={brandsMap.get(product.brand_id)}
                   category={categoriesMap.get(product.category_id)}
                   onClick={() => (window.location.href = `/products/${product.id}`)}
+                  effectivePrice={priceByProduct[product.id]}
+                  tourAnchor={i === 0}
                 />
               ))
             )}

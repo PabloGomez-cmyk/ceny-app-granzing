@@ -59,6 +59,7 @@ export interface Quote {
   cut_plan_snapshot: Record<string, unknown>;
   valid_until: string;
   totals: QuoteTotals;
+  total_margin: number | string | null;
   has_altura: boolean;
   created_at: string;
 }

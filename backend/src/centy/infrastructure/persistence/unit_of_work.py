@@ -8,6 +8,9 @@ from centy.infrastructure.persistence.repositories.customer_repo import (
     SQLAlchemyCustomerLabelRepository,
     SQLAlchemyCustomerRepository,
 )
+from centy.infrastructure.persistence.repositories.price_list_repo import (
+    SQLAlchemyPriceListItemRepository,
+)
 from centy.infrastructure.persistence.repositories.product_repo import (
     SQLAlchemyBrandRepository,
     SQLAlchemyGlassTypeRepository,
@@ -38,6 +41,7 @@ class SQLAlchemyUnitOfWork(IUnitOfWork):
         self.product_categories = SQLAlchemyProductCategoryRepository(self._session)
         self.glass_types = SQLAlchemyGlassTypeRepository(self._session)
         self.products = SQLAlchemyProductRepository(self._session)
+        self.price_list_items = SQLAlchemyPriceListItemRepository(self._session)
         self.quotes = SQLAlchemyQuoteRepository(self._session)
         self.warranties = SQLAlchemyWarrantyRepository(self._session)
         return self

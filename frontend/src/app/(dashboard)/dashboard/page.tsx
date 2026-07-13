@@ -3,87 +3,10 @@
 import { useSession, signOut } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  BarChart2,
-  Users,
-  ShoppingCart,
-  Crown,
-  Settings2,
-  Package,
-} from "lucide-react";
 import ProfileModal from "@/components/profile/ProfileModal";
 import UserMenu from "@/components/layout/UserMenu";
 import { useState } from "react";
-import type { LucideIcon } from "lucide-react";
-
-// ── Módulos ───────────────────────────────────────────────────────────────────
-
-interface AppModule {
-  name: string;
-  href: string;
-  icon: LucideIcon;
-  bgFrom: string;
-  bgTo: string;
-  iconClass: string;
-  roles: string[];
-}
-
-const MODULES: AppModule[] = [
-  {
-    name: "Dashboard",
-    href: "/dashboard/metrics",
-    icon: BarChart2,
-    bgFrom: "#0fa078",
-    bgTo: "#0c7e5f",
-    iconClass: "text-white",
-    roles: ["ADMIN", "OPERATOR"],
-  },
-  {
-    name: "Clientes",
-    href: "/customers",
-    icon: Users,
-    bgFrom: "#8ecfe0",
-    bgTo: "#60b8d0",
-    iconClass: "text-white",
-    roles: ["ADMIN", "OPERATOR"],
-  },
-  {
-    name: "Catálogo",
-    href: "/products",
-    icon: Package,
-    bgFrom: "#86efac",
-    bgTo: "#22c55e",
-    iconClass: "text-white",
-    roles: ["ADMIN", "OPERATOR"],
-  },
-  {
-    name: "Ventas",
-    href: "/orders",
-    icon: ShoppingCart,
-    bgFrom: "#dcea88",
-    bgTo: "#c3d45e",
-    iconClass: "text-[#4d6010]",
-    roles: ["ADMIN", "OPERATOR"],
-  },
-  {
-    name: "Panel Admin",
-    href: "/admin",
-    icon: Crown,
-    bgFrom: "#f7de5a",
-    bgTo: "#f0c520",
-    iconClass: "text-[#7a5800]",
-    roles: ["ADMIN"],
-  },
-  {
-    name: "Configuración",
-    href: "/settings",
-    icon: Settings2,
-    bgFrom: "#44c8b8",
-    bgTo: "#28a898",
-    iconClass: "text-white",
-    roles: ["ADMIN", "OPERATOR"],
-  },
-];
+import { MODULES } from "@/lib/dashboardModules";
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
@@ -134,6 +57,7 @@ export default function DashboardPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar aplicaciones..."
+            data-tour="dashboard-search"
             className="w-full rounded-[10px] border border-[#dde4ee] bg-white px-4 py-2.5 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] shadow-sm focus:border-[#d9622c] focus:outline-none focus:ring-2 focus:ring-[#d9622c]/20"
           />
         </div>
@@ -145,6 +69,7 @@ export default function DashboardPage() {
               <Link
                 key={mod.name}
                 href={mod.href as never}
+                data-tour={mod.tourId}
                 className="group flex flex-col items-center gap-2.5"
               >
                 <div

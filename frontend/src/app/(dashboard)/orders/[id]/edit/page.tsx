@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, use } from "react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -10,6 +11,7 @@ import { useProducts } from "@/hooks/useProducts";
 import type { FilmMode, LocationType } from "@/lib/api/quotes";
 import type { Product } from "@/lib/api/products";
 import { CutDiagram, type CutPiece, type CutRow } from "@/components/quotes/CutDiagram";
+import { useEffectivePriceList } from "@/hooks/usePriceLists";
 
 // ── Re-use shared logic from new/page via dynamic import workaround ────────────
 // Instead of duplicating, we import the building blocks directly.
@@ -136,6 +138,11 @@ export default function EditQuotePage({ params }: { params: Promise<{ id: string
   const { data: quote, isPending } = useQuote(id);
   const { data: customers = [] } = useCustomers();
   const { data: products = [] } = useProducts();
+  const { data: priceList = [] } = useEffectivePriceList(quote?.created_by_user_id);
+  const priceByProduct = useMemo(
+    () => Object.fromEntries(priceList.map((i) => [i.product_id, i])),
+    [priceList]
+  );
   const updateQuote = useUpdateQuote();
 
   // ── Wizard state (inicializado desde el quote existente) ──────────────────
@@ -214,8 +221,10 @@ export default function EditQuotePage({ params }: { params: Promise<{ id: string
       const product = activeProducts.find((p) => p.id === singleProductId);
       if (!product) return [];
       const totalM2 = glassPanes.reduce((s, p) => s + (p.width_cm / 100) * (p.height_cm / 100) * p.quantity, 0);
-      const price = Number(product.sale_price_per_m2);
-      return [{ glass_pane_ids: glassPanes.map((p) => p.pane_id), product_id: product.id, product_snapshot: { name: product.name, brand_name: "", brand_color: "#d9622c", price_per_m2: price, uv_pct: product.uv_percentage, irr_pct: product.irr_percentage }, price_per_m2: price, surface_m2: Math.round(totalM2 * 10000) / 10000, subtotal: Math.round(totalM2 * price * 100) / 100 }];
+      const effective = priceByProduct[product.id];
+      const price = Number(effective ? effective.effective_sale_price : product.sale_price_per_m2);
+      const cost = Number(effective ? effective.effective_purchase_price : product.purchase_price_per_m2);
+      return [{ glass_pane_ids: glassPanes.map((p) => p.pane_id), product_id: product.id, product_snapshot: { name: product.name, brand_name: "", brand_color: "#d9622c", price_per_m2: price, uv_pct: product.uv_percentage, irr_pct: product.irr_percentage, purchase_price_per_m2: cost }, price_per_m2: price, surface_m2: Math.round(totalM2 * 10000) / 10000, subtotal: Math.round(totalM2 * price * 100) / 100 }];
     } else {
       const byProduct: Record<string, { pane_ids: string[]; m2: number }> = {};
       for (const pane of glassPanes) {
@@ -227,12 +236,14 @@ export default function EditQuotePage({ params }: { params: Promise<{ id: string
       }
       return Object.entries(byProduct).map(([pid, data]) => {
         const product = activeProducts.find((p) => p.id === pid)!;
-        const price = Number(product.sale_price_per_m2);
+        const effective = priceByProduct[pid];
+        const price = Number(effective ? effective.effective_sale_price : product.sale_price_per_m2);
+        const cost = Number(effective ? effective.effective_purchase_price : product.purchase_price_per_m2);
         const m2 = Math.round(data.m2 * 10000) / 10000;
-        return { glass_pane_ids: data.pane_ids, product_id: pid, product_snapshot: { name: product.name, brand_name: "", brand_color: "#d9622c", price_per_m2: price, uv_pct: product.uv_percentage, irr_pct: product.irr_percentage }, price_per_m2: price, surface_m2: m2, subtotal: Math.round(m2 * price * 100) / 100 };
+        return { glass_pane_ids: data.pane_ids, product_id: pid, product_snapshot: { name: product.name, brand_name: "", brand_color: "#d9622c", price_per_m2: price, uv_pct: product.uv_percentage, irr_pct: product.irr_percentage, purchase_price_per_m2: cost }, price_per_m2: price, surface_m2: m2, subtotal: Math.round(m2 * price * 100) / 100 };
       });
     }
-  }, [filmMode, singleProductId, perGlassMap, glassPanes, products]);
+  }, [filmMode, singleProductId, perGlassMap, glassPanes, products, priceByProduct]);
 
   const activeLines = editableLines.length > 0 ? editableLines : derivedLines;
 
@@ -431,7 +442,7 @@ export default function EditQuotePage({ params }: { params: Promise<{ id: string
 
 import { useGlassTypes } from "@/hooks/useProducts";
 import { useCreateCustomer, useCustomerLabels } from "@/hooks/useCustomers";
-import { Plus, Pencil, Trash2, Check, X, Layers, Users, Sun, DollarSign, Scissors, AlertTriangle } from "lucide-react";
+import { Plus, Pencil, Trash2, Check, X, Layers, Users, Sun, DollarSign, Scissors, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
 
 function EditStep1({
   glassPanes, setGlassPanes, customerId, setCustomerId, customers,
@@ -633,37 +644,137 @@ function EditStep2({
   setPerGlassMap: (m: Record<string, string>) => void;
   products: Product[];
 }) {
+  const { data: session } = useSession();
   const activeProducts = products.filter((p) => p.is_active);
+  const { data: priceList = [] } = useEffectivePriceList(session?.userId);
+  const priceByProduct = useMemo(
+    () => Object.fromEntries(priceList.map((i) => [i.product_id, i.effective_sale_price])),
+    [priceList]
+  );
+  function effectiveSalePrice(p: Product): number {
+    const override = priceByProduct[p.id];
+    return Number(override ?? p.sale_price_per_m2);
+  }
+
+  const glassTypeNames = [...new Set(glassPanes.map((p) => p.glass_type_name))].join(", ");
+
+  const materialSummary = useMemo(() => {
+    const map: Record<string, { product: Product; panes: GlassEntry[]; m2: number }> = {};
+    for (const pane of glassPanes) {
+      const pid = perGlassMap[pane.pane_id];
+      if (!pid) continue;
+      const product = activeProducts.find((p) => p.id === pid);
+      if (!product) continue;
+      if (!map[pid]) map[pid] = { product, panes: [], m2: 0 };
+      map[pid].panes.push(pane);
+      map[pid].m2 += (pane.width_cm / 100) * (pane.height_cm / 100) * pane.quantity;
+    }
+    return Object.values(map);
+  }, [glassPanes, perGlassMap, activeProducts]);
+
   return (
-    <div className="rounded-[14px] border border-[#e8ecf2] bg-white p-5">
-      <div className="mb-4 flex items-center gap-2 text-[14px] font-semibold text-[#0f172a]"><Sun size={16} className="text-[#d9622c]" />Selección de Lámina</div>
-      <div className="mb-4 flex gap-2">
-        {(["SINGLE", "PER_GLASS"] as FilmMode[]).map((m) => (
-          <button key={m} onClick={() => setFilmMode(m)} className={`rounded-[8px] px-4 py-2 text-[12px] font-semibold transition-colors ${filmMode === m ? "bg-[#d9622c] text-white" : "border border-[#dde4ee] text-[#475569] hover:bg-[#f1f5f9]"}`}>
-            {m === "SINGLE" ? "Una sola lámina" : "Láminas por vidrio"}
-          </button>
-        ))}
+    <div className="space-y-5">
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          onClick={() => setFilmMode("SINGLE")}
+          className={`flex items-center justify-center gap-2 rounded-[12px] border-2 px-4 py-3 text-[13px] font-semibold transition-all ${filmMode === "SINGLE" ? "border-[#d9622c] bg-[#fbeee1] text-[#d9622c]" : "border-[#e8ecf2] bg-white text-[#475569] hover:border-[#ead9c8]"}`}
+        >
+          <Sun size={15} />
+          Una sola lámina para todos los vidrios
+        </button>
+        <button
+          onClick={() => setFilmMode("PER_GLASS")}
+          className={`flex items-center justify-center gap-2 rounded-[12px] border-2 px-4 py-3 text-[13px] font-semibold transition-all ${filmMode === "PER_GLASS" ? "border-[#d9622c] bg-[#fbeee1] text-[#d9622c]" : "border-[#e8ecf2] bg-white text-[#475569] hover:border-[#ead9c8]"}`}
+        >
+          <Layers size={15} />
+          Láminas distintas por vidrio
+        </button>
       </div>
+
       {filmMode === "SINGLE" ? (
-        <div>
-          <label className="mb-1 block text-[11px] font-medium text-[#64748b]">Producto</label>
-          <select value={singleProductId} onChange={(e) => setSingleProductId(e.target.value)} className="w-full rounded-[10px] border border-[#dde4ee] bg-[#f8fafc] px-3 py-2 text-[13px] text-[#0f172a] focus:border-[#d9622c] focus:outline-none">
-            <option value="">Seleccionar producto...</option>
-            {activeProducts.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
+        <div className="rounded-[14px] border border-[#e8ecf2] bg-white p-5">
+          <div className="mb-3 flex items-center gap-2 text-[13px] font-semibold text-[#0f172a]">
+            <Sun size={14} className="text-amber-500" />
+            Seleccionar Lámina
+          </div>
+          <p className="mb-3 text-[12px] text-[#94a3b8]">Vidrios: {glassTypeNames}</p>
+          <div className="space-y-2">
+            {activeProducts.map((p) => {
+              const selected = p.id === singleProductId;
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => setSingleProductId(p.id)}
+                  className={`w-full rounded-[10px] border-2 px-4 py-3 text-left transition-all ${selected ? "border-[#d9622c] bg-[#fbeee1]" : "border-[#e8ecf2] bg-white hover:border-[#ead9c8]"}`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Sun size={14} className="shrink-0 text-amber-500" />
+                      <div>
+                        <p className="text-[13px] font-semibold text-[#0f172a]">{p.name}</p>
+                        <p className="text-[11px] text-[#94a3b8]">
+                          ${effectiveSalePrice(p).toLocaleString("es-AR")}/m²&nbsp;&nbsp;UV {p.uv_percentage}%&nbsp;&nbsp;IRR {p.irr_percentage}%
+                        </p>
+                      </div>
+                    </div>
+                    {selected ? <ChevronUp size={14} className="text-[#d9622c]" /> : <ChevronDown size={14} className="text-[#94a3b8]" />}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
       ) : (
-        <div className="space-y-2">
-          {glassPanes.map((pane) => (
-            <div key={pane.pane_id} className="flex items-center gap-3 rounded-[8px] bg-[#f8fafc] p-3">
-              <span className="w-10 font-bold text-[12px] text-[#0f172a]">{pane.pane_id}</span>
-              <span className="flex-1 text-[11px] text-[#64748b]">{pane.width_cm}×{pane.height_cm} cm · {pane.glass_type_name}</span>
-              <select value={perGlassMap[pane.pane_id] ?? ""} onChange={(e) => setPerGlassMap({ ...perGlassMap, [pane.pane_id]: e.target.value })} className="rounded-[8px] border border-[#dde4ee] bg-white px-2 py-1.5 text-[12px] text-[#0f172a] focus:border-[#d9622c] focus:outline-none">
-                <option value="">Seleccionar...</option>
-                {activeProducts.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
+        <div className="rounded-[14px] border border-[#e8ecf2] bg-white p-5">
+          <div className="mb-1 flex items-center gap-2 text-[13px] font-semibold text-[#0f172a]">
+            <Layers size={14} className="text-[#d9622c]" />
+            Asignar lámina por vidrio
+          </div>
+          <p className="mb-4 text-[12px] text-[#94a3b8]">Cada vidrio puede tener una lámina diferente</p>
+
+          <div className="overflow-hidden rounded-[10px] border border-[#e8ecf2]">
+            <div className="grid grid-cols-[60px_1fr_200px] border-b border-[#f1f5f9] bg-[#f8fafc] px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">
+              <span>Vidrio</span>
+              <span>Medidas</span>
+              <span>Lámina asignada</span>
             </div>
-          ))}
+            {glassPanes.map((pane) => (
+              <div key={pane.pane_id} className="grid grid-cols-[60px_1fr_200px] items-center border-b border-[#f8fafc] px-4 py-3">
+                <span className="text-[13px] font-bold text-[#0f172a]">{pane.pane_id}</span>
+                <div>
+                  <span className="text-[12px] text-[#475569]">
+                    {pane.width_cm} × {pane.height_cm} cm
+                  </span>
+                  <span className="ml-2 rounded bg-[#f1f5f9] px-1.5 py-0.5 text-[10px] text-[#64748b]">
+                    {pane.glass_type_name}
+                  </span>
+                </div>
+                <select
+                  value={perGlassMap[pane.pane_id] ?? ""}
+                  onChange={(e) => setPerGlassMap({ ...perGlassMap, [pane.pane_id]: e.target.value })}
+                  className="rounded-[8px] border border-[#dde4ee] bg-white px-2 py-1.5 text-[12px] text-[#0f172a] focus:border-[#d9622c] focus:outline-none"
+                >
+                  <option value="">Seleccionar lámina...</option>
+                  {activeProducts.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} — ${effectiveSalePrice(p).toLocaleString("es-AR")}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ))}
+          </div>
+
+          {materialSummary.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {materialSummary.map((ms) => (
+                <span key={ms.product.id} className="flex items-center gap-1.5 rounded-full border border-[#e8ecf2] bg-[#f8fafc] px-3 py-1 text-[11px] font-medium text-[#475569]">
+                  <Sun size={10} className="text-amber-500" />
+                  {ms.product.name} · {ms.panes.length} vidrio{ms.panes.length !== 1 ? "s" : ""} · {ms.m2.toFixed(2)} m²
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -683,7 +794,20 @@ function calcTotals(lines: QuoteLineLocal[], panes: GlassEntry[], hPct: number, 
   const taxableAmount = subtotal - discountAmount;
   const taxAmount = Math.round(taxableAmount * taxP) / 100;
   const total = taxableAmount + taxAmount;
-  return { materials, heightSurcharge, travel, subtotal, discountAmount, taxAmount, total };
+
+  let margin: number | null = 0;
+  for (const l of lines) {
+    const rawCost = l.product_snapshot?.purchase_price_per_m2;
+    if (margin === null) continue;
+    if (rawCost == null || (typeof rawCost !== "number" && typeof rawCost !== "string") || isNaN(Number(rawCost))) {
+      margin = null;
+      continue;
+    }
+    margin += (l.price_per_m2 - Number(rawCost)) * l.surface_m2;
+  }
+  if (margin !== null) margin = Math.round(margin * 100) / 100;
+
+  return { materials, heightSurcharge, travel, subtotal, discountAmount, taxAmount, total, margin };
 }
 
 function EditStep3({
@@ -853,6 +977,23 @@ function EditStep3({
           {taxPct > 0 && <span className="min-w-[70px] text-right text-[13px] font-bold text-violet-700">+{fmt(totals.taxAmount)}</span>}
         </div>
       </div>
+
+      {/* Margen */}
+      {totals.margin != null && (
+        <div className="flex items-center justify-between rounded-[8px] bg-emerald-50 px-3 py-2">
+          <span className="text-[12px] font-medium text-emerald-700">
+            Margen
+            {totals.materials > 0 && (
+              <span className="ml-1 text-[11px] text-emerald-600">
+                ({((totals.margin / totals.materials) * 100).toFixed(1)}%)
+              </span>
+            )}
+          </span>
+          <span className="text-[13px] font-bold text-emerald-700">
+            $ {Math.round(totals.margin).toLocaleString("es-AR")}
+          </span>
+        </div>
+      )}
 
       {/* Total */}
       <div className="flex items-center justify-between rounded-[12px] bg-[#d9622c] px-5 py-4">

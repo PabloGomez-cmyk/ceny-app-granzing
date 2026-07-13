@@ -210,6 +210,7 @@ def make_product(
         brand_id=brand_id,
         category_id=uuid4(),
         sale_price_per_m2=Decimal("1000"),
+        purchase_price_per_m2=Decimal("500"),
         uv_percentage=Decimal("83"),
         irr_percentage=Decimal("76"),
         tser_percentage=Decimal("52.3"),

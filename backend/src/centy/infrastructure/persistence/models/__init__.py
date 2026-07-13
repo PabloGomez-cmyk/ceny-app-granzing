@@ -6,6 +6,7 @@ from centy.infrastructure.persistence.models.email_config import UserEmailConfig
 from centy.infrastructure.persistence.models.password_reset import (
     PasswordResetTokenModel,
 )
+from centy.infrastructure.persistence.models.pricing import PriceListItemModel
 from centy.infrastructure.persistence.models.product import (
     BrandModel,
     GlassTypeModel,
@@ -28,6 +29,7 @@ __all__ = [
     "GlassPaneModel",
     "GlassTypeModel",
     "PasswordResetTokenModel",
+    "PriceListItemModel",
     "ProductCategoryModel",
     "ProductGlassTypeModel",
     "ProductModel",

@@ -170,6 +170,7 @@ class QuoteResponse(BaseModel):
     cut_plan_snapshot: dict
     valid_until: str
     totals: QuoteTotalsResponse
+    total_margin: Decimal | None
     has_altura: bool
     created_at: str
 
@@ -201,6 +202,7 @@ def _to_response(r: object) -> QuoteResponse:
         cut_plan_snapshot=r.cut_plan_snapshot,  # type: ignore[attr-defined]
         valid_until=r.valid_until,  # type: ignore[attr-defined]
         totals=QuoteTotalsResponse(**r.totals.__dict__),  # type: ignore[attr-defined]
+        total_margin=r.total_margin,  # type: ignore[attr-defined]
         has_altura=r.has_altura,  # type: ignore[attr-defined]
         created_at=r.created_at,  # type: ignore[attr-defined]
     )
