@@ -27,7 +27,12 @@ from centy.application.quotes.queries import (
     GetQuoteStatsQuery,
     ListQuotesQuery,
 )
-from centy.domain.quotes.value_objects import FilmMode, LocationType, QuoteStatus
+from centy.domain.quotes.value_objects import (
+    FilmMode,
+    LocationType,
+    QuoteStatus,
+    SaleType,
+)
 from centy.domain.shared.value_objects import TenantId
 from centy.infrastructure.api.dependencies import (
     CurrentUser,
@@ -79,8 +84,9 @@ class QuoteLineBody(BaseModel):
 class CreateQuoteBody(BaseModel):
     customer_id: UUID | None = None
     customer_snapshot: dict | None = None
+    sale_type: str = Field("ARCHITECTURE", pattern="^(ARCHITECTURE|AUTOMOTIVE)$")
     film_mode: str = Field("SINGLE", pattern="^(SINGLE|PER_GLASS)$")
-    glass_panes: list[GlassPaneBody] = Field(..., min_length=1)
+    glass_panes: list[GlassPaneBody] = Field(default_factory=list)
     lines: list[QuoteLineBody] = Field(..., min_length=1)
     height_surcharge_pct: Decimal = Field(Decimal("30"), ge=0, le=100)
     travel_cost: Decimal = Field(Decimal("0"), ge=0)
@@ -158,6 +164,7 @@ class QuoteResponse(BaseModel):
     customer_id: str | None
     customer_snapshot: dict | None
     status: str
+    sale_type: str
     film_mode: str
     glass_panes: list[GlassPaneResponse]
     lines: list[QuoteLineResponse]
@@ -184,6 +191,7 @@ def _to_response(r: object) -> QuoteResponse:
         customer_id=r.customer_id,  # type: ignore[attr-defined]
         customer_snapshot=r.customer_snapshot,  # type: ignore[attr-defined]
         status=r.status,  # type: ignore[attr-defined]
+        sale_type=r.sale_type,  # type: ignore[attr-defined]
         film_mode=r.film_mode,  # type: ignore[attr-defined]
         glass_panes=[
             GlassPaneResponse(**p.__dict__)
@@ -238,6 +246,7 @@ async def create_quote(
             created_by_user_id=UUID(current_user.user_id),
             customer_id=body.customer_id,
             customer_snapshot=body.customer_snapshot,
+            sale_type=SaleType(body.sale_type),
             film_mode=FilmMode(body.film_mode),
             glass_panes=[
                 GlassPaneInput(
@@ -363,6 +372,9 @@ async def update_quote(
             requester_role=current_user.role,
             customer_id=body.customer_id,
             customer_snapshot=body.customer_snapshot,
+            # sale_type es inmutable tras la creación — UpdateQuoteHandler
+            # ignora este valor y conserva el ya persistido en la quote.
+            sale_type=SaleType(body.sale_type),
             film_mode=FilmMode(body.film_mode),
             glass_panes=[
                 GlassPaneInput(

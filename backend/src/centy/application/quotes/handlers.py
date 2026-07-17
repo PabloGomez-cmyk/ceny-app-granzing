@@ -72,6 +72,7 @@ class QuoteResult:
     customer_id: str | None
     customer_snapshot: dict[str, Any] | None
     status: str
+    sale_type: str
     film_mode: str
     glass_panes: list[GlassPaneResult]
     lines: list[QuoteLineResult]
@@ -141,6 +142,7 @@ def _quote_result(q: Quote) -> QuoteResult:
         customer_id=str(q.customer_id) if q.customer_id else None,
         customer_snapshot=q.customer_snapshot,
         status=q.status.value,
+        sale_type=q.sale_type.value,
         film_mode=q.film_mode.value,
         glass_panes=[_pane_result(p) for p in q.glass_panes],
         lines=[_line_result(line) for line in q.lines],
@@ -257,6 +259,7 @@ class CreateQuoteHandler:
                 quote_number=quote_number,
                 customer_id=command.customer_id,
                 customer_snapshot=command.customer_snapshot,
+                sale_type=command.sale_type,
                 film_mode=command.film_mode,
                 glass_panes=glass_panes,
                 lines=lines,
@@ -369,6 +372,10 @@ class UpdateQuoteHandler:
                 uow, command.tenant_id, quote.created_by_user_id, command.lines
             )
 
+            # sale_type es inmutable tras la creación — se ignora lo que
+            # venga en el command y se conserva el valor ya persistido, ya
+            # que arquitectura (vidrios/plan de cortes) y automotriz (líneas
+            # simples) son flujos incompatibles entre sí.
             updated = Quote(
                 id=quote.id,
                 tenant_id=quote.tenant_id,
@@ -377,6 +384,7 @@ class UpdateQuoteHandler:
                 customer_id=command.customer_id,
                 customer_snapshot=command.customer_snapshot,
                 status=quote.status,
+                sale_type=quote.sale_type,
                 film_mode=command.film_mode,
                 glass_panes=glass_panes,
                 lines=lines,

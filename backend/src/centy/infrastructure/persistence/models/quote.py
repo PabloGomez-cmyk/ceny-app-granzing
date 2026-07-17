@@ -29,6 +29,9 @@ class QuoteModel(Base):
     customer_id: Mapped[str | None] = mapped_column(UUID(as_uuid=False), nullable=True)
     customer_snapshot: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="DRAFT")
+    sale_type: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="ARCHITECTURE"
+    )
     film_mode: Mapped[str] = mapped_column(String(20), nullable=False, default="SINGLE")
     height_surcharge_pct: Mapped[float] = mapped_column(
         Numeric(5, 2), nullable=False, default=30

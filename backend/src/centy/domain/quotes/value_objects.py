@@ -18,3 +18,8 @@ class LocationType(StrEnum):
 class FilmMode(StrEnum):
     SINGLE = "SINGLE"
     PER_GLASS = "PER_GLASS"
+
+
+class SaleType(StrEnum):
+    ARCHITECTURE = "ARCHITECTURE"
+    AUTOMOTIVE = "AUTOMOTIVE"

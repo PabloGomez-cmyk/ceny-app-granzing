@@ -52,6 +52,8 @@ class WarrantyResult:
     is_valid: bool
     sent_at: str | None
     created_at: str
+    vehicle_model: str | None
+    license_plate: str | None
 
 
 def _warranty_result(w: Warranty) -> WarrantyResult:
@@ -70,6 +72,8 @@ def _warranty_result(w: Warranty) -> WarrantyResult:
         is_valid=w.is_valid,
         sent_at=w.sent_at.isoformat() if w.sent_at else None,
         created_at=w.created_at.isoformat(),
+        vehicle_model=w.vehicle_model,
+        license_plate=w.license_plate,
     )
 
 
@@ -139,6 +143,8 @@ class GenerateWarrantiesHandler:
                     customer_snapshot=quote.customer_snapshot,
                     created_by_user_id=quote.created_by_user_id,
                     warranty_years=product.warranty_years,
+                    vehicle_model=command.vehicle_model,
+                    license_plate=command.license_plate,
                 )
                 await uow.warranties.save(warranty)
                 warranties.append(warranty)
@@ -280,6 +286,19 @@ def _build_warranty_html(
         else ""
     )
 
+    vehicle_source = next(
+        (w for w in warranties if w.vehicle_model or w.license_plate), None
+    )
+    vehicle_block = ""
+    if vehicle_source:
+        model_txt = vehicle_source.vehicle_model or "-"
+        plate_txt = vehicle_source.license_plate or "-"
+        vehicle_block = f"""
+        <div style="background:#f8fafc;border:1px solid #e2e6f0;border-radius:10px;padding:14px 16px;margin-bottom:24px">
+          <p style="margin:0 0 6px;font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.5px">🚗 Vehículo</p>
+          <p style="margin:0;font-size:13px;color:#374151">Modelo: <strong>{model_txt}</strong> · Patente: <strong>{plate_txt}</strong></p>
+        </div>"""
+
     product_blocks = ""
     for w in warranties:
         snap = w.product_snapshot
@@ -316,6 +335,7 @@ def _build_warranty_html(
           <p style="margin:0;font-size:13px;color:#047857;font-weight:600">✓ Instalación completada con éxito</p>
           <p style="margin:4px 0 0;font-size:12px;color:#059669">Su garantía oficial ha sido emitida para el presupuesto #{quote_number}</p>
         </div>
+        {vehicle_block}
         <p style="margin:0 0 8px;font-size:13px;color:#6b7280">Estimado/a</p>
         <p style="margin:0 0 24px;font-size:18px;font-weight:bold;color:#0f172a">{recipient_name},</p>
         {custom_block}

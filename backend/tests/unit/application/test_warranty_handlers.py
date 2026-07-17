@@ -390,6 +390,58 @@ class TestGenerateWarrantiesHandler:
             await GenerateWarrantiesHandler(uow).handle(cmd)
 
     @pytest.mark.asyncio
+    async def test_genera_con_datos_de_vehiculo(
+        self,
+        uow: FakeWarrantyUnitOfWork,
+        tenant_id: TenantId,
+    ) -> None:
+        user_id = uuid4()
+        brand = make_brand(tenant_id)
+        await uow.brands.save(brand)
+        product = make_product(tenant_id, brand.id, warranty_years=5)
+        await uow.products.save(product)
+        quote = make_quote(tenant_id, user_id, product.id)
+        await uow.quotes.save(quote)
+
+        results = await GenerateWarrantiesHandler(uow).handle(
+            GenerateWarrantiesCommand(
+                quote_id=quote.id,
+                tenant_id=tenant_id,
+                requester_user_id=user_id,
+                requester_role="OPERATOR",
+                vehicle_model="Toyota Corolla 2021",
+                license_plate="AB123CD",
+            )
+        )
+        assert results[0].vehicle_model == "Toyota Corolla 2021"
+        assert results[0].license_plate == "AB123CD"
+
+    @pytest.mark.asyncio
+    async def test_genera_sin_datos_de_vehiculo_sigue_funcionando(
+        self,
+        uow: FakeWarrantyUnitOfWork,
+        tenant_id: TenantId,
+    ) -> None:
+        user_id = uuid4()
+        brand = make_brand(tenant_id)
+        await uow.brands.save(brand)
+        product = make_product(tenant_id, brand.id, warranty_years=5)
+        await uow.products.save(product)
+        quote = make_quote(tenant_id, user_id, product.id)
+        await uow.quotes.save(quote)
+
+        results = await GenerateWarrantiesHandler(uow).handle(
+            GenerateWarrantiesCommand(
+                quote_id=quote.id,
+                tenant_id=tenant_id,
+                requester_user_id=user_id,
+                requester_role="OPERATOR",
+            )
+        )
+        assert results[0].vehicle_model is None
+        assert results[0].license_plate is None
+
+    @pytest.mark.asyncio
     async def test_operator_ajeno_no_puede_generar(
         self,
         uow: FakeWarrantyUnitOfWork,
@@ -542,8 +594,76 @@ class TestSendWarrantiesEmailHandler:
 
         assert len(sender.sent_messages) == 1
         assert "Black Silver" in sender.sent_messages[0].html_body
+        assert "🚗 Vehículo" not in sender.sent_messages[0].html_body
         saved = await warranty_repo.list_by_quote(quote.id, tenant_id)
         assert all(w.sent_at is not None for w in saved)
+
+    @pytest.mark.asyncio
+    async def test_email_incluye_bloque_vehiculo_una_sola_vez(
+        self,
+        uow: FakeWarrantyUnitOfWork,
+        quote_repo: FakeQuoteRepository,
+        warranty_repo: FakeWarrantyRepository,
+        tenant_id: TenantId,
+    ) -> None:
+        from tests.conftest import FakeUserRepository
+
+        user_id = uuid4()
+        brand = make_brand(tenant_id)
+        await uow.brands.save(brand)
+        product = make_product(tenant_id, brand.id)
+        await uow.products.save(product)
+        quote = make_quote(tenant_id, user_id, product.id)
+        await uow.quotes.save(quote)
+
+        await GenerateWarrantiesHandler(uow).handle(
+            GenerateWarrantiesCommand(
+                quote_id=quote.id,
+                tenant_id=tenant_id,
+                requester_user_id=user_id,
+                requester_role="OPERATOR",
+                vehicle_model="Toyota Corolla 2021",
+                license_plate="AB123CD",
+            )
+        )
+
+        now = datetime.now(UTC)
+        email_config = UserEmailConfig(
+            user_id=user_id,
+            tenant_id=str(tenant_id),
+            gmail_email="test@gmail.com",
+            access_token="tok",
+            refresh_token="ref",
+            token_expiry=now,
+            created_at=now,
+            updated_at=now,
+        )
+        sender = FakeEmailSender()
+        handler = SendWarrantiesEmailHandler(
+            oauth=FakeGmailOAuthService(),
+            email_config_repo=FakeEmailConfigRepository(email_config),
+            sender=sender,
+            quote_repo=quote_repo,
+            warranty_repo=warranty_repo,
+            user_repo=FakeUserRepository(),
+        )
+
+        await handler.handle(
+            SendWarrantiesEmailCommand(
+                quote_id=str(quote.id),
+                sender_user_id=user_id,
+                tenant_id=str(tenant_id),
+                recipient_email="cliente@example.com",
+                recipient_name=None,
+                custom_message=None,
+                frontend_base_url="http://localhost:3000",
+            )
+        )
+
+        html = sender.sent_messages[0].html_body
+        assert html.count("🚗 Vehículo") == 1
+        assert "Toyota Corolla 2021" in html
+        assert "AB123CD" in html
 
     @pytest.mark.asyncio
     async def test_sin_gmail_configurado_lanza_error(

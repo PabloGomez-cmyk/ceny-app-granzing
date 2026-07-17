@@ -6,7 +6,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from centy.application.ports.repositories import IQuoteRepository
 from centy.domain.quotes.entities import GlassPane, Quote, QuoteLine
-from centy.domain.quotes.value_objects import FilmMode, LocationType, QuoteStatus
+from centy.domain.quotes.value_objects import (
+    FilmMode,
+    LocationType,
+    QuoteStatus,
+    SaleType,
+)
 from centy.domain.shared.value_objects import TenantId
 from centy.infrastructure.persistence.models.quote import (
     GlassPaneModel,
@@ -54,6 +59,7 @@ def _quote_to_domain(
         customer_id=UUID(q.customer_id) if q.customer_id else None,
         customer_snapshot=q.customer_snapshot,
         status=QuoteStatus(q.status),
+        sale_type=SaleType(q.sale_type) if q.sale_type else SaleType.ARCHITECTURE,
         film_mode=FilmMode(q.film_mode),
         glass_panes=[
             _pane_to_domain(p) for p in sorted(panes, key=lambda x: x.sort_order)
@@ -100,6 +106,7 @@ class SQLAlchemyQuoteRepository(IQuoteRepository):
                     customer_id=str(quote.customer_id) if quote.customer_id else None,
                     customer_snapshot=quote.customer_snapshot,
                     status=quote.status.value,
+                    sale_type=quote.sale_type.value,
                     film_mode=quote.film_mode.value,
                     height_surcharge_pct=float(quote.height_surcharge_pct),
                     travel_cost=float(quote.travel_cost),

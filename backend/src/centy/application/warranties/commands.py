@@ -10,6 +10,8 @@ class GenerateWarrantiesCommand:
     tenant_id: TenantId
     requester_user_id: UUID
     requester_role: str
+    vehicle_model: str | None = None
+    license_plate: str | None = None
 
 
 @dataclass(frozen=True)

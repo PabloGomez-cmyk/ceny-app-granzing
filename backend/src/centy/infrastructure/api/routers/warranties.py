@@ -2,7 +2,7 @@ import uuid
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from centy.application.warranties.commands import (
@@ -53,6 +53,11 @@ class SendWarrantiesEmailBody(BaseModel):
     custom_message: str | None = None
 
 
+class GenerateWarrantiesBody(BaseModel):
+    vehicle_model: str | None = Field(default=None, max_length=100)
+    license_plate: str | None = Field(default=None, max_length=20)
+
+
 # ── Response schema ───────────────────────────────────────────────────────────
 
 
@@ -71,6 +76,8 @@ class WarrantyResponse(BaseModel):
     is_valid: bool
     sent_at: str | None
     created_at: str
+    vehicle_model: str | None
+    license_plate: str | None
 
 
 def _to_response(r: object) -> WarrantyResponse:
@@ -89,6 +96,8 @@ def _to_response(r: object) -> WarrantyResponse:
         is_valid=r.is_valid,  # type: ignore[attr-defined]
         sent_at=r.sent_at,  # type: ignore[attr-defined]
         created_at=r.created_at,  # type: ignore[attr-defined]
+        vehicle_model=r.vehicle_model,  # type: ignore[attr-defined]
+        license_plate=r.license_plate,  # type: ignore[attr-defined]
     )
 
 
@@ -153,6 +162,7 @@ async def list_warranties_by_quote(
 )
 async def generate_warranties(
     quote_id: UUID,
+    body: GenerateWarrantiesBody | None = None,
     current_user: CurrentUser = Depends(get_current_user),
     handler: GenerateWarrantiesHandler = Depends(get_generate_warranties_handler),
 ) -> list[WarrantyResponse]:
@@ -162,6 +172,8 @@ async def generate_warranties(
             tenant_id=_resolve_tenant(get_settings().tenant_id_default),
             requester_user_id=UUID(current_user.user_id),
             requester_role=current_user.role,
+            vehicle_model=body.vehicle_model if body else None,
+            license_plate=body.license_plate if body else None,
         )
     )
     return [_to_response(r) for r in results]

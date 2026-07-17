@@ -3,7 +3,12 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
-from centy.domain.quotes.value_objects import FilmMode, LocationType, QuoteStatus
+from centy.domain.quotes.value_objects import (
+    FilmMode,
+    LocationType,
+    QuoteStatus,
+    SaleType,
+)
 from centy.domain.shared.value_objects import TenantId
 
 
@@ -36,6 +41,7 @@ class CreateQuoteCommand:
     created_by_user_id: UUID
     customer_id: UUID | None
     customer_snapshot: dict[str, Any] | None
+    sale_type: SaleType
     film_mode: FilmMode
     glass_panes: list[GlassPaneInput]
     lines: list[QuoteLineInput]
@@ -57,6 +63,7 @@ class UpdateQuoteCommand:
     requester_role: str
     customer_id: UUID | None
     customer_snapshot: dict[str, Any] | None
+    sale_type: SaleType
     film_mode: FilmMode
     glass_panes: list[GlassPaneInput]
     lines: list[QuoteLineInput]

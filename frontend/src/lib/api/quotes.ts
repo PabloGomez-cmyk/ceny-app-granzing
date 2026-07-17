@@ -5,6 +5,7 @@ import { apiRequest } from "./client";
 export type QuoteStatus = "DRAFT" | "SENT" | "ACCEPTED" | "INVOICED" | "COMPLETED" | "CANCELLED";
 export type FilmMode = "SINGLE" | "PER_GLASS";
 export type LocationType = "SUPERFICIE" | "ALTURA";
+export type SaleType = "ARCHITECTURE" | "AUTOMOTIVE";
 
 export interface GlassPane {
   pane_id: string;
@@ -47,6 +48,7 @@ export interface Quote {
   customer_id: string | null;
   customer_snapshot: Record<string, unknown> | null;
   status: QuoteStatus;
+  sale_type: SaleType;
   film_mode: FilmMode;
   glass_panes: GlassPane[];
   lines: QuoteLine[];
@@ -90,6 +92,7 @@ export interface QuoteLineInput {
 export interface CreateQuoteInput {
   customer_id: string | null;
   customer_snapshot: Record<string, unknown> | null;
+  sale_type: SaleType;
   film_mode: FilmMode;
   glass_panes: GlassPaneInput[];
   lines: QuoteLineInput[];

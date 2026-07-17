@@ -33,6 +33,8 @@ class WarrantyModel(Base):
     sent_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    vehicle_model: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    license_plate: Mapped[str | None] = mapped_column(String(20), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False
     )

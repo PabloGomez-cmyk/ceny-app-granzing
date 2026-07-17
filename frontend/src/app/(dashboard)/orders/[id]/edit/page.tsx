@@ -12,6 +12,7 @@ import type { FilmMode, LocationType } from "@/lib/api/quotes";
 import type { Product } from "@/lib/api/products";
 import { CutDiagram, type CutPiece, type CutRow } from "@/components/quotes/CutDiagram";
 import { useEffectivePriceList } from "@/hooks/usePriceLists";
+import { AutomotiveQuoteForm } from "@/components/quotes/AutomotiveQuoteForm";
 
 // ── Re-use shared logic from new/page via dynamic import workaround ────────────
 // Instead of duplicating, we import the building blocks directly.
@@ -273,6 +274,9 @@ export default function EditQuotePage({ params }: { params: Promise<{ id: string
         data: {
           customer_id: customerId || null,
           customer_snapshot: customerSnapshot,
+          // sale_type es inmutable — el backend ignora este valor y conserva
+          // el ya persistido, se manda por completitud del tipo.
+          sale_type: quote?.sale_type ?? "ARCHITECTURE",
           film_mode: filmMode,
           glass_panes: glassPanes.map((p) => ({
             pane_id: p.pane_id,
@@ -322,6 +326,30 @@ export default function EditQuotePage({ params }: { params: Promise<{ id: string
       <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-[#f0f4f8]">
         <p className="text-[14px] text-[#475569]">Presupuesto no encontrado.</p>
         <Link href={"/orders" as never} className="text-[13px] text-[#d9622c] hover:underline">Volver</Link>
+      </div>
+    );
+  }
+
+  // sale_type es inmutable — las ventas automotrices editan con el formulario
+  // simplificado (sin vidrios ni plan de cortes), nunca con el wizard de 3 pasos.
+  if (quote.sale_type === "AUTOMOTIVE") {
+    return (
+      <div className="flex min-h-screen flex-col bg-[#f0f4f8]">
+        <header className="flex items-center gap-4 border-b border-[#e8ecf2] bg-white px-5 py-4">
+          <Link
+            href={`/orders/${id}` as never}
+            className="flex h-8 w-8 items-center justify-center rounded-[8px] border border-[#e8ecf2] text-[#64748b] hover:bg-[#f1f5f9]"
+          >
+            <ArrowLeft size={15} />
+          </Link>
+          <div>
+            <h1 className="text-[17px] font-bold text-[#0f172a]">Editar {quote.quote_number} — Automotriz</h1>
+            <p className="text-[12px] text-[#94a3b8]">Los cambios reemplazan el presupuesto actual</p>
+          </div>
+        </header>
+        <div className="flex-1 overflow-y-auto p-5">
+          <AutomotiveQuoteForm initialQuote={quote} />
+        </div>
       </div>
     );
   }
