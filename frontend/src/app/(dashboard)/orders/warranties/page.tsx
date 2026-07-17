@@ -47,7 +47,9 @@ export default function WarrantiesPage() {
       !q ||
       w.warranty_number.toLowerCase().includes(q) ||
       productName.includes(q) ||
-      customerName.includes(q);
+      customerName.includes(q) ||
+      (w.vehicle_model ?? "").toLowerCase().includes(q) ||
+      (w.license_plate ?? "").toLowerCase().includes(q);
     return matchValid && matchSearch;
   });
 
@@ -144,7 +146,14 @@ export default function WarrantiesPage() {
                           </Link>
                         </td>
                         <td className="px-4 py-3 text-[13px] text-[#374151]">{customerName}</td>
-                        <td className="px-4 py-3 text-[13px] text-[#374151]">{productName}</td>
+                        <td className="px-4 py-3 text-[13px] text-[#374151]">
+                          {productName}
+                          {(w.vehicle_model || w.license_plate) && (
+                            <p className="mt-0.5 text-[11px] text-[#94a3b8]">
+                              {w.vehicle_model ?? "—"}{w.license_plate ? ` · ${w.license_plate}` : ""}
+                            </p>
+                          )}
+                        </td>
                         <td className="px-4 py-3 text-[12px] text-[#64748b]">
                           {new Date(w.created_at).toLocaleDateString("es-AR")}
                         </td>
@@ -189,6 +198,11 @@ export default function WarrantiesPage() {
                     <div>
                       <p className="text-[13px] font-bold text-[#0f172a]">{w.warranty_number}</p>
                       <p className="text-[12px] text-[#64748b]">{productName} · {customerName}</p>
+                      {(w.vehicle_model || w.license_plate) && (
+                        <p className="text-[11px] text-[#94a3b8]">
+                          {w.vehicle_model ?? "—"}{w.license_plate ? ` · ${w.license_plate}` : ""}
+                        </p>
+                      )}
                     </div>
                     {w.is_valid ? (
                       <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">

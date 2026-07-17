@@ -32,7 +32,12 @@ from centy.application.quotes.queries import GetQuoteQuery, GetQuoteStatsQuery
 from centy.domain.catalog.entities import Product
 from centy.domain.pricing.entities import PriceListItem
 from centy.domain.quotes.entities import Quote
-from centy.domain.quotes.value_objects import FilmMode, LocationType, QuoteStatus
+from centy.domain.quotes.value_objects import (
+    FilmMode,
+    LocationType,
+    QuoteStatus,
+    SaleType,
+)
 from centy.domain.shared.exceptions import AuthorizationError, NotFoundError
 from centy.domain.shared.value_objects import TenantId
 
@@ -188,14 +193,17 @@ def _create_cmd(
     tax_pct: Decimal = Decimal("0"),
     discount_pct: Decimal = Decimal("0"),
     travel_cost: Decimal = Decimal("0"),
+    sale_type: SaleType = SaleType.ARCHITECTURE,
+    glass_panes: list[GlassPaneInput] | None = None,
 ) -> CreateQuoteCommand:
     return CreateQuoteCommand(
         tenant_id=tenant_id,
         created_by_user_id=user_id,
         customer_id=None,
         customer_snapshot=None,
+        sale_type=sale_type,
         film_mode=FilmMode.SINGLE,
-        glass_panes=[_pane_input()],
+        glass_panes=[_pane_input()] if glass_panes is None else glass_panes,
         lines=[_line_input()],
         height_surcharge_pct=Decimal("0"),
         travel_cost=travel_cost,
@@ -270,6 +278,35 @@ class TestCreateQuoteHandler:
         assert result.totals.subtotal == Decimal("1500.00")
         assert result.totals.tax_amount == Decimal("315.00")
         assert result.totals.total == Decimal("1815.00")
+
+    @pytest.mark.asyncio
+    async def test_crea_quote_automotriz_sin_vidrios(
+        self, uow: FakeQuoteUnitOfWork, tenant_id: TenantId
+    ) -> None:
+        result = await CreateQuoteHandler(uow).handle(
+            _create_cmd(
+                tenant_id, uuid4(), sale_type=SaleType.AUTOMOTIVE, glass_panes=[]
+            )
+        )
+        assert result.sale_type == "AUTOMOTIVE"
+        assert result.glass_panes == []
+        assert result.totals.total == Decimal("1000.00")
+
+    @pytest.mark.asyncio
+    async def test_arquitectura_sin_vidrios_sigue_fallando(
+        self, uow: FakeQuoteUnitOfWork, tenant_id: TenantId
+    ) -> None:
+        from centy.domain.shared.exceptions import BusinessRuleViolationError
+
+        with pytest.raises(BusinessRuleViolationError, match="vidrio"):
+            await CreateQuoteHandler(uow).handle(
+                _create_cmd(
+                    tenant_id,
+                    uuid4(),
+                    sale_type=SaleType.ARCHITECTURE,
+                    glass_panes=[],
+                )
+            )
 
     @pytest.mark.asyncio
     async def test_numeros_se_incrementan_por_usuario(
@@ -436,6 +473,7 @@ class TestUpdateQuoteHandler:
         role: str = "OPERATOR",
         *,
         tax_pct: Decimal = Decimal("21"),
+        sale_type: SaleType = SaleType.ARCHITECTURE,
     ) -> UpdateQuoteCommand:
         return UpdateQuoteCommand(
             quote_id=quote_id,
@@ -444,6 +482,7 @@ class TestUpdateQuoteHandler:
             requester_role=role,
             customer_id=None,
             customer_snapshot=None,
+            sale_type=sale_type,
             film_mode=FilmMode.SINGLE,
             glass_panes=[_pane_input()],
             lines=[_line_input()],
@@ -472,6 +511,26 @@ class TestUpdateQuoteHandler:
         )
         assert updated.tax_pct == Decimal("21")
         assert updated.totals.tax_amount == Decimal("210.00")
+
+    @pytest.mark.asyncio
+    async def test_update_no_puede_cambiar_sale_type(
+        self, uow: FakeQuoteUnitOfWork, tenant_id: TenantId
+    ) -> None:
+        user_id = uuid4()
+        created = await CreateQuoteHandler(uow).handle(
+            _create_cmd(
+                tenant_id, user_id, sale_type=SaleType.AUTOMOTIVE, glass_panes=[]
+            )
+        )
+        updated = await UpdateQuoteHandler(uow).handle(
+            self._update_cmd(
+                UUID(created.quote_id),
+                tenant_id,
+                user_id,
+                sale_type=SaleType.ARCHITECTURE,
+            )
+        )
+        assert updated.sale_type == "AUTOMOTIVE"
 
     @pytest.mark.asyncio
     async def test_invoiced_no_se_puede_editar(

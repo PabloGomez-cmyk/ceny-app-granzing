@@ -24,6 +24,8 @@ def _to_domain(m: WarrantyModel) -> Warranty:
         expires_at=m.expires_at,
         sent_at=m.sent_at,
         created_at=m.created_at,
+        vehicle_model=m.vehicle_model,
+        license_plate=m.license_plate,
     )
 
 
@@ -61,6 +63,8 @@ class SQLAlchemyWarrantyRepository(IWarrantyRepository):
                     expires_at=warranty.expires_at,
                     sent_at=warranty.sent_at,
                     created_at=warranty.created_at,
+                    vehicle_model=warranty.vehicle_model,
+                    license_plate=warranty.license_plate,
                 )
             )
         else:

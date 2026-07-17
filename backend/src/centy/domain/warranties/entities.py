@@ -23,6 +23,8 @@ class Warranty(Entity):
     warranty_years: int
     expires_at: date
     sent_at: datetime | None = None
+    vehicle_model: str | None = None
+    license_plate: str | None = None
 
     @classmethod
     def create(
@@ -37,6 +39,8 @@ class Warranty(Entity):
         customer_snapshot: dict[str, Any] | None,
         created_by_user_id: UUID,
         warranty_years: int,
+        vehicle_model: str | None = None,
+        license_plate: str | None = None,
     ) -> "Warranty":
         if warranty_years <= 0:
             raise BusinessRuleViolationError(
@@ -61,6 +65,8 @@ class Warranty(Entity):
             created_by_user_id=created_by_user_id,
             warranty_years=warranty_years,
             expires_at=expires_at,
+            vehicle_model=vehicle_model,
+            license_plate=license_plate,
         )
 
     @property

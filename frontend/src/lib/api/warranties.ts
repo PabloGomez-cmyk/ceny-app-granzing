@@ -17,12 +17,19 @@ export interface Warranty {
   is_valid: boolean;
   sent_at: string | null;
   created_at: string;
+  vehicle_model: string | null;
+  license_plate: string | null;
 }
 
 export interface SendWarrantiesEmailPayload {
   recipient_email: string;
   recipient_name?: string | null;
   custom_message?: string | null;
+}
+
+export interface GenerateWarrantiesPayload {
+  vehicle_model?: string | null;
+  license_plate?: string | null;
 }
 
 // ── API ───────────────────────────────────────────────────────────────────────
@@ -35,9 +42,10 @@ export const warrantiesApi = {
   listByQuote: (quoteId: string, token: string) =>
     apiRequest<Warranty[]>(`/quotes/${quoteId}/warranties`, token),
 
-  generate: (quoteId: string, token: string) =>
+  generate: (quoteId: string, token: string, payload?: GenerateWarrantiesPayload) =>
     apiRequest<Warranty[]>(`/quotes/${quoteId}/warranties`, token, {
       method: "POST",
+      body: payload ? JSON.stringify(payload) : undefined,
     }),
 
   sendEmail: (quoteId: string, token: string, payload: SendWarrantiesEmailPayload) =>

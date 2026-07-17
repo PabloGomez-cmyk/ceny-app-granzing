@@ -3,7 +3,12 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID, uuid4
 
-from centy.domain.quotes.value_objects import FilmMode, LocationType, QuoteStatus
+from centy.domain.quotes.value_objects import (
+    FilmMode,
+    LocationType,
+    QuoteStatus,
+    SaleType,
+)
 from centy.domain.shared.entity import Entity
 from centy.domain.shared.exceptions import BusinessRuleViolationError
 from centy.domain.shared.value_objects import TenantId
@@ -53,6 +58,7 @@ class Quote(Entity):
     customer_id: UUID | None = None
     customer_snapshot: dict[str, Any] | None = None
     status: QuoteStatus = QuoteStatus.DRAFT
+    sale_type: SaleType = SaleType.ARCHITECTURE
     film_mode: FilmMode = FilmMode.SINGLE
     glass_panes: list[GlassPane] = field(default_factory=list)
     lines: list[QuoteLine] = field(default_factory=list)
@@ -74,6 +80,7 @@ class Quote(Entity):
         quote_number: str,
         customer_id: UUID | None,
         customer_snapshot: dict[str, Any] | None,
+        sale_type: SaleType = SaleType.ARCHITECTURE,
         film_mode: FilmMode,
         glass_panes: list[GlassPane],
         lines: list[QuoteLine],
@@ -86,7 +93,9 @@ class Quote(Entity):
         cut_plan_snapshot: dict[str, Any],
         valid_until: str,
     ) -> "Quote":
-        if not glass_panes:
+        # Automotriz no tiene "vidrios del proyecto": son líneas simples de
+        # producto + m2, sin plan de cortes ni recargo por altura.
+        if sale_type == SaleType.ARCHITECTURE and not glass_panes:
             raise BusinessRuleViolationError(
                 "El presupuesto debe tener al menos un vidrio"
             )
@@ -108,6 +117,7 @@ class Quote(Entity):
             quote_number=quote_number,
             customer_id=customer_id,
             customer_snapshot=customer_snapshot,
+            sale_type=sale_type,
             film_mode=film_mode,
             glass_panes=glass_panes,
             lines=lines,

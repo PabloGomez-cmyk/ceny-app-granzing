@@ -11,7 +11,12 @@ import pytest
 
 from centy.domain.quotes.entities import GlassPane, Quote, QuoteLine
 from centy.domain.quotes.services import QuoteCalculator
-from centy.domain.quotes.value_objects import FilmMode, LocationType, QuoteStatus
+from centy.domain.quotes.value_objects import (
+    FilmMode,
+    LocationType,
+    QuoteStatus,
+    SaleType,
+)
 from centy.domain.shared.exceptions import BusinessRuleViolationError
 from centy.domain.shared.value_objects import TenantId
 
@@ -105,6 +110,19 @@ class TestQuoteCreate:
     def test_sin_vidrios_lanza_error(self) -> None:
         with pytest.raises(BusinessRuleViolationError, match="vidrio"):
             make_quote(glass_panes=[])
+
+    def test_default_sale_type_es_architecture(self) -> None:
+        q = make_quote()
+        assert q.sale_type == SaleType.ARCHITECTURE
+
+    def test_automotive_sin_vidrios_no_lanza_error(self) -> None:
+        q = make_quote(sale_type=SaleType.AUTOMOTIVE, glass_panes=[])
+        assert q.sale_type == SaleType.AUTOMOTIVE
+        assert q.glass_panes == []
+
+    def test_automotive_sin_lineas_lanza_error(self) -> None:
+        with pytest.raises(BusinessRuleViolationError, match="lámina"):
+            make_quote(sale_type=SaleType.AUTOMOTIVE, glass_panes=[], lines=[])
 
     def test_sin_laminas_lanza_error(self) -> None:
         with pytest.raises(BusinessRuleViolationError, match="lámina"):
@@ -310,6 +328,24 @@ class TestQuoteCalculator:
         assert totals.subtotal == Decimal("1500.00")
         assert totals.tax_amount == Decimal("315.00")
         assert totals.total == Decimal("1815.00")
+
+    def test_quote_automotriz_sin_vidrios_calcula_totales(self) -> None:
+        # sale_type=AUTOMOTIVE: sin glass_panes, con líneas → total simple,
+        # sin recargo por altura (no hay panes que lo disparen)
+        q = self._quote_with(
+            sale_type=SaleType.AUTOMOTIVE,
+            glass_panes=[],
+            lines=[
+                make_line(price_per_m2=1000, surface_m2=1.5),
+                make_line(price_per_m2=800, surface_m2=2.0),
+            ],
+            tax_pct=Decimal("21"),
+        )
+        totals = self.calc.calculate(q)
+        assert totals.materials_subtotal == Decimal("3100.00")
+        assert totals.height_surcharge == Decimal("0.00")
+        assert totals.tax_amount == Decimal("651.00")
+        assert totals.total == Decimal("3751.00")
 
     def test_recargo_altura_se_suma_antes_de_iva(self) -> None:
         # pane 1m² en ALTURA; price $1000; altura 30% → surcharge $300

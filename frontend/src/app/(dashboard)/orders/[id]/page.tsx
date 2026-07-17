@@ -28,6 +28,7 @@ import type { QuoteStatus } from "@/lib/api/quotes";
 import dynamic from "next/dynamic";
 import SendQuoteEmailModal from "@/components/email/SendQuoteEmailModal";
 import SendWarrantiesEmailModal from "@/components/warranties/SendWarrantiesEmailModal";
+import GenerateWarrantiesModal from "@/components/warranties/GenerateWarrantiesModal";
 import { CutDiagram, type CutRow } from "@/components/quotes/CutDiagram";
 
 const DownloadPDFButton = dynamic(() => import("@/components/pdf/DownloadPDFButton"), { ssr: false });
@@ -81,6 +82,7 @@ export default function QuoteDetailPage() {
   const updateStatus = useUpdateQuoteStatus();
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [warrantyEmailModalOpen, setWarrantyEmailModalOpen] = useState(false);
+  const [generateWarrantiesModalOpen, setGenerateWarrantiesModalOpen] = useState(false);
   const { data: warranties = [] } = useWarrantiesByQuote(id);
   const generateWarranties = useGenerateWarranties();
 
@@ -153,7 +155,13 @@ export default function QuoteDetailPage() {
           </button>
           {quote.status === "COMPLETED" && warranties.length === 0 && (
             <button
-              onClick={() => generateWarranties.mutate(quote.id)}
+              onClick={() => {
+                if (quote.sale_type === "AUTOMOTIVE") {
+                  setGenerateWarrantiesModalOpen(true);
+                } else {
+                  generateWarranties.mutate({ quoteId: quote.id });
+                }
+              }}
               disabled={generateWarranties.isPending}
               className="flex items-center gap-1.5 rounded-[10px] border border-[#dde4ee] px-3 py-2 text-[12px] font-semibold text-[#475569] hover:bg-[#f1f5f9] disabled:opacity-50"
             >
@@ -239,53 +247,55 @@ export default function QuoteDetailPage() {
               </div>
             </Section>
 
-            {/* Glass panes */}
-            <Section title="Vidrios del Proyecto" icon={<Layers size={15} className="text-[#d9622c]" />}>
-              <div className="mb-3 flex items-center gap-2">
-                <span className="rounded-full bg-blue-50 px-3 py-1 text-[12px] font-semibold text-blue-700">
-                  {totalM2.toFixed(2)} m²
-                </span>
-                {quote.has_altura && (
-                  <span className="rounded-full bg-orange-100 px-3 py-1 text-[12px] font-semibold text-orange-700">
-                    Trabajo en altura
+            {/* Glass panes — solo aplica al flujo Arquitectura */}
+            {quote.sale_type === "ARCHITECTURE" && (
+              <Section title="Vidrios del Proyecto" icon={<Layers size={15} className="text-[#d9622c]" />}>
+                <div className="mb-3 flex items-center gap-2">
+                  <span className="rounded-full bg-blue-50 px-3 py-1 text-[12px] font-semibold text-blue-700">
+                    {totalM2.toFixed(2)} m²
                   </span>
-                )}
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-[12px]">
-                  <thead>
-                    <tr className="border-b border-[#f1f5f9]">
-                      {["ID", "Tipo", "Dimensiones (cm)", "Superficie", "Ubicación"].map((h) => (
-                        <th key={h} className="pb-2 pr-4 text-left text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {quote.glass_panes.map((p) => (
-                      <tr key={p.pane_id} className="border-b border-[#f8fafc]">
-                        <td className="py-2.5 pr-4 font-bold text-[#0f172a]">{p.pane_id}</td>
-                        <td className="py-2.5 pr-4">
-                          <span className="rounded bg-[#f1f5f9] px-1.5 py-0.5 text-[11px] font-medium text-[#475569]">
-                            {p.glass_type_name}
-                          </span>
-                        </td>
-                        <td className="py-2.5 pr-4 text-[#475569]">
-                          {p.width_cm} × {p.height_cm} cm
-                        </td>
-                        <td className="py-2.5 pr-4 font-semibold text-[#0f172a]">{Number(p.surface_m2).toFixed(3)} m²</td>
-                        <td className="py-2.5">
-                          <span className={`rounded-[6px] px-2 py-0.5 text-[11px] font-medium ${p.location === "ALTURA" ? "bg-orange-100 text-orange-700" : "bg-sky-50 text-sky-700"}`}>
-                            {p.location === "ALTURA" ? "Altura" : "Superficie"}
-                          </span>
-                        </td>
+                  {quote.has_altura && (
+                    <span className="rounded-full bg-orange-100 px-3 py-1 text-[12px] font-semibold text-orange-700">
+                      Trabajo en altura
+                    </span>
+                  )}
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-[12px]">
+                    <thead>
+                      <tr className="border-b border-[#f1f5f9]">
+                        {["ID", "Tipo", "Dimensiones (cm)", "Superficie", "Ubicación"].map((h) => (
+                          <th key={h} className="pb-2 pr-4 text-left text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">
+                            {h}
+                          </th>
+                        ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Section>
+                    </thead>
+                    <tbody>
+                      {quote.glass_panes.map((p) => (
+                        <tr key={p.pane_id} className="border-b border-[#f8fafc]">
+                          <td className="py-2.5 pr-4 font-bold text-[#0f172a]">{p.pane_id}</td>
+                          <td className="py-2.5 pr-4">
+                            <span className="rounded bg-[#f1f5f9] px-1.5 py-0.5 text-[11px] font-medium text-[#475569]">
+                              {p.glass_type_name}
+                            </span>
+                          </td>
+                          <td className="py-2.5 pr-4 text-[#475569]">
+                            {p.width_cm} × {p.height_cm} cm
+                          </td>
+                          <td className="py-2.5 pr-4 font-semibold text-[#0f172a]">{Number(p.surface_m2).toFixed(3)} m²</td>
+                          <td className="py-2.5">
+                            <span className={`rounded-[6px] px-2 py-0.5 text-[11px] font-medium ${p.location === "ALTURA" ? "bg-orange-100 text-orange-700" : "bg-sky-50 text-sky-700"}`}>
+                              {p.location === "ALTURA" ? "Altura" : "Superficie"}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Section>
+            )}
 
             {/* Cut plan summary */}
             {cutPlan.materials && cutPlan.materials.length > 0 && (
@@ -481,6 +491,14 @@ export default function QuoteDetailPage() {
               : ""
           }
           onClose={() => setWarrantyEmailModalOpen(false)}
+        />
+      )}
+
+      {generateWarrantiesModalOpen && (
+        <GenerateWarrantiesModal
+          quoteId={quote.id}
+          quoteNumber={quote.quote_number}
+          onClose={() => setGenerateWarrantiesModalOpen(false)}
         />
       )}
     </div>

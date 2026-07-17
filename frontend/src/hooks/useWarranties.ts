@@ -1,6 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import { type SendWarrantiesEmailPayload, warrantiesApi } from "@/lib/api/warranties";
+import {
+  type GenerateWarrantiesPayload,
+  type SendWarrantiesEmailPayload,
+  warrantiesApi,
+} from "@/lib/api/warranties";
 
 function useToken(): string | undefined {
   const { data: session } = useSession();
@@ -44,8 +48,14 @@ export function useGenerateWarranties() {
   const token = useToken();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (quoteId: string) => warrantiesApi.generate(quoteId, token!),
-    onSuccess: (_, quoteId) => {
+    mutationFn: ({
+      quoteId,
+      payload,
+    }: {
+      quoteId: string;
+      payload?: GenerateWarrantiesPayload;
+    }) => warrantiesApi.generate(quoteId, token!, payload),
+    onSuccess: (_, { quoteId }) => {
       qc.invalidateQueries({ queryKey: KEYS.all });
       qc.invalidateQueries({ queryKey: KEYS.byQuote(quoteId) });
     },

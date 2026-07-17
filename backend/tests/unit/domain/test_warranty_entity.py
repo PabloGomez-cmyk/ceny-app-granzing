@@ -14,7 +14,11 @@ from centy.domain.shared.value_objects import TenantId
 from centy.domain.warranties.entities import Warranty
 
 
-def make_warranty(warranty_years: int = 5) -> Warranty:
+def make_warranty(
+    warranty_years: int = 5,
+    vehicle_model: str | None = None,
+    license_plate: str | None = None,
+) -> Warranty:
     return Warranty.create(
         tenant_id=TenantId(uuid4()),
         quote_id=uuid4(),
@@ -25,6 +29,8 @@ def make_warranty(warranty_years: int = 5) -> Warranty:
         customer_snapshot={"name": "Pablo Gómez"},
         created_by_user_id=uuid4(),
         warranty_years=warranty_years,
+        vehicle_model=vehicle_model,
+        license_plate=license_plate,
     )
 
 
@@ -45,6 +51,16 @@ class TestWarrantyCreate:
     def test_sent_at_default_es_none(self) -> None:
         w = make_warranty()
         assert w.sent_at is None
+
+    def test_vehicle_model_y_license_plate_son_none_por_defecto(self) -> None:
+        w = make_warranty()
+        assert w.vehicle_model is None
+        assert w.license_plate is None
+
+    def test_acepta_vehicle_model_y_license_plate(self) -> None:
+        w = make_warranty(vehicle_model="Toyota Corolla 2021", license_plate="AB123CD")
+        assert w.vehicle_model == "Toyota Corolla 2021"
+        assert w.license_plate == "AB123CD"
 
 
 class TestWarrantyIsValid:
