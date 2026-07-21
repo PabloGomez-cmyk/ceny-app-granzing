@@ -201,7 +201,5 @@ class Quote(Entity):
         campo status.
         """
         if new_status == self.status:
-            raise BusinessRuleViolationError(
-                "El presupuesto ya está en ese estado"
-            )
+            raise BusinessRuleViolationError("El presupuesto ya está en ese estado")
         self.status = new_status
