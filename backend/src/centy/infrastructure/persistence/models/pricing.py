@@ -33,6 +33,12 @@ class PriceListItemModel(Base):
     )
     purchase_price: Mapped[float | None] = mapped_column(Numeric(12, 2), nullable=True)
     sale_price: Mapped[float | None] = mapped_column(Numeric(12, 2), nullable=True)
+    purchase_price_per_unit: Mapped[float | None] = mapped_column(
+        Numeric(12, 2), nullable=True
+    )
+    sale_price_per_unit: Mapped[float | None] = mapped_column(
+        Numeric(12, 2), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False
     )

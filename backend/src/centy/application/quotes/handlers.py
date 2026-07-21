@@ -48,8 +48,9 @@ class QuoteLineResult:
     product_snapshot: dict[str, Any]
     glass_pane_ids: list[str]
     price_per_m2: Decimal
-    surface_m2: Decimal
     subtotal: Decimal
+    surface_m2: Decimal | None
+    quantity: Decimal | None
 
 
 @dataclass(frozen=True)
@@ -117,8 +118,9 @@ def _line_result(line: QuoteLine) -> QuoteLineResult:
         product_snapshot=line.product_snapshot,
         glass_pane_ids=line.glass_pane_ids,
         price_per_m2=line.price_per_m2,
-        surface_m2=line.surface_m2,
         subtotal=line.subtotal,
+        surface_m2=line.surface_m2,
+        quantity=line.quantity,
     )
 
 
@@ -198,14 +200,24 @@ async def _build_lines_with_cost_snapshot(
         override = await uow.price_list_items.get_by_user_and_product(
             owner_user_id, line.product_id, tenant_id
         )
-        effective_cost = (
-            override.purchase_price.amount
-            if override and override.purchase_price is not None
-            else product.purchase_price_per_m2.amount
-        )
+        is_unit_line = line.quantity is not None
+        if is_unit_line:
+            effective_cost = (
+                override.purchase_price_per_unit.amount
+                if override and override.purchase_price_per_unit is not None
+                else product.purchase_price_per_unit.amount
+            )
+            snapshot_key = "purchase_price_per_unit"
+        else:
+            effective_cost = (
+                override.purchase_price.amount
+                if override and override.purchase_price is not None
+                else product.purchase_price_per_m2.amount
+            )
+            snapshot_key = "purchase_price_per_m2"
         snapshot = {
             **line.product_snapshot,
-            "purchase_price_per_m2": str(effective_cost),
+            snapshot_key: str(effective_cost),
         }
         lines.append(
             QuoteLine(
@@ -213,8 +225,9 @@ async def _build_lines_with_cost_snapshot(
                 product_snapshot=snapshot,
                 glass_pane_ids=line.glass_pane_ids,
                 price_per_m2=line.price_per_m2,
-                surface_m2=line.surface_m2,
                 subtotal=line.subtotal,
+                surface_m2=line.surface_m2,
+                quantity=line.quantity,
             )
         )
     return lines
@@ -317,16 +330,10 @@ class UpdateQuoteStatusHandler:
                     "No tiene permiso para modificar este presupuesto"
                 )
 
-            if command.new_status == QuoteStatus.SENT:
-                quote.submit()
-            elif command.new_status == QuoteStatus.ACCEPTED:
-                quote.accept()
-            elif command.new_status == QuoteStatus.INVOICED:
-                quote.invoice()
-            elif command.new_status == QuoteStatus.COMPLETED:
-                quote.complete()
-            elif command.new_status == QuoteStatus.CANCELLED:
-                quote.cancel()
+            # Cambio de estado manual y arbitrario — permite corregir errores
+            # de operador (ej. avanzar sin querer a COMPLETED) moviéndose a
+            # cualquier estado, incluso "hacia atrás". Ver Quote.set_status.
+            quote.set_status(command.new_status)
 
             await uow.quotes.save(quote)
             await uow.commit()

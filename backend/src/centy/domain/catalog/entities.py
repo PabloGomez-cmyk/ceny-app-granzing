@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from uuid import UUID
 
-from centy.domain.catalog.value_objects import ApplicationType, Percentage
+from centy.domain.catalog.value_objects import ApplicationType, Percentage, SaleUnit
 from centy.domain.shared.entity import Entity
 from centy.domain.shared.exceptions import BusinessRuleViolationError, ValidationError
 from centy.domain.shared.value_objects import Money, TenantId
@@ -209,6 +209,9 @@ class Product(Entity):
     compatible_glass_ids: list[UUID] = field(default_factory=list)
     technical_sheet_url: str | None = None
     is_active: bool = True
+    sale_price_per_unit: Money = field(default_factory=lambda: Money(Decimal("0")))
+    purchase_price_per_unit: Money = field(default_factory=lambda: Money(Decimal("0")))
+    default_sale_unit: SaleUnit = SaleUnit.SQUARE_METER
 
     @classmethod
     def create(
@@ -229,6 +232,9 @@ class Product(Entity):
         application_types: list[str],
         compatible_glass_ids: list[UUID] | None = None,
         technical_sheet_url: str | None = None,
+        sale_price_per_unit: Decimal = Decimal("0"),
+        purchase_price_per_unit: Decimal = Decimal("0"),
+        default_sale_unit: str = SaleUnit.SQUARE_METER.value,
     ) -> "Product":
         name = name.strip()
         if not name:
@@ -262,6 +268,14 @@ class Product(Entity):
         if roll_length_m <= 0:
             raise BusinessRuleViolationError("El largo del rollo debe ser mayor a 0")
 
+        try:
+            parsed_default_unit = SaleUnit(default_sale_unit)
+        except ValueError as exc:
+            raise ValidationError(
+                f"Unidad de venta por defecto inválida: '{default_sale_unit}'. "
+                "Valores: SQUARE_METER, UNIT"
+            ) from exc
+
         return cls(
             tenant_id=tenant_id,
             name=name,
@@ -278,6 +292,9 @@ class Product(Entity):
             application_types=parsed_types,
             compatible_glass_ids=compatible_glass_ids or [],
             technical_sheet_url=technical_sheet_url,
+            sale_price_per_unit=Money(sale_price_per_unit),
+            purchase_price_per_unit=Money(purchase_price_per_unit),
+            default_sale_unit=parsed_default_unit,
         )
 
     def update(
@@ -298,6 +315,9 @@ class Product(Entity):
         compatible_glass_ids: list[UUID] | None = None,
         technical_sheet_url: str | None = None,
         clear_technical_sheet: bool = False,
+        sale_price_per_unit: Decimal | None = None,
+        purchase_price_per_unit: Decimal | None = None,
+        default_sale_unit: str | None = None,
     ) -> None:
         if name is not None:
             name = name.strip()
@@ -354,6 +374,18 @@ class Product(Entity):
             self.technical_sheet_url = None
         elif technical_sheet_url is not None:
             self.technical_sheet_url = technical_sheet_url
+        if sale_price_per_unit is not None:
+            self.sale_price_per_unit = Money(sale_price_per_unit)
+        if purchase_price_per_unit is not None:
+            self.purchase_price_per_unit = Money(purchase_price_per_unit)
+        if default_sale_unit is not None:
+            try:
+                self.default_sale_unit = SaleUnit(default_sale_unit)
+            except ValueError as exc:
+                raise ValidationError(
+                    f"Unidad de venta por defecto inválida: '{default_sale_unit}'. "
+                    "Valores: SQUARE_METER, UNIT"
+                ) from exc
 
     def deactivate(self) -> None:
         if not self.is_active:

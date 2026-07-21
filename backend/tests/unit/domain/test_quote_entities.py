@@ -44,21 +44,29 @@ def make_pane(
 def make_line(
     pane_ids: list[str] | None = None,
     price_per_m2: float = 1000,
-    surface_m2: float = 1.0,
+    surface_m2: float | None = 1.0,
     purchase_price_per_m2: float | None = None,
+    quantity: float | None = None,
+    purchase_price_per_unit: float | None = None,
 ) -> QuoteLine:
-    s = Decimal(str(surface_m2))
+    is_unit_line = quantity is not None
+    s = None if is_unit_line else Decimal(str(surface_m2))
+    q = Decimal(str(quantity)) if is_unit_line else None
     p = Decimal(str(price_per_m2))
+    qty_for_subtotal = q if is_unit_line else s
     snapshot: dict = {"name": "Film Solar"}
     if purchase_price_per_m2 is not None:
         snapshot["purchase_price_per_m2"] = str(purchase_price_per_m2)
+    if purchase_price_per_unit is not None:
+        snapshot["purchase_price_per_unit"] = str(purchase_price_per_unit)
     return QuoteLine(
         product_id=uuid4(),
         product_snapshot=snapshot,
-        glass_pane_ids=pane_ids or ["v01"],
+        glass_pane_ids=[] if is_unit_line else (pane_ids or ["v01"]),
         price_per_m2=p,
         surface_m2=s,
-        subtotal=(p * s).quantize(Decimal("0.01")),
+        quantity=q,
+        subtotal=(p * qty_for_subtotal).quantize(Decimal("0.01")),
     )
 
 
@@ -116,9 +124,25 @@ class TestQuoteCreate:
         assert q.sale_type == SaleType.ARCHITECTURE
 
     def test_automotive_sin_vidrios_no_lanza_error(self) -> None:
-        q = make_quote(sale_type=SaleType.AUTOMOTIVE, glass_panes=[])
+        q = make_quote(
+            sale_type=SaleType.AUTOMOTIVE,
+            glass_panes=[],
+            lines=[make_line(quantity=1)],
+        )
         assert q.sale_type == SaleType.AUTOMOTIVE
         assert q.glass_panes == []
+
+    def test_architecture_con_linea_por_unidad_lanza_error(self) -> None:
+        with pytest.raises(BusinessRuleViolationError, match="arquitectura"):
+            make_quote(lines=[make_line(quantity=1)])
+
+    def test_automotive_con_linea_por_m2_lanza_error(self) -> None:
+        with pytest.raises(BusinessRuleViolationError, match="automotriz"):
+            make_quote(
+                sale_type=SaleType.AUTOMOTIVE,
+                glass_panes=[],
+                lines=[make_line(surface_m2=1.0)],
+            )
 
     def test_automotive_sin_lineas_lanza_error(self) -> None:
         with pytest.raises(BusinessRuleViolationError, match="lámina"):
@@ -248,6 +272,32 @@ class TestQuoteStatusTransitions:
             q.cancel()
 
 
+class TestQuoteSetStatus:
+    """set_status: corrección manual arbitraria de estado (ver docstring)."""
+
+    def test_permite_avanzar_varios_pasos_de_una(self) -> None:
+        q = make_quote()
+        q.set_status(QuoteStatus.COMPLETED)
+        assert q.status == QuoteStatus.COMPLETED
+
+    def test_permite_retroceder_desde_completed_a_draft(self) -> None:
+        q = make_quote()
+        q.set_status(QuoteStatus.COMPLETED)
+        q.set_status(QuoteStatus.DRAFT)
+        assert q.status == QuoteStatus.DRAFT
+
+    def test_permite_revertir_cancelled(self) -> None:
+        q = make_quote()
+        q.set_status(QuoteStatus.CANCELLED)
+        q.set_status(QuoteStatus.SENT)
+        assert q.status == QuoteStatus.SENT
+
+    def test_mismo_estado_lanza_error(self) -> None:
+        q = make_quote()
+        with pytest.raises(BusinessRuleViolationError, match="ya está en ese estado"):
+            q.set_status(QuoteStatus.DRAFT)
+
+
 # ── QuoteCalculator ───────────────────────────────────────────────────────────
 
 
@@ -336,8 +386,8 @@ class TestQuoteCalculator:
             sale_type=SaleType.AUTOMOTIVE,
             glass_panes=[],
             lines=[
-                make_line(price_per_m2=1000, surface_m2=1.5),
-                make_line(price_per_m2=800, surface_m2=2.0),
+                make_line(price_per_m2=1000, quantity=1.5),
+                make_line(price_per_m2=800, quantity=2.0),
             ],
             tax_pct=Decimal("21"),
         )
@@ -417,5 +467,28 @@ class TestQuoteCalculatorMargin:
         # límite de una única línea incompleta en su lugar.
         q = make_quote(
             lines=[make_line(purchase_price_per_m2=None)],
+        )
+        assert self.calc.calculate_margin(q) is None
+
+    def test_linea_por_unidad_calcula_margen(self) -> None:
+        # línea automotriz: venta 15000, costo 9000, 2 unidades → margen 12000
+        q = make_quote(
+            sale_type=SaleType.AUTOMOTIVE,
+            glass_panes=[],
+            lines=[
+                make_line(
+                    price_per_m2=15000,
+                    quantity=2,
+                    purchase_price_per_unit=9000,
+                )
+            ],
+        )
+        assert self.calc.calculate_margin(q) == Decimal("12000.00")
+
+    def test_linea_por_unidad_sin_costo_devuelve_none(self) -> None:
+        q = make_quote(
+            sale_type=SaleType.AUTOMOTIVE,
+            glass_panes=[],
+            lines=[make_line(price_per_m2=15000, quantity=2)],
         )
         assert self.calc.calculate_margin(q) is None

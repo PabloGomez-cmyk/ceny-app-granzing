@@ -38,6 +38,16 @@ class SQLAlchemyPriceListItemRepository(IPriceListItemRepository):
             existing.sale_price = (
                 float(item.sale_price.amount) if item.sale_price is not None else None
             )
+            existing.purchase_price_per_unit = (
+                float(item.purchase_price_per_unit.amount)
+                if item.purchase_price_per_unit is not None
+                else None
+            )
+            existing.sale_price_per_unit = (
+                float(item.sale_price_per_unit.amount)
+                if item.sale_price_per_unit is not None
+                else None
+            )
         else:
             self._session.add(
                 PriceListItemModel(
@@ -53,6 +63,16 @@ class SQLAlchemyPriceListItemRepository(IPriceListItemRepository):
                     sale_price=(
                         float(item.sale_price.amount)
                         if item.sale_price is not None
+                        else None
+                    ),
+                    purchase_price_per_unit=(
+                        float(item.purchase_price_per_unit.amount)
+                        if item.purchase_price_per_unit is not None
+                        else None
+                    ),
+                    sale_price_per_unit=(
+                        float(item.sale_price_per_unit.amount)
+                        if item.sale_price_per_unit is not None
                         else None
                     ),
                     created_at=item.created_at,
@@ -95,6 +115,16 @@ def _item_to_domain(row: PriceListItemModel) -> PriceListItem:
     )
     i.sale_price = (
         Money(Decimal(str(row.sale_price))) if row.sale_price is not None else None
+    )
+    i.purchase_price_per_unit = (
+        Money(Decimal(str(row.purchase_price_per_unit)))
+        if row.purchase_price_per_unit is not None
+        else None
+    )
+    i.sale_price_per_unit = (
+        Money(Decimal(str(row.sale_price_per_unit)))
+        if row.sale_price_per_unit is not None
+        else None
     )
     i.created_at = row.created_at
     return i

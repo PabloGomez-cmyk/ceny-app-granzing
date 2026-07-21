@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -19,6 +19,8 @@ import {
   ShieldCheck,
   TrendingUp,
   Mail,
+  ChevronDown,
+  RefreshCw,
 } from "lucide-react";
 import { useQuote, useUpdateQuoteStatus } from "@/hooks/useQuotes";
 import { useUser } from "@/hooks/useUsers";
@@ -60,14 +62,110 @@ function fmt(n: number | string) {
   return "$ " + Math.round(Number(n)).toLocaleString("es-AR");
 }
 
-function Section({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
+function Section({
+  title,
+  icon,
+  children,
+  collapsible,
+  defaultOpen = true,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  collapsible?: boolean;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  const isOpen = !collapsible || open;
   return (
     <div className="rounded-[14px] border border-[#e8ecf2] bg-white p-5">
-      <div className="mb-4 flex items-center gap-2 text-[14px] font-semibold text-[#0f172a]">
-        {icon}
-        {title}
-      </div>
-      {children}
+      {collapsible ? (
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          className={`flex w-full items-center justify-between gap-2 text-[14px] font-semibold text-[#0f172a] ${isOpen ? "mb-4" : ""}`}
+        >
+          <span className="flex items-center gap-2">
+            {icon}
+            {title}
+          </span>
+          <ChevronDown
+            size={16}
+            className={`text-[#94a3b8] transition-transform ${isOpen ? "rotate-180" : ""}`}
+          />
+        </button>
+      ) : (
+        <div className="mb-4 flex items-center gap-2 text-[14px] font-semibold text-[#0f172a]">
+          {icon}
+          {title}
+        </div>
+      )}
+      {isOpen && children}
+    </div>
+  );
+}
+
+function StatusChangeMenu({
+  currentStatus,
+  onChange,
+  disabled,
+}: {
+  currentStatus: QuoteStatus;
+  onChange: (status: QuoteStatus) => void;
+  disabled?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    if (open) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
+  const options = (Object.keys(STATUS_CONFIG) as QuoteStatus[]).filter(
+    (s) => s !== currentStatus
+  );
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        disabled={disabled}
+        className="flex items-center gap-1.5 rounded-[10px] border border-[#dde4ee] px-3 py-2 text-[12px] font-semibold text-[#475569] hover:bg-[#f1f5f9] disabled:opacity-50"
+        title="Corregir el estado manualmente"
+      >
+        <RefreshCw size={13} />
+        <span className="hidden sm:inline">Cambiar estado</span>
+        <ChevronDown size={12} className={`transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="absolute right-0 z-10 mt-1 w-56 rounded-[10px] border border-[#e8ecf2] bg-white p-1.5 shadow-lg">
+          <p className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#94a3b8]">
+            Corregir estado manualmente
+          </p>
+          {options.map((s) => {
+            const cfg = STATUS_CONFIG[s];
+            return (
+              <button
+                key={s}
+                type="button"
+                onClick={() => {
+                  onChange(s);
+                  setOpen(false);
+                }}
+                className="flex w-full items-center gap-2 rounded-[8px] px-2 py-1.5 text-left text-[12px] font-medium text-[#374151] hover:bg-[#f1f5f9]"
+              >
+                <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
+                {cfg.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -127,21 +225,25 @@ export default function QuoteDetailPage() {
   return (
     <div className="flex min-h-screen flex-col bg-[#f0f4f8]">
       {/* Header */}
-      <header className="flex items-center justify-between bg-white px-5 py-4 border-b border-[#e8ecf2]">
+      <header className="flex flex-col gap-3 bg-white px-4 py-4 border-b border-[#e8ecf2] sm:px-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-3">
           <Link
             href="/orders"
-            className="flex h-8 w-8 items-center justify-center rounded-[8px] border border-[#e8ecf2] text-[#64748b] hover:bg-[#f1f5f9]"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] border border-[#e8ecf2] text-[#64748b] hover:bg-[#f1f5f9]"
           >
             <ArrowLeft size={15} />
           </Link>
-          <div>
-            <h1 className="text-[17px] font-bold text-[#0f172a]">{quote.quote_number}</h1>
+          <div className="min-w-0">
+            <h1 className="truncate text-[17px] font-bold text-[#0f172a]">{quote.quote_number}</h1>
             <p className="text-[12px] text-[#94a3b8]">Detalle del presupuesto</p>
           </div>
+          <span className={`ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-semibold lg:hidden ${statusCfg.color}`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${statusCfg.dot}`} />
+            {statusCfg.label}
+          </span>
         </div>
-        <div className="flex items-center gap-3">
-          <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-semibold ${statusCfg.color}`}>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className={`hidden items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-semibold lg:inline-flex ${statusCfg.color}`}>
             <span className={`h-1.5 w-1.5 rounded-full ${statusCfg.dot}`} />
             {statusCfg.label}
           </span>
@@ -206,6 +308,11 @@ export default function QuoteDetailPage() {
               Cancelar
             </button>
           )}
+          <StatusChangeMenu
+            currentStatus={quote.status as QuoteStatus}
+            disabled={updateStatus.isPending}
+            onChange={(status) => updateStatus.mutate({ id: quote.id, status })}
+          />
         </div>
       </header>
 
@@ -299,7 +406,12 @@ export default function QuoteDetailPage() {
 
             {/* Cut plan summary */}
             {cutPlan.materials && cutPlan.materials.length > 0 && (
-              <Section title="Plan de Cortes" icon={<Scissors size={15} className="text-purple-600" />}>
+              <Section
+                title="Plan de Cortes"
+                icon={<Scissors size={15} className="text-purple-600" />}
+                collapsible
+                defaultOpen={false}
+              >
                 <div className="grid grid-cols-4 gap-2 mb-4">
                   <div className="rounded-[10px] bg-[#f0f4f8] p-3 text-center">
                     <p className="text-[16px] font-bold text-[#0f172a]">{cutPlan.total_linear_m}m</p>
@@ -380,7 +492,9 @@ export default function QuoteDetailPage() {
                     >
                       <p className="text-[13px] font-semibold text-[#0f172a]">{String(snap.name ?? "")}</p>
                       <p className="text-[11px] text-[#94a3b8]">
-                        {Number(line.surface_m2).toFixed(2)} m² · ${Number(line.price_per_m2).toLocaleString("es-AR")}/m²
+                        {line.quantity != null
+                          ? `${Number(line.quantity)} u. · $${Number(line.price_per_m2).toLocaleString("es-AR")}/u.`
+                          : `${Number(line.surface_m2).toFixed(2)} m² · $${Number(line.price_per_m2).toLocaleString("es-AR")}/m²`}
                       </p>
                     </div>
                   );

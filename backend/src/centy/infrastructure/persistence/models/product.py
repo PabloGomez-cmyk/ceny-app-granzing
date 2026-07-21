@@ -92,6 +92,15 @@ class ProductModel(Base):
     application_types: Mapped[list[str]] = mapped_column(
         ARRAY(String(20)), nullable=False
     )
+    sale_price_per_unit: Mapped[float] = mapped_column(
+        Numeric(12, 2), nullable=False, server_default="0"
+    )
+    purchase_price_per_unit: Mapped[float] = mapped_column(
+        Numeric(12, 2), nullable=False, server_default="0"
+    )
+    default_sale_unit: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default="SQUARE_METER"
+    )
     technical_sheet_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     created_at: Mapped[datetime] = mapped_column(

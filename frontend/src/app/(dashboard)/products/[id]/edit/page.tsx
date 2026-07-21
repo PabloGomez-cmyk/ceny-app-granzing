@@ -183,6 +183,7 @@ interface FormErrors {
   application_types?: string;
   sale_price?: string;
   purchase_price?: string;
+  sale_price_per_unit?: string;
 }
 
 export default function EditProductPage() {
@@ -209,6 +210,9 @@ export default function EditProductPage() {
   const [categoryId, setCategoryId] = useState("");
   const [salePrice, setSalePrice] = useState("");
   const [purchasePrice, setPurchasePrice] = useState("");
+  const [salePricePerUnit, setSalePricePerUnit] = useState("");
+  const [purchasePricePerUnit, setPurchasePricePerUnit] = useState("");
+  const [defaultSaleUnit, setDefaultSaleUnit] = useState<"SQUARE_METER" | "UNIT">("SQUARE_METER");
   const [uv, setUv] = useState("");
   const [irr, setIrr] = useState("");
   const [tser, setTser] = useState("");
@@ -246,6 +250,9 @@ export default function EditProductPage() {
       setAppTypes(product.application_types);
       setGlassIds(product.compatible_glass_ids);
       setTechSheetUrl(product.technical_sheet_url);
+      setSalePricePerUnit(String(product.sale_price_per_unit));
+      setPurchasePricePerUnit(String(product.purchase_price_per_unit));
+      setDefaultSaleUnit(product.default_sale_unit);
       setInitialized(true);
     }
   }, [product, initialized]);
@@ -282,11 +289,19 @@ export default function EditProductPage() {
     if (!name.trim()) errs.name = "El nombre es obligatorio";
     if (!brandId) errs.brand = "Seleccioná una marca";
     if (!categoryId) errs.category = "Seleccioná una categoría";
-    if (!salePrice || isNaN(Number(salePrice)) || Number(salePrice) < 0)
+    if (
+      appTypes.includes("WINDOW") &&
+      (!salePrice || isNaN(Number(salePrice)) || Number(salePrice) < 0)
+    )
       errs.sale_price = "Ingresá un precio válido";
     if (purchasePrice && (isNaN(Number(purchasePrice)) || Number(purchasePrice) < 0))
       errs.purchase_price = "Ingresá un costo válido";
     if (appTypes.length === 0) errs.application_types = "Seleccioná al menos una aplicación";
+    if (
+      appTypes.includes("AUTOMOTIVE") &&
+      (!salePricePerUnit || isNaN(Number(salePricePerUnit)) || Number(salePricePerUnit) < 0)
+    )
+      errs.sale_price_per_unit = "Ingresá un precio por unidad válido";
     setErrors(errs);
     return Object.keys(errs).length === 0;
   }
@@ -313,6 +328,9 @@ export default function EditProductPage() {
           application_types: appTypes,
           compatible_glass_ids: glassIds,
           technical_sheet_url: techSheetUrl,
+          sale_price_per_unit: Number(salePricePerUnit) || 0,
+          purchase_price_per_unit: Number(purchasePricePerUnit) || 0,
+          default_sale_unit: defaultSaleUnit,
         },
       });
       router.push(`/products/${id}`);
@@ -362,7 +380,13 @@ export default function EditProductPage() {
   }
 
   function toggleAppType(type: string) {
-    setAppTypes((prev) => prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]);
+    setAppTypes((prev) => {
+      const next = prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type];
+      if (next.length === 1) {
+        setDefaultSaleUnit(next[0] === "AUTOMOTIVE" ? "UNIT" : "SQUARE_METER");
+      }
+      return next;
+    });
   }
 
   const selectedBrand = brands.find((b) => b.id === brandId);
@@ -598,6 +622,8 @@ export default function EditProductPage() {
         {/* ── Precio ─────────────────────────────────────────────────────── */}
         <div className="rounded-[14px] border border-[#e8ecf2] bg-white p-6">
           <SectionTitle>Precio</SectionTitle>
+          {appTypes.includes("WINDOW") && (
+          <>
           <div className="grid max-w-xl grid-cols-2 gap-4">
             <div>
               <Label required>Precio de venta sugerido por m²</Label>
@@ -629,6 +655,59 @@ export default function EditProductPage() {
           <p className="mt-3 text-[11px] text-[#94a3b8]">
             Ambos valores son el default de catálogo. Desde <span className="font-medium">Listas de precios</span> el admin puede asignarle a cada operador un costo y/o precio de venta propios.
           </p>
+          </>
+          )}
+
+          {appTypes.includes("AUTOMOTIVE") && (
+            <div className={appTypes.includes("WINDOW") ? "mt-6 border-t border-[#e8ecf2] pt-5" : ""}>
+              <div className="mb-3 flex items-center gap-2 text-[13px] font-semibold text-[#0f172a]">
+                <Car size={14} className="text-[#d9622c]" />
+                Precio por unidad (venta automotriz)
+              </div>
+              <div className="grid max-w-xl grid-cols-2 gap-4">
+                <div>
+                  <Label required>Precio de venta sugerido por unidad</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-[#94a3b8]">$</span>
+                    <input type="number" min="0" step="0.01" placeholder="0.00" value={salePricePerUnit}
+                      onChange={(e) => setSalePricePerUnit(e.target.value)}
+                      className={`h-[42px] w-full rounded-[10px] border pl-7 pr-3 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#d9622c]/20 ${
+                        errors.sale_price_per_unit ? "border-red-400 bg-red-50" : "border-[#dde4ee] bg-[#f8fafc] focus:border-[#d9622c]"
+                      }`}
+                    />
+                  </div>
+                  {errors.sale_price_per_unit && <p className="mt-1 text-[11px] text-red-500">{errors.sale_price_per_unit}</p>}
+                </div>
+                <div>
+                  <Label>Costo de compra por unidad</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-[#94a3b8]">$</span>
+                    <input type="number" min="0" step="0.01" placeholder="0.00" value={purchasePricePerUnit}
+                      onChange={(e) => setPurchasePricePerUnit(e.target.value)}
+                      className="h-[42px] w-full rounded-[10px] border border-[#dde4ee] bg-[#f8fafc] pl-7 pr-3 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#d9622c] focus:outline-none focus:ring-2 focus:ring-[#d9622c]/20"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {appTypes.length > 1 && (
+                <div className="mt-4 max-w-xs">
+                  <Label>Unidad de venta por defecto</Label>
+                  <select
+                    value={defaultSaleUnit}
+                    onChange={(e) => setDefaultSaleUnit(e.target.value as "SQUARE_METER" | "UNIT")}
+                    className="h-[42px] w-full rounded-[10px] border border-[#dde4ee] bg-[#f8fafc] px-3 text-[13px] text-[#0f172a] focus:border-[#d9622c] focus:outline-none focus:ring-2 focus:ring-[#d9622c]/20"
+                  >
+                    <option value="SQUARE_METER">Metro cuadrado (m²)</option>
+                    <option value="UNIT">Unidad</option>
+                  </select>
+                  <p className="mt-1 text-[11px] text-[#94a3b8]">
+                    Este producto aplica a ambos mercados. Define qué precio se muestra primero en el catálogo.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* ── Documentación ──────────────────────────────────────────────── */}

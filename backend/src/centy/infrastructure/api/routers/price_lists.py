@@ -49,6 +49,12 @@ class EffectivePriceItemResponse(BaseModel):
     effective_sale_price: Decimal
     has_purchase_override: bool
     has_sale_override: bool
+    catalog_purchase_price_per_unit: Decimal
+    catalog_sale_price_per_unit: Decimal
+    effective_purchase_price_per_unit: Decimal
+    effective_sale_price_per_unit: Decimal
+    has_purchase_override_per_unit: bool
+    has_sale_override_per_unit: bool
 
 
 class SetPriceOverrideBody(BaseModel):
@@ -57,6 +63,10 @@ class SetPriceOverrideBody(BaseModel):
     sale_price: Decimal | None = Field(None, ge=Decimal("0"))
     clear_purchase_price: bool = False
     clear_sale_price: bool = False
+    purchase_price_per_unit: Decimal | None = Field(None, ge=Decimal("0"))
+    sale_price_per_unit: Decimal | None = Field(None, ge=Decimal("0"))
+    clear_purchase_price_per_unit: bool = False
+    clear_sale_price_per_unit: bool = False
 
 
 class PriceListItemResponse(BaseModel):
@@ -64,6 +74,8 @@ class PriceListItemResponse(BaseModel):
     product_id: str
     purchase_price: Decimal | None
     sale_price: Decimal | None
+    purchase_price_per_unit: Decimal | None
+    sale_price_per_unit: Decimal | None
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
@@ -96,6 +108,12 @@ async def get_effective_price_list(
             effective_sale_price=r.effective_sale_price,
             has_purchase_override=r.has_purchase_override,
             has_sale_override=r.has_sale_override,
+            catalog_purchase_price_per_unit=r.catalog_purchase_price_per_unit,
+            catalog_sale_price_per_unit=r.catalog_sale_price_per_unit,
+            effective_purchase_price_per_unit=r.effective_purchase_price_per_unit,
+            effective_sale_price_per_unit=r.effective_sale_price_per_unit,
+            has_purchase_override_per_unit=r.has_purchase_override_per_unit,
+            has_sale_override_per_unit=r.has_sale_override_per_unit,
         )
         for r in results
     ]
@@ -119,6 +137,10 @@ async def set_price_override(
             sale_price=body.sale_price,
             clear_purchase_price=body.clear_purchase_price,
             clear_sale_price=body.clear_sale_price,
+            purchase_price_per_unit=body.purchase_price_per_unit,
+            sale_price_per_unit=body.sale_price_per_unit,
+            clear_purchase_price_per_unit=body.clear_purchase_price_per_unit,
+            clear_sale_price_per_unit=body.clear_sale_price_per_unit,
         )
     )
     return PriceListItemResponse(
@@ -126,6 +148,8 @@ async def set_price_override(
         product_id=str(result.product_id),
         purchase_price=result.purchase_price,
         sale_price=result.sale_price,
+        purchase_price_per_unit=result.purchase_price_per_unit,
+        sale_price_per_unit=result.sale_price_per_unit,
     )
 
 

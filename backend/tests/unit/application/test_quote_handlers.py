@@ -174,14 +174,16 @@ def _line_input(
     price: float = 1000.0,
     product_id: UUID | None = None,
     product_snapshot: dict | None = None,
+    unit: bool = False,
 ) -> QuoteLineInput:
     p = Decimal(str(price))
     return QuoteLineInput(
         product_id=product_id or DEFAULT_PRODUCT_ID,
         product_snapshot=product_snapshot or {"name": "Film Solar"},
-        glass_pane_ids=pane_ids or ["v01"],
+        glass_pane_ids=[] if unit else (pane_ids or ["v01"]),
         price_per_m2=p,
-        surface_m2=Decimal("1.00"),
+        surface_m2=None if unit else Decimal("1.00"),
+        quantity=Decimal("1.00") if unit else None,
         subtotal=p,
     )
 
@@ -204,7 +206,7 @@ def _create_cmd(
         sale_type=sale_type,
         film_mode=FilmMode.SINGLE,
         glass_panes=[_pane_input()] if glass_panes is None else glass_panes,
-        lines=[_line_input()],
+        lines=[_line_input(unit=sale_type == SaleType.AUTOMOTIVE)],
         height_surcharge_pct=Decimal("0"),
         travel_cost=travel_cost,
         discount_pct=discount_pct,
@@ -443,6 +445,41 @@ class TestUpdateQuoteStatusHandler:
             assert result.status == expected
 
     @pytest.mark.asyncio
+    async def test_permite_retroceder_estado_por_error_de_operador(
+        self, uow: FakeQuoteUnitOfWork, tenant_id: TenantId
+    ) -> None:
+        user_id = uuid4()
+        created = await CreateQuoteHandler(uow).handle(_create_cmd(tenant_id, user_id))
+        qid = UUID(created.quote_id)
+
+        for new_status in [
+            QuoteStatus.SENT,
+            QuoteStatus.ACCEPTED,
+            QuoteStatus.INVOICED,
+            QuoteStatus.COMPLETED,
+        ]:
+            await UpdateQuoteStatusHandler(uow).handle(
+                UpdateQuoteStatusCommand(
+                    quote_id=qid,
+                    tenant_id=tenant_id,
+                    requester_user_id=user_id,
+                    requester_role="OPERATOR",
+                    new_status=new_status,
+                )
+            )
+
+        result = await UpdateQuoteStatusHandler(uow).handle(
+            UpdateQuoteStatusCommand(
+                quote_id=qid,
+                tenant_id=tenant_id,
+                requester_user_id=user_id,
+                requester_role="OPERATOR",
+                new_status=QuoteStatus.INVOICED,
+            )
+        )
+        assert result.status == "INVOICED"
+
+    @pytest.mark.asyncio
     async def test_operator_ajeno_no_puede_cambiar_estado(
         self, uow: FakeQuoteUnitOfWork, tenant_id: TenantId
     ) -> None:
@@ -474,6 +511,7 @@ class TestUpdateQuoteHandler:
         *,
         tax_pct: Decimal = Decimal("21"),
         sale_type: SaleType = SaleType.ARCHITECTURE,
+        unit: bool = False,
     ) -> UpdateQuoteCommand:
         return UpdateQuoteCommand(
             quote_id=quote_id,
@@ -484,8 +522,8 @@ class TestUpdateQuoteHandler:
             customer_snapshot=None,
             sale_type=sale_type,
             film_mode=FilmMode.SINGLE,
-            glass_panes=[_pane_input()],
-            lines=[_line_input()],
+            glass_panes=[] if unit else [_pane_input()],
+            lines=[_line_input(unit=unit)],
             height_surcharge_pct=Decimal("0"),
             travel_cost=Decimal("0"),
             discount_pct=Decimal("0"),

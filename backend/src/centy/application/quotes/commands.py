@@ -31,8 +31,9 @@ class QuoteLineInput:
     product_snapshot: dict[str, Any]
     glass_pane_ids: list[str]
     price_per_m2: Decimal
-    surface_m2: Decimal
     subtotal: Decimal
+    surface_m2: Decimal | None = None
+    quantity: Decimal | None = None
 
 
 @dataclass(frozen=True)

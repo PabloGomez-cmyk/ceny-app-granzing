@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Search, RotateCcw } from "lucide-react";
 import { useUsers } from "@/hooks/useUsers";
+import { useProducts } from "@/hooks/useProducts";
 import {
   useEffectivePriceList,
   useSetPriceOverride,
@@ -75,6 +76,12 @@ export default function PriceListsPage() {
   const operators = useMemo(
     () => users.filter((u) => u.role === "OPERATOR" && u.is_active),
     [users]
+  );
+
+  const { data: products = [] } = useProducts();
+  const automotiveProductIds = useMemo(
+    () => new Set(products.filter((p) => p.application_types.includes("AUTOMOTIVE")).map((p) => p.id)),
+    [products]
   );
 
   const [selectedUserId, setSelectedUserId] = useState<string>("");
@@ -175,20 +182,22 @@ export default function PriceListsPage() {
                 <th className="px-4 py-3">Precio venta (catálogo)</th>
                 <th className="px-4 py-3">Costo del operador</th>
                 <th className="px-4 py-3">Precio sugerido del operador</th>
+                <th className="px-4 py-3">Costo/u. del operador</th>
+                <th className="px-4 py-3">Precio/u. del operador</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
             <tbody>
               {isLoading && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-6 text-center text-[#94a3b8]">
+                  <td colSpan={9} className="px-4 py-6 text-center text-[#94a3b8]">
                     Cargando...
                   </td>
                 </tr>
               )}
               {!isLoading && filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-6 text-center text-[#94a3b8]">
+                  <td colSpan={9} className="px-4 py-6 text-center text-[#94a3b8]">
                     No hay productos.
                   </td>
                 </tr>
@@ -226,7 +235,44 @@ export default function PriceListsPage() {
                     />
                   </td>
                   <td className="px-4 py-3">
-                    {(item.has_purchase_override || item.has_sale_override) && (
+                    {automotiveProductIds.has(item.product_id) ? (
+                      <PriceCell
+                        value={item.effective_purchase_price_per_unit}
+                        hasOverride={item.has_purchase_override_per_unit}
+                        onSave={(n) =>
+                          selectedUserId &&
+                          setOverride.mutate({
+                            userId: selectedUserId,
+                            data: { product_id: item.product_id, purchase_price_per_unit: n },
+                          })
+                        }
+                      />
+                    ) : (
+                      <span className="text-[#cbd5e1]">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    {automotiveProductIds.has(item.product_id) ? (
+                      <PriceCell
+                        value={item.effective_sale_price_per_unit}
+                        hasOverride={item.has_sale_override_per_unit}
+                        onSave={(n) =>
+                          selectedUserId &&
+                          setOverride.mutate({
+                            userId: selectedUserId,
+                            data: { product_id: item.product_id, sale_price_per_unit: n },
+                          })
+                        }
+                      />
+                    ) : (
+                      <span className="text-[#cbd5e1]">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    {(item.has_purchase_override ||
+                      item.has_sale_override ||
+                      item.has_purchase_override_per_unit ||
+                      item.has_sale_override_per_unit) && (
                       <button
                         onClick={() => handleReset(item)}
                         title="Restablecer al valor de catálogo"

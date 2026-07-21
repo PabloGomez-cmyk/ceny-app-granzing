@@ -95,6 +95,9 @@ class CreateProductCommand:
     application_types: list[str] = field(default_factory=list)
     compatible_glass_ids: list[UUID] = field(default_factory=list)
     technical_sheet_url: str | None = None
+    sale_price_per_unit: Decimal = Decimal("0")
+    purchase_price_per_unit: Decimal = Decimal("0")
+    default_sale_unit: str = "SQUARE_METER"
 
 
 @dataclass(frozen=True)
@@ -117,6 +120,9 @@ class UpdateProductCommand:
     technical_sheet_url: str | None = None
     clear_technical_sheet: bool = False
     is_active: bool | None = None
+    sale_price_per_unit: Decimal | None = None
+    purchase_price_per_unit: Decimal | None = None
+    default_sale_unit: str | None = None
 
 
 @dataclass(frozen=True)

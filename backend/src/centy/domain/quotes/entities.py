@@ -44,8 +44,9 @@ class QuoteLine:
     ]  # {name, brand_name, brand_color, price_per_m2, uv_pct, irr_pct}
     glass_pane_ids: list[str]
     price_per_m2: Decimal
-    surface_m2: Decimal
-    subtotal: Decimal  # price_per_m2 x surface_m2
+    subtotal: Decimal  # price_per_m2 x (surface_m2 o quantity)
+    surface_m2: Decimal | None = None  # líneas ARCHITECTURE
+    quantity: Decimal | None = None  # líneas AUTOMOTIVE (venta por unidad)
 
 
 @dataclass(kw_only=True)
@@ -103,6 +104,19 @@ class Quote(Entity):
             raise BusinessRuleViolationError(
                 "El presupuesto debe tener al menos una lámina asignada"
             )
+        for line in lines:
+            if sale_type == SaleType.ARCHITECTURE:
+                if line.surface_m2 is None or line.quantity is not None:
+                    raise BusinessRuleViolationError(
+                        "Las líneas de un presupuesto de arquitectura deben "
+                        "tener superficie (m²), no cantidad de unidades"
+                    )
+            else:
+                if line.quantity is None or line.surface_m2 is not None:
+                    raise BusinessRuleViolationError(
+                        "Las líneas de un presupuesto automotriz deben tener "
+                        "cantidad de unidades, no superficie (m²)"
+                    )
         if discount_pct < -50 or discount_pct > 50:
             raise BusinessRuleViolationError(
                 "El descuento/recargo debe estar entre -50% y +50%"
@@ -171,3 +185,21 @@ class Quote(Entity):
         if self.status == QuoteStatus.CANCELLED:
             raise BusinessRuleViolationError("El presupuesto ya está cancelado")
         self.status = QuoteStatus.CANCELLED
+
+    def set_status(self, new_status: QuoteStatus) -> None:
+        """Cambio de estado manual y arbitrario (correcciones de operador).
+
+        A diferencia de submit/accept/invoice/complete/cancel — que modelan
+        el flujo normal de venta y validan la transición — este método existe
+        para corregir errores humanos (ej. avanzar sin querer a COMPLETED):
+        permite moverse a cualquier estado, incluso "hacia atrás". Las
+        garantías ya generadas al llegar a COMPLETED no se tocan ni se
+        borran al retroceder; sólo se reconstruye el snapshot financiero de
+        la respuesta (QuoteResult), que se recalcula siempre a partir del
+        estado actual. Editar líneas/precios sigue bloqueado para quotes
+        INVOICED/COMPLETED (ver UpdateQuoteHandler) — esto sólo cambia el
+        campo status.
+        """
+        if new_status == self.status:
+            raise BusinessRuleViolationError("El presupuesto ya está en ese estado")
+        self.status = new_status

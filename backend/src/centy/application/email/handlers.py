@@ -128,7 +128,6 @@ class SendQuoteEmailHandler:
             else "Cliente"
         )
         recipient = cmd.recipient_name or customer_name
-        quote_url = f"{cmd.frontend_base_url.rstrip('/')}/orders/{cmd.quote_id}"
         total_str = f"${quote.totals.total:,.2f}" if hasattr(quote, "totals") else ""
 
         html_body = _build_quote_html(
@@ -136,9 +135,9 @@ class SendQuoteEmailHandler:
             customer_name=customer_name,
             recipient_name=recipient,
             total=total_str,
-            quote_url=quote_url,
             from_company=from_name or "Glazing",
             custom_message=cmd.custom_message,
+            has_pdf=cmd.pdf_base64 is not None,
         )
 
         await self._sender.send(
@@ -164,13 +163,20 @@ def _build_quote_html(
     customer_name: str,
     recipient_name: str,
     total: str,
-    quote_url: str,
     from_company: str,
     custom_message: str | None,
+    has_pdf: bool,
 ) -> str:
     custom_block = (
         f'<p style="margin:0 0 16px;color:#374151;font-size:14px;">{custom_message}</p>'
         if custom_message
+        else ""
+    )
+    pdf_note = (
+        '<p style="margin:0;color:#374151;font-size:14px">'
+        "Encontrás el detalle completo en el <strong>PDF adjunto</strong> a este correo."
+        "</p>"
+        if has_pdf
         else ""
     )
     return f"""<!DOCTYPE html>
@@ -198,9 +204,7 @@ def _build_quote_html(
           {f'con el total de <strong style="color:#0f6e50">{total}</strong>.' if total else "."}
         </p>
         {'<div style="background:#f8fafc;border:1px solid #e2e6f0;border-radius:10px;padding:20px;margin-bottom:24px"><p style="margin:0 0 4px;font-size:12px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Total del presupuesto</p><p style="margin:0;font-size:28px;font-weight:bold;color:#0f6e50">' + total + "</p></div>" if total else ""}
-        <a href="{quote_url}" style="display:inline-block;background:#0f6e50;color:#fff;text-decoration:none;border-radius:8px;padding:12px 24px;font-size:14px;font-weight:600">
-          Ver presupuesto completo →
-        </a>
+        {pdf_note}
       </td>
     </tr>
     <tr>

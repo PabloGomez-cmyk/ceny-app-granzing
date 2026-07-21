@@ -46,6 +46,9 @@ export interface Product {
   technical_sheet_url: string | null;
   is_active: boolean;
   created_at: string;
+  sale_price_per_unit: number;
+  purchase_price_per_unit: number;
+  default_sale_unit: "SQUARE_METER" | "UNIT";
 }
 
 export interface CreateBrandInput {
@@ -92,6 +95,9 @@ export interface CreateProductInput {
   application_types: string[];
   compatible_glass_ids: string[];
   technical_sheet_url?: string | null;
+  sale_price_per_unit?: number;
+  purchase_price_per_unit?: number;
+  default_sale_unit?: "SQUARE_METER" | "UNIT";
 }
 
 export interface UpdateProductInput {
@@ -111,6 +117,9 @@ export interface UpdateProductInput {
   technical_sheet_url?: string | null;
   clear_technical_sheet?: boolean;
   is_active?: boolean;
+  sale_price_per_unit?: number;
+  purchase_price_per_unit?: number;
+  default_sale_unit?: "SQUARE_METER" | "UNIT";
 }
 
 // ── API ────────────────────────────────────────────────────────────────────────

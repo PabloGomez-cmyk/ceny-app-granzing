@@ -250,11 +250,11 @@ export default function OrdersPage() {
 
       {/* ── Barra de selección ──────────────────────────────────────────────── */}
       {someSelected && (
-        <div className="flex items-center gap-3 border-b border-red-100 bg-red-50 px-5 py-2.5">
+        <div className="flex flex-wrap items-center gap-3 border-b border-red-100 bg-red-50 px-4 py-2.5 sm:px-5">
           <span className="text-[13px] font-semibold text-red-700">
             {selected.size} presupuesto{selected.size !== 1 ? "s" : ""} seleccionado{selected.size !== 1 ? "s" : ""}
           </span>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="flex flex-1 flex-wrap items-center gap-2 sm:ml-auto sm:flex-initial">
             {/* Acciones para 1 seleccionado */}
             {selected.size === 1 && (() => {
               const selId = [...selected][0];
@@ -272,7 +272,8 @@ export default function OrdersPage() {
                     className="flex items-center gap-1.5 rounded-[8px] border border-[#dde4ee] bg-white px-3 py-1.5 text-[12px] font-semibold text-[#475569] hover:bg-[#f1f5f9]"
                   >
                     <Mail size={13} />
-                    Enviar por email
+                    <span className="hidden sm:inline">Enviar por email</span>
+                    <span className="sm:hidden">Email</span>
                   </button>
                 </>
               ) : null;
@@ -283,10 +284,11 @@ export default function OrdersPage() {
                 className="flex items-center gap-1.5 rounded-[8px] bg-red-600 px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-red-700"
               >
                 <Trash2 size={13} />
-                Eliminar seleccionados
+                <span className="hidden sm:inline">Eliminar seleccionados</span>
+                <span className="sm:hidden">Eliminar</span>
               </button>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[12px] font-medium text-red-700">¿Confirmar eliminación?</span>
                 <button
                   onClick={handleBulkDelete}
@@ -303,7 +305,7 @@ export default function OrdersPage() {
                 </button>
               </div>
             )}
-            <button onClick={clearSelection} className="flex h-7 w-7 items-center justify-center rounded-full text-red-400 hover:bg-red-100">
+            <button onClick={clearSelection} className="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-red-400 hover:bg-red-100 sm:ml-0">
               <X size={14} />
             </button>
           </div>
