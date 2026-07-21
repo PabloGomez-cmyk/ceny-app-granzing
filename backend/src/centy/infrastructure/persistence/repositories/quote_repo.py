@@ -41,8 +41,9 @@ def _line_to_domain(m: QuoteLineModel) -> QuoteLine:
         product_snapshot=m.product_snapshot,
         glass_pane_ids=list(m.glass_pane_ids),
         price_per_m2=Decimal(str(m.price_per_m2)),
-        surface_m2=Decimal(str(m.surface_m2)),
         subtotal=Decimal(str(m.subtotal)),
+        surface_m2=Decimal(str(m.surface_m2)) if m.surface_m2 is not None else None,
+        quantity=Decimal(str(m.quantity)) if m.quantity is not None else None,
     )
 
 
@@ -148,7 +149,12 @@ class SQLAlchemyQuoteRepository(IQuoteRepository):
                         product_snapshot=line.product_snapshot,
                         glass_pane_ids=line.glass_pane_ids,
                         price_per_m2=float(line.price_per_m2),
-                        surface_m2=float(line.surface_m2),
+                        surface_m2=float(line.surface_m2)
+                        if line.surface_m2 is not None
+                        else None,
+                        quantity=float(line.quantity)
+                        if line.quantity is not None
+                        else None,
                         subtotal=float(line.subtotal),
                     )
                 )
@@ -202,7 +208,12 @@ class SQLAlchemyQuoteRepository(IQuoteRepository):
                         product_snapshot=line.product_snapshot,
                         glass_pane_ids=line.glass_pane_ids,
                         price_per_m2=float(line.price_per_m2),
-                        surface_m2=float(line.surface_m2),
+                        surface_m2=float(line.surface_m2)
+                        if line.surface_m2 is not None
+                        else None,
+                        quantity=float(line.quantity)
+                        if line.quantity is not None
+                        else None,
                         subtotal=float(line.subtotal),
                     )
                 )

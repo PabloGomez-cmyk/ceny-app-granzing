@@ -29,5 +29,4 @@ class SendQuoteEmailCommand:
     recipient_email: str
     recipient_name: str | None
     custom_message: str | None
-    frontend_base_url: str
     pdf_base64: str | None = None

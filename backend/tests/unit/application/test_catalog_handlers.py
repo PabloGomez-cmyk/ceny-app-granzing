@@ -51,7 +51,7 @@ from centy.application.catalog.queries import (
     ListGlassTypesQuery,
     ListProductsQuery,
 )
-from centy.domain.shared.exceptions import NotFoundError
+from centy.domain.shared.exceptions import ConflictError, NotFoundError
 from centy.domain.shared.value_objects import TenantId
 from tests.conftest import FakeUnitOfWork
 
@@ -263,6 +263,21 @@ class TestDeleteBrandHandler:
                 DeleteBrandCommand(brand_id=uuid4(), tenant_id=tenant_id)
             )
 
+    async def test_marca_en_uso_por_producto_lanza_conflict(
+        self, uow: FakeUnitOfWork, tenant_id: TenantId
+    ) -> None:
+        brand = await CreateBrandHandler(uow).handle(
+            CreateBrandCommand(tenant_id=tenant_id, name="En uso", color="#000000")
+        )
+        await CreateProductHandler(uow).handle(
+            _product_cmd(tenant_id, brand_id=brand.brand_id)
+        )
+        with pytest.raises(ConflictError, match="productos"):
+            await DeleteBrandHandler(uow).handle(
+                DeleteBrandCommand(brand_id=brand.brand_id, tenant_id=tenant_id)
+            )
+        assert await uow.brands.get_by_id(brand.brand_id, tenant_id) is not None
+
 
 # ── ProductCategory handlers ──────────────────────────────────────────────────
 
@@ -396,6 +411,24 @@ class TestDeleteCategoryHandler:
             await DeleteCategoryHandler(uow).handle(
                 DeleteCategoryCommand(category_id=uuid4(), tenant_id=tenant_id)
             )
+
+    async def test_categoria_en_uso_por_producto_lanza_conflict(
+        self, uow: FakeUnitOfWork, tenant_id: TenantId
+    ) -> None:
+        cat = await CreateCategoryHandler(uow).handle(
+            CreateCategoryCommand(tenant_id=tenant_id, name="En uso")
+        )
+        await CreateProductHandler(uow).handle(
+            _product_cmd(tenant_id, category_id=cat.category_id)
+        )
+        with pytest.raises(ConflictError, match="productos"):
+            await DeleteCategoryHandler(uow).handle(
+                DeleteCategoryCommand(category_id=cat.category_id, tenant_id=tenant_id)
+            )
+        assert (
+            await uow.product_categories.get_by_id(cat.category_id, tenant_id)
+            is not None
+        )
 
 
 # ── GlassType handlers ────────────────────────────────────────────────────────

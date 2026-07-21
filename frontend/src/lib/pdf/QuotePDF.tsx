@@ -411,44 +411,56 @@ export function QuotePDFDocument({ quote, company }: Props) {
         </View>
 
         {/* ── TABLA VIDRIOS ─────────────────────────────────────────────── */}
-        <Text style={s.sectionTitle}>Detalle de vidrios</Text>
-        <View style={s.tableHeader}>
-          <Text style={[s.tableHeaderCell, s.cId]}>ID</Text>
-          <Text style={[s.tableHeaderCell, s.cTipo]}>Tipo</Text>
-          <Text style={[s.tableHeaderCell, s.cDim]}>Dimensiones</Text>
-          <Text style={[s.tableHeaderCell, s.cM2]}>m² c/u</Text>
-          <Text style={[s.tableHeaderCell, s.cQty]}>Cant.</Text>
-          <Text style={[s.tableHeaderCell, s.cM2T]}>m² total</Text>
-          <Text style={[s.tableHeaderCell, s.cUb]}>Ubic.</Text>
-        </View>
-        {quote.glass_panes.map((p, i) => (
-          <View key={p.pane_id} style={[s.tableRow, i % 2 === 1 ? s.tableRowAlt : {}]}>
-            <Text style={[s.tableCell, s.cId, { fontFamily: "Helvetica-Bold" }]}>{p.pane_id}</Text>
-            <Text style={[s.tableCell, s.cTipo]}>{p.glass_type_name}</Text>
-            <Text style={[s.tableCell, s.cDim]}>{p.width_cm} × {p.height_cm} cm</Text>
-            <Text style={[s.tableCell, s.cM2]}>{Number(p.surface_m2).toFixed(3)}</Text>
-            <Text style={[s.tableCell, s.cQty]}>{p.quantity}</Text>
-            <Text style={[s.tableCell, s.cM2T]}>{(Number(p.surface_m2) * p.quantity).toFixed(3)}</Text>
-            <Text style={[s.tableCell, s.cUb]}>{p.location === "ALTURA" ? "Altura" : "Sup."}</Text>
-          </View>
-        ))}
+        {quote.sale_type !== "AUTOMOTIVE" && (
+          <>
+            <Text style={s.sectionTitle}>Detalle de vidrios</Text>
+            <View style={s.tableHeader}>
+              <Text style={[s.tableHeaderCell, s.cId]}>ID</Text>
+              <Text style={[s.tableHeaderCell, s.cTipo]}>Tipo</Text>
+              <Text style={[s.tableHeaderCell, s.cDim]}>Dimensiones</Text>
+              <Text style={[s.tableHeaderCell, s.cM2]}>m² c/u</Text>
+              <Text style={[s.tableHeaderCell, s.cQty]}>Cant.</Text>
+              <Text style={[s.tableHeaderCell, s.cM2T]}>m² total</Text>
+              <Text style={[s.tableHeaderCell, s.cUb]}>Ubic.</Text>
+            </View>
+            {quote.glass_panes.map((p, i) => (
+              <View key={p.pane_id} style={[s.tableRow, i % 2 === 1 ? s.tableRowAlt : {}]}>
+                <Text style={[s.tableCell, s.cId, { fontFamily: "Helvetica-Bold" }]}>{p.pane_id}</Text>
+                <Text style={[s.tableCell, s.cTipo]}>{p.glass_type_name}</Text>
+                <Text style={[s.tableCell, s.cDim]}>{p.width_cm} × {p.height_cm} cm</Text>
+                <Text style={[s.tableCell, s.cM2]}>{Number(p.surface_m2).toFixed(3)}</Text>
+                <Text style={[s.tableCell, s.cQty]}>{p.quantity}</Text>
+                <Text style={[s.tableCell, s.cM2T]}>{(Number(p.surface_m2) * p.quantity).toFixed(3)}</Text>
+                <Text style={[s.tableCell, s.cUb]}>{p.location === "ALTURA" ? "Altura" : "Sup."}</Text>
+              </View>
+            ))}
+          </>
+        )}
 
         {/* ── TABLA MATERIALES ──────────────────────────────────────────── */}
         <Text style={s.sectionTitle}>Materiales / Láminas</Text>
         <View style={s.tableHeader}>
           <Text style={[s.tableHeaderCell, s.cProd]}>Producto</Text>
-          <Text style={[s.tableHeaderCell, s.cSup]}>Superficie (m²)</Text>
-          <Text style={[s.tableHeaderCell, s.cPUnit]}>Precio / m²</Text>
+          <Text style={[s.tableHeaderCell, s.cSup]}>
+            {quote.sale_type === "AUTOMOTIVE" ? "Cantidad" : "Superficie (m²)"}
+          </Text>
+          <Text style={[s.tableHeaderCell, s.cPUnit]}>
+            {quote.sale_type === "AUTOMOTIVE" ? "Precio / u." : "Precio / m²"}
+          </Text>
           <Text style={[s.tableHeaderCell, s.cSubt]}>Subtotal</Text>
         </View>
         {quote.lines.map((line, i) => {
           const linesnap = line.product_snapshot as Record<string, string | number>;
+          const qtyDisplay =
+            line.quantity != null
+              ? Number(line.quantity).toString()
+              : Number(line.surface_m2).toFixed(3);
           return (
             <View key={line.line_id} style={[s.tableRow, i % 2 === 1 ? s.tableRowAlt : {}]}>
               <Text style={[s.tableCell, s.cProd, { fontFamily: "Helvetica-Bold" }]}>
                 {String(linesnap.name ?? "")}
               </Text>
-              <Text style={[s.tableCell, s.cSup]}>{Number(line.surface_m2).toFixed(3)}</Text>
+              <Text style={[s.tableCell, s.cSup]}>{qtyDisplay}</Text>
               <Text style={[s.tableCell, s.cPUnit]}>{money(line.price_per_m2)}</Text>
               <Text style={[s.tableCell, s.cSubt, { fontFamily: "Helvetica-Bold" }]}>
                 {money(line.subtotal)}

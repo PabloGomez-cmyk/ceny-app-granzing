@@ -10,6 +10,11 @@ class ApplicationType(StrEnum):
     AUTOMOTIVE = "AUTOMOTIVE"
 
 
+class SaleUnit(StrEnum):
+    SQUARE_METER = "SQUARE_METER"
+    UNIT = "UNIT"
+
+
 @dataclass(frozen=True)
 class Percentage:
     """Porcentaje entre 0.00 y 100.00 inclusive."""

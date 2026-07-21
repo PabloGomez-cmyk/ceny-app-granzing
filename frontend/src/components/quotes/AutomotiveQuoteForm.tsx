@@ -18,8 +18,8 @@ const DEFAULT_CONDITIONS =
 interface LineEntry {
   key: string;
   product_id: string;
-  surface_m2: string;
-  price_per_m2: string;
+  quantity: string;
+  price_per_unit: string;
 }
 
 function fmt(n: number) {
@@ -62,10 +62,10 @@ export function AutomotiveQuoteForm({
       ? initialQuote.lines.map((l) => ({
           key: makeKey(),
           product_id: l.product_id,
-          surface_m2: String(l.surface_m2),
-          price_per_m2: String(l.price_per_m2),
+          quantity: String(l.quantity ?? ""),
+          price_per_unit: String(l.price_per_m2),
         }))
-      : [{ key: makeKey(), product_id: "", surface_m2: "", price_per_m2: "" }]
+      : [{ key: makeKey(), product_id: "", quantity: "", price_per_unit: "" }]
   );
   const [travelCost, setTravelCost] = useState(Number(initialQuote?.travel_cost ?? 0));
   const [discountPct, setDiscountPct] = useState(Number(initialQuote?.discount_pct ?? 0));
@@ -79,7 +79,7 @@ export function AutomotiveQuoteForm({
   }, [initialQuote, userData?.default_commercial_conditions]);
 
   function addLine() {
-    setLines((prev) => [...prev, { key: makeKey(), product_id: "", surface_m2: "", price_per_m2: "" }]);
+    setLines((prev) => [...prev, { key: makeKey(), product_id: "", quantity: "", price_per_unit: "" }]);
   }
 
   function removeLine(key: string) {
@@ -95,8 +95,10 @@ export function AutomotiveQuoteForm({
           const product = automotiveProducts.find((p) => p.id === patch.product_id);
           if (product) {
             const effective = priceByProduct[product.id];
-            const price = Number(effective ? effective.effective_sale_price : product.sale_price_per_m2);
-            next.price_per_m2 = String(price);
+            const price = Number(
+              effective ? effective.effective_sale_price_per_unit : product.sale_price_per_unit
+            );
+            next.price_per_unit = String(price);
           }
         }
         return next;
@@ -105,11 +107,11 @@ export function AutomotiveQuoteForm({
   }
 
   const validLines = lines.filter(
-    (l) => l.product_id && parseFloat(l.surface_m2) > 0 && parseFloat(l.price_per_m2) >= 0
+    (l) => l.product_id && parseFloat(l.quantity) > 0 && parseFloat(l.price_per_unit) >= 0
   );
 
   const materialsSub = validLines.reduce(
-    (s, l) => s + parseFloat(l.surface_m2) * parseFloat(l.price_per_m2),
+    (s, l) => s + parseFloat(l.quantity) * parseFloat(l.price_per_unit),
     0
   );
   const subtotal = materialsSub + travelCost;
@@ -142,10 +144,12 @@ export function AutomotiveQuoteForm({
       const product = automotiveProducts.find((p) => p.id === l.product_id)!;
       const effective = priceByProduct[product.id];
       const cost = Number(
-        effective ? effective.effective_purchase_price : product.purchase_price_per_m2
+        effective
+          ? effective.effective_purchase_price_per_unit
+          : product.purchase_price_per_unit
       );
-      const surface = Math.round(parseFloat(l.surface_m2) * 10000) / 10000;
-      const price = parseFloat(l.price_per_m2);
+      const quantity = Math.round(parseFloat(l.quantity) * 100) / 100;
+      const price = parseFloat(l.price_per_unit);
       return {
         product_id: product.id,
         product_snapshot: {
@@ -155,12 +159,13 @@ export function AutomotiveQuoteForm({
           price_per_m2: price,
           uv_pct: product.uv_percentage,
           irr_pct: product.irr_percentage,
-          purchase_price_per_m2: cost,
+          purchase_price_per_unit: cost,
         },
         glass_pane_ids: [],
         price_per_m2: price,
-        surface_m2: surface,
-        subtotal: Math.round(surface * price * 100) / 100,
+        surface_m2: null,
+        quantity,
+        subtotal: Math.round(quantity * price * 100) / 100,
       };
     });
 
@@ -229,8 +234,8 @@ export function AutomotiveQuoteForm({
         <div className="space-y-3">
           {lines.map((line) => {
             const product = automotiveProducts.find((p) => p.id === line.product_id);
-            const surface = parseFloat(line.surface_m2) || 0;
-            const price = parseFloat(line.price_per_m2) || 0;
+            const quantity = parseFloat(line.quantity) || 0;
+            const price = parseFloat(line.price_per_unit) || 0;
             return (
               <div key={line.key} className="grid grid-cols-1 gap-2 rounded-[10px] border border-[#f1f5f9] p-3 sm:grid-cols-[1fr_110px_130px_28px] sm:items-end">
                 <div>
@@ -247,25 +252,25 @@ export function AutomotiveQuoteForm({
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-[11px] font-medium text-[#64748b]">m²</label>
+                  <label className="mb-1 block text-[11px] font-medium text-[#64748b]">Cantidad</label>
                   <input
                     type="number"
                     min={0}
-                    step="0.01"
-                    value={line.surface_m2}
-                    onChange={(e) => updateLine(line.key, { surface_m2: e.target.value })}
-                    placeholder="1.50"
+                    step="1"
+                    value={line.quantity}
+                    onChange={(e) => updateLine(line.key, { quantity: e.target.value })}
+                    placeholder="1"
                     className="w-full rounded-[8px] border border-[#dde4ee] bg-white px-2 py-2 text-[12px] text-[#0f172a] focus:border-[#d9622c] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-[11px] font-medium text-[#64748b]">Precio $/m²</label>
+                  <label className="mb-1 block text-[11px] font-medium text-[#64748b]">Precio $/unidad</label>
                   <input
                     type="number"
                     min={0}
                     step="0.01"
-                    value={line.price_per_m2}
-                    onChange={(e) => updateLine(line.key, { price_per_m2: e.target.value })}
+                    value={line.price_per_unit}
+                    onChange={(e) => updateLine(line.key, { price_per_unit: e.target.value })}
                     className="w-full rounded-[8px] border border-[#dde4ee] bg-white px-2 py-2 text-[12px] text-[#0f172a] focus:border-[#d9622c] focus:outline-none"
                   />
                 </div>
@@ -278,9 +283,9 @@ export function AutomotiveQuoteForm({
                 >
                   <Trash2 size={14} />
                 </button>
-                {product && surface > 0 && price > 0 && (
+                {product && quantity > 0 && price > 0 && (
                   <div className="sm:col-span-4 text-right text-[11px] text-[#94a3b8]">
-                    Subtotal: <span className="font-semibold text-[#0f172a]">{fmt(surface * price)}</span>
+                    Subtotal: <span className="font-semibold text-[#0f172a]">{fmt(quantity * price)}</span>
                   </div>
                 )}
               </div>

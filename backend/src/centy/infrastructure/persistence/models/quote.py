@@ -91,5 +91,6 @@ class QuoteLineModel(Base):
     product_snapshot: Mapped[dict] = mapped_column(JSONB, nullable=False)
     glass_pane_ids: Mapped[list[str]] = mapped_column(ARRAY(String(10)), nullable=False)
     price_per_m2: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
-    surface_m2: Mapped[float] = mapped_column(Numeric(10, 4), nullable=False)
+    surface_m2: Mapped[float | None] = mapped_column(Numeric(10, 4), nullable=True)
+    quantity: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
     subtotal: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)

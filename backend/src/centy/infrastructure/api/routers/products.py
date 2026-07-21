@@ -157,6 +157,9 @@ class ProductResponse(BaseModel):
     technical_sheet_url: str | None
     is_active: bool
     created_at: str
+    sale_price_per_unit: Decimal
+    purchase_price_per_unit: Decimal
+    default_sale_unit: str
 
 
 class CreateProductBody(BaseModel):
@@ -174,6 +177,9 @@ class CreateProductBody(BaseModel):
     application_types: list[str] = Field(..., min_length=1)
     compatible_glass_ids: list[UUID] = Field(default_factory=list)
     technical_sheet_url: str | None = None
+    sale_price_per_unit: Decimal = Field(Decimal("0"), ge=Decimal("0"))
+    purchase_price_per_unit: Decimal = Field(Decimal("0"), ge=Decimal("0"))
+    default_sale_unit: str = "SQUARE_METER"
 
 
 class UpdateProductBody(BaseModel):
@@ -193,6 +199,9 @@ class UpdateProductBody(BaseModel):
     technical_sheet_url: str | None = None
     clear_technical_sheet: bool = False
     is_active: bool | None = None
+    sale_price_per_unit: Decimal | None = Field(None, ge=Decimal("0"))
+    purchase_price_per_unit: Decimal | None = Field(None, ge=Decimal("0"))
+    default_sale_unit: str | None = None
 
 
 # ── Brand routes ──────────────────────────────────────────────────────────────
@@ -509,6 +518,9 @@ async def create_product(
             application_types=body.application_types,
             compatible_glass_ids=body.compatible_glass_ids,
             technical_sheet_url=body.technical_sheet_url,
+            sale_price_per_unit=body.sale_price_per_unit,
+            purchase_price_per_unit=body.purchase_price_per_unit,
+            default_sale_unit=body.default_sale_unit,
         )
     )
     return _to_product_response(result)
@@ -556,6 +568,9 @@ async def update_product(
             technical_sheet_url=body.technical_sheet_url,
             clear_technical_sheet=body.clear_technical_sheet,
             is_active=body.is_active,
+            sale_price_per_unit=body.sale_price_per_unit,
+            purchase_price_per_unit=body.purchase_price_per_unit,
+            default_sale_unit=body.default_sale_unit,
         )
     )
     return _to_product_response(result)
@@ -595,4 +610,7 @@ def _to_product_response(r: object) -> ProductResponse:
         technical_sheet_url=r.technical_sheet_url,  # type: ignore[attr-defined]
         is_active=r.is_active,  # type: ignore[attr-defined]
         created_at=r.created_at,  # type: ignore[attr-defined]
+        sale_price_per_unit=r.sale_price_per_unit,  # type: ignore[attr-defined]
+        purchase_price_per_unit=r.purchase_price_per_unit,  # type: ignore[attr-defined]
+        default_sale_unit=r.default_sale_unit,  # type: ignore[attr-defined]
     )

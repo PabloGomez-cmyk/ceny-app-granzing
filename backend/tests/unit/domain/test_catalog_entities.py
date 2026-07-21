@@ -9,7 +9,7 @@ from uuid import uuid4
 import pytest
 
 from centy.domain.catalog.entities import Brand, GlassType, Product, ProductCategory
-from centy.domain.catalog.value_objects import ApplicationType, Percentage
+from centy.domain.catalog.value_objects import ApplicationType, Percentage, SaleUnit
 from centy.domain.shared.exceptions import BusinessRuleViolationError, ValidationError
 from centy.domain.shared.value_objects import TenantId
 
@@ -425,6 +425,30 @@ class TestProductCreate:
         )
         assert p.purchase_price_per_m2.amount > p.sale_price_per_m2.amount
 
+    def test_default_sale_unit_por_defecto_es_square_meter(self) -> None:
+        p = make_product()
+        assert p.default_sale_unit == SaleUnit.SQUARE_METER
+
+    def test_crea_con_precio_por_unidad(self) -> None:
+        p = make_product(
+            application_types=["AUTOMOTIVE"],
+            sale_price_per_unit=Decimal("15000"),
+            purchase_price_per_unit=Decimal("9000"),
+            default_sale_unit="UNIT",
+        )
+        assert p.sale_price_per_unit.amount == Decimal("15000")
+        assert p.purchase_price_per_unit.amount == Decimal("9000")
+        assert p.default_sale_unit == SaleUnit.UNIT
+
+    def test_default_sale_unit_invalido_lanza_error(self) -> None:
+        with pytest.raises(ValidationError, match="Unidad de venta"):
+            make_product(default_sale_unit="LITERS")
+
+    def test_precio_por_unidad_default_es_cero(self) -> None:
+        p = make_product()
+        assert p.sale_price_per_unit.amount == Decimal("0")
+        assert p.purchase_price_per_unit.amount == Decimal("0")
+
 
 # ── Product.update ────────────────────────────────────────────────────────────
 
@@ -476,6 +500,22 @@ class TestProductUpdate:
         p = make_product()
         p.update(technical_sheet_url="https://cdn.example.com/sheet.pdf")
         assert p.technical_sheet_url == "https://cdn.example.com/sheet.pdf"
+
+    def test_actualiza_precio_por_unidad(self) -> None:
+        p = make_product()
+        p.update(
+            sale_price_per_unit=Decimal("15000"),
+            purchase_price_per_unit=Decimal("9000"),
+            default_sale_unit="UNIT",
+        )
+        assert p.sale_price_per_unit.amount == Decimal("15000")
+        assert p.purchase_price_per_unit.amount == Decimal("9000")
+        assert p.default_sale_unit == SaleUnit.UNIT
+
+    def test_actualiza_default_sale_unit_invalido_lanza_error(self) -> None:
+        p = make_product()
+        with pytest.raises(ValidationError, match="Unidad de venta"):
+            p.update(default_sale_unit="LITERS")
 
     def test_clear_technical_sheet(self) -> None:
         p = make_product(technical_sheet_url="https://cdn.example.com/sheet.pdf")

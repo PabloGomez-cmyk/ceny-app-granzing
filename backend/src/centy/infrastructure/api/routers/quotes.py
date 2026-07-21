@@ -77,8 +77,9 @@ class QuoteLineBody(BaseModel):
     product_snapshot: dict
     glass_pane_ids: list[str]
     price_per_m2: Decimal = Field(..., ge=0)
-    surface_m2: Decimal = Field(..., ge=0)
     subtotal: Decimal = Field(..., ge=0)
+    surface_m2: Decimal | None = Field(None, ge=0)
+    quantity: Decimal | None = Field(None, ge=0)
 
 
 class CreateQuoteBody(BaseModel):
@@ -99,7 +100,9 @@ class CreateQuoteBody(BaseModel):
 
 
 class UpdateStatusBody(BaseModel):
-    status: str = Field(..., pattern="^(SENT|ACCEPTED|INVOICED|COMPLETED|CANCELLED)$")
+    status: str = Field(
+        ..., pattern="^(DRAFT|SENT|ACCEPTED|INVOICED|COMPLETED|CANCELLED)$"
+    )
 
 
 class UserQuoteStatResponse(BaseModel):
@@ -142,8 +145,9 @@ class QuoteLineResponse(BaseModel):
     product_snapshot: dict
     glass_pane_ids: list[str]
     price_per_m2: Decimal
-    surface_m2: Decimal
     subtotal: Decimal
+    surface_m2: Decimal | None
+    quantity: Decimal | None
 
 
 class QuoteTotalsResponse(BaseModel):
@@ -268,8 +272,9 @@ async def create_quote(
                     product_snapshot=line.product_snapshot,
                     glass_pane_ids=line.glass_pane_ids,
                     price_per_m2=line.price_per_m2,
-                    surface_m2=line.surface_m2,
                     subtotal=line.subtotal,
+                    surface_m2=line.surface_m2,
+                    quantity=line.quantity,
                 )
                 for line in body.lines
             ],
@@ -396,8 +401,9 @@ async def update_quote(
                     product_snapshot=line.product_snapshot,
                     glass_pane_ids=line.glass_pane_ids,
                     price_per_m2=line.price_per_m2,
-                    surface_m2=line.surface_m2,
                     subtotal=line.subtotal,
+                    surface_m2=line.surface_m2,
+                    quantity=line.quantity,
                 )
                 for line in body.lines
             ],

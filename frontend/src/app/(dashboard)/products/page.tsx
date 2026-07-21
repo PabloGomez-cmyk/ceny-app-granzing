@@ -57,6 +57,20 @@ function ActiveBadge({ active }: { active: boolean }) {
   );
 }
 
+function formatProductPrice(
+  product: Product,
+  effectivePricePerM2?: number,
+  effectivePricePerUnit?: number
+): string {
+  if (product.default_sale_unit === "UNIT") {
+    const price = effectivePricePerUnit ?? product.sale_price_per_unit;
+    if (!price) return "Sin precio configurado";
+    return `$${Number(price).toLocaleString("es-AR", { minimumFractionDigits: 2 })}/u.`;
+  }
+  const price = effectivePricePerM2 ?? product.sale_price_per_m2;
+  return `$${Number(price).toLocaleString("es-AR", { minimumFractionDigits: 2 })}/m²`;
+}
+
 function BrandChip({ brand }: { brand: Brand | undefined }) {
   if (!brand) return <span className="text-[12px] text-[#cbd5e1]">—</span>;
   return (
@@ -110,6 +124,7 @@ function ProductRow({
   category,
   onClick,
   effectivePrice,
+  effectivePricePerUnit,
   tourAnchor,
 }: {
   product: Product;
@@ -117,6 +132,7 @@ function ProductRow({
   category: ProductCategory | undefined;
   onClick: () => void;
   effectivePrice?: number;
+  effectivePricePerUnit?: number;
   tourAnchor?: boolean;
 }) {
   return (
@@ -163,7 +179,7 @@ function ProductRow({
         className="px-3 py-3 text-right text-[13px] font-bold text-[#d9622c]"
         data-tour={tourAnchor ? "products-price" : undefined}
       >
-        ${Number(effectivePrice ?? product.sale_price_per_m2).toLocaleString("es-AR", { minimumFractionDigits: 2 })}/m²
+        {formatProductPrice(product, effectivePrice, effectivePricePerUnit)}
       </td>
       <td className="px-3 py-3">
         <ActiveBadge active={product.is_active} />
@@ -183,6 +199,7 @@ function ProductCard({
   category,
   onClick,
   effectivePrice,
+  effectivePricePerUnit,
   tourAnchor,
 }: {
   product: Product;
@@ -190,6 +207,7 @@ function ProductCard({
   category: ProductCategory | undefined;
   onClick: () => void;
   effectivePrice?: number;
+  effectivePricePerUnit?: number;
   tourAnchor?: boolean;
 }) {
   return (
@@ -225,7 +243,7 @@ function ProductCard({
           className="text-[13px] font-bold text-[#d9622c]"
           data-tour={tourAnchor ? "products-price" : undefined}
         >
-          ${Number(effectivePrice ?? product.sale_price_per_m2).toLocaleString("es-AR", { minimumFractionDigits: 2 })}/m²
+          {formatProductPrice(product, effectivePrice, effectivePricePerUnit)}
         </span>
       </div>
     </div>
@@ -248,6 +266,10 @@ export default function ProductsPage() {
   const { data: priceList = [] } = useEffectivePriceList(userId);
   const priceByProduct = useMemo(
     () => Object.fromEntries(priceList.map((i) => [i.product_id, i.effective_sale_price])),
+    [priceList]
+  );
+  const priceByProductPerUnit = useMemo(
+    () => Object.fromEntries(priceList.map((i) => [i.product_id, i.effective_sale_price_per_unit])),
     [priceList]
   );
 
@@ -411,6 +433,7 @@ export default function ProductsPage() {
                       category={categoriesMap.get(product.category_id)}
                       onClick={() => (window.location.href = `/products/${product.id}`)}
                       effectivePrice={priceByProduct[product.id]}
+                      effectivePricePerUnit={priceByProductPerUnit[product.id]}
                       tourAnchor={i === 0}
                     />
                   ))
@@ -436,6 +459,7 @@ export default function ProductsPage() {
                   category={categoriesMap.get(product.category_id)}
                   onClick={() => (window.location.href = `/products/${product.id}`)}
                   effectivePrice={priceByProduct[product.id]}
+                  effectivePricePerUnit={priceByProductPerUnit[product.id]}
                   tourAnchor={i === 0}
                 />
               ))

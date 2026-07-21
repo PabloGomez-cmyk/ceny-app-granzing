@@ -12,6 +12,12 @@ export interface EffectivePriceItem {
   effective_sale_price: number;
   has_purchase_override: boolean;
   has_sale_override: boolean;
+  catalog_purchase_price_per_unit: number;
+  catalog_sale_price_per_unit: number;
+  effective_purchase_price_per_unit: number;
+  effective_sale_price_per_unit: number;
+  has_purchase_override_per_unit: boolean;
+  has_sale_override_per_unit: boolean;
 }
 
 export interface SetPriceOverrideInput {
@@ -20,6 +26,10 @@ export interface SetPriceOverrideInput {
   sale_price?: number | null;
   clear_purchase_price?: boolean;
   clear_sale_price?: boolean;
+  purchase_price_per_unit?: number | null;
+  sale_price_per_unit?: number | null;
+  clear_purchase_price_per_unit?: boolean;
+  clear_sale_price_per_unit?: boolean;
 }
 
 export interface PriceListItemResult {
@@ -27,6 +37,8 @@ export interface PriceListItemResult {
   product_id: string;
   purchase_price: number | null;
   sale_price: number | null;
+  purchase_price_per_unit: number | null;
+  sale_price_per_unit: number | null;
 }
 
 // ── API ────────────────────────────────────────────────────────────────────────

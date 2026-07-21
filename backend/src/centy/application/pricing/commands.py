@@ -16,6 +16,10 @@ class SetPriceOverrideCommand:
     sale_price: Decimal | None = None
     clear_purchase_price: bool = False
     clear_sale_price: bool = False
+    purchase_price_per_unit: Decimal | None = None
+    sale_price_per_unit: Decimal | None = None
+    clear_purchase_price_per_unit: bool = False
+    clear_sale_price_per_unit: bool = False
 
 
 @dataclass(frozen=True)

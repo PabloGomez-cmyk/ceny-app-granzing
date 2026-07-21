@@ -26,8 +26,9 @@ export interface QuoteLine {
   product_snapshot: Record<string, unknown>;
   glass_pane_ids: string[];
   price_per_m2: number;
-  surface_m2: number;
   subtotal: number;
+  surface_m2: number | null;
+  quantity: number | null;
 }
 
 export interface QuoteTotals {
@@ -85,8 +86,9 @@ export interface QuoteLineInput {
   product_snapshot: Record<string, unknown>;
   glass_pane_ids: string[];
   price_per_m2: number;
-  surface_m2: number;
   subtotal: number;
+  surface_m2?: number | null;
+  quantity?: number | null;
 }
 
 export interface CreateQuoteInput {

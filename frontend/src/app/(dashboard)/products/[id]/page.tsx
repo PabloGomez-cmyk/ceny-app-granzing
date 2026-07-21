@@ -207,6 +207,52 @@ export default function ProductDetailPage() {
           </p>
         </div>
 
+        {/* ── Price per unit (automotriz) ────────────────────────────────── */}
+        {product.application_types.includes("AUTOMOTIVE") && (
+          <div className="rounded-[14px] border border-[#e8ecf2] bg-white p-6">
+            <p className="mb-4 flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wide text-[#94a3b8]">
+              <Car size={13} className="text-[#d9622c]" />
+              Precio por unidad (automotriz)
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">
+                  Precio de venta sugerido
+                  {myPrice?.has_sale_override_per_unit && (
+                    <span className="ml-1.5 rounded-full bg-[#fbeee1] px-1.5 py-0.5 text-[9px] font-semibold normal-case text-[#d9622c]">
+                      Personalizado
+                    </span>
+                  )}
+                </p>
+                <p className="mt-1 text-[28px] font-bold text-[#d9622c]">
+                  ${Number(myPrice?.effective_sale_price_per_unit ?? product.sale_price_per_unit).toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+                  <span className="ml-1 text-[14px] font-normal text-[#94a3b8]">/u.</span>
+                </p>
+                {Number(myPrice?.effective_sale_price_per_unit ?? product.sale_price_per_unit) === 0 && (
+                  <p className="mt-1 text-[11px] font-medium text-amber-600">Sin precio configurado</p>
+                )}
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">
+                  Costo de compra
+                  {myPrice?.has_purchase_override_per_unit && (
+                    <span className="ml-1.5 rounded-full bg-[#fbeee1] px-1.5 py-0.5 text-[9px] font-semibold normal-case text-[#d9622c]">
+                      Personalizado
+                    </span>
+                  )}
+                </p>
+                <p className="mt-1 text-[28px] font-bold text-[#475569]">
+                  ${Number(myPrice?.effective_purchase_price_per_unit ?? product.purchase_price_per_unit).toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+                  <span className="ml-1 text-[14px] font-normal text-[#94a3b8]">/u.</span>
+                </p>
+                {Number(myPrice?.effective_purchase_price_per_unit ?? product.purchase_price_per_unit) === 0 && (
+                  <p className="mt-1 text-[11px] font-medium text-amber-600">Sin costo configurado</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ── Compatible glass ─────────────────────────────────────────────── */}
         {compatibleGlass.length > 0 && (
           <div className="rounded-[14px] border border-[#e8ecf2] bg-white p-6">

@@ -34,7 +34,7 @@ from centy.application.ports.repositories import (
 )
 from centy.application.ports.unit_of_work import IUnitOfWork
 from centy.domain.catalog.entities import Brand, GlassType, Product, ProductCategory
-from centy.domain.shared.exceptions import NotFoundError
+from centy.domain.shared.exceptions import ConflictError, NotFoundError
 
 # ── Result dataclasses ────────────────────────────────────────────────────────
 
@@ -85,6 +85,9 @@ class ProductResult:
     technical_sheet_url: str | None
     is_active: bool
     created_at: str
+    sale_price_per_unit: Decimal
+    purchase_price_per_unit: Decimal
+    default_sale_unit: str
 
 
 # ── Mappers ───────────────────────────────────────────────────────────────────
@@ -139,6 +142,9 @@ def _product_result(p: Product) -> ProductResult:
         technical_sheet_url=p.technical_sheet_url,
         is_active=p.is_active,
         created_at=p.created_at.isoformat(),
+        sale_price_per_unit=p.sale_price_per_unit.amount,
+        purchase_price_per_unit=p.purchase_price_per_unit.amount,
+        default_sale_unit=p.default_sale_unit.value,
     )
 
 
@@ -211,6 +217,12 @@ class DeleteBrandHandler:
             brand = await uow.brands.get_by_id(command.brand_id, command.tenant_id)
             if brand is None:
                 raise NotFoundError(f"Marca {command.brand_id} no encontrada")
+            products = await uow.products.list_by_tenant(command.tenant_id)
+            if any(p.brand_id == command.brand_id for p in products):
+                raise ConflictError(
+                    "No se puede eliminar la marca porque hay productos que la "
+                    "usan. Reasigná o eliminá esos productos primero."
+                )
             await uow.brands.delete(command.brand_id, command.tenant_id)
             await uow.commit()
 
@@ -282,6 +294,12 @@ class DeleteCategoryHandler:
             )
             if cat is None:
                 raise NotFoundError(f"Categoría {command.category_id} no encontrada")
+            products = await uow.products.list_by_tenant(command.tenant_id)
+            if any(p.category_id == command.category_id for p in products):
+                raise ConflictError(
+                    "No se puede eliminar la categoría porque hay productos que "
+                    "la usan. Reasigná o eliminá esos productos primero."
+                )
             await uow.product_categories.delete(command.category_id, command.tenant_id)
             await uow.commit()
 
@@ -386,6 +404,9 @@ class CreateProductHandler:
                 application_types=command.application_types,
                 compatible_glass_ids=command.compatible_glass_ids,
                 technical_sheet_url=command.technical_sheet_url,
+                sale_price_per_unit=command.sale_price_per_unit,
+                purchase_price_per_unit=command.purchase_price_per_unit,
+                default_sale_unit=command.default_sale_unit,
             )
             await uow.products.save(product)
             await uow.commit()
@@ -444,6 +465,9 @@ class UpdateProductHandler:
                 compatible_glass_ids=command.compatible_glass_ids,
                 technical_sheet_url=command.technical_sheet_url,
                 clear_technical_sheet=command.clear_technical_sheet,
+                sale_price_per_unit=command.sale_price_per_unit,
+                purchase_price_per_unit=command.purchase_price_per_unit,
+                default_sale_unit=command.default_sale_unit,
             )
             await uow.products.save(product)
             await uow.commit()

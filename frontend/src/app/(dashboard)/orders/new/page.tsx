@@ -267,11 +267,11 @@ function StepBar({ step }: { step: 1 | 2 | 3 }) {
         const active = s.n === step;
         return (
           <div key={s.n} className="flex items-center gap-2">
-            <div className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-semibold ${done ? "bg-emerald-100 text-emerald-700" : active ? "bg-[#d9622c] text-white" : "bg-[#f1f5f9] text-[#94a3b8]"}`}>
+            <div className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold sm:px-3 ${done ? "bg-emerald-100 text-emerald-700" : active ? "bg-[#d9622c] text-white" : "bg-[#f1f5f9] text-[#94a3b8]"}`}>
               {done ? <Check size={11} /> : <span className="text-[11px]">{s.n}</span>}
-              {s.label}
+              <span className="hidden sm:inline">{s.label}</span>
             </div>
-            {i < steps.length - 1 && <ArrowRight size={12} className="text-[#cbd5e1]" />}
+            {i < steps.length - 1 && <ArrowRight size={12} className="hidden text-[#cbd5e1] sm:block" />}
           </div>
         );
       })}
@@ -918,6 +918,7 @@ function Step3({
   const totals = calcTotals(lines, glassPanes, heightSurchargePct, travelCost, discountPct, taxPct);
   const totalM2 = glassPanes.reduce((s, p) => s + (p.width_cm / 100) * (p.height_cm / 100) * p.quantity, 0);
   const selectedCustomer = customers.find((c) => c.id === customerId);
+  const [cutPlanOpen, setCutPlanOpen] = useState(false);
 
   function updatePrice(productId: string, newPrice: number) {
     setLines(
@@ -1182,8 +1183,12 @@ function Step3({
       {/* Cut plan */}
       {cutPlan.materials.length > 0 && (
         <div className="rounded-[14px] border border-[#e8ecf2] bg-white p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-[14px] font-semibold text-[#0f172a]">
+          <button
+            type="button"
+            onClick={() => setCutPlanOpen((o) => !o)}
+            className={`flex w-full flex-wrap items-center justify-between gap-3 text-left ${cutPlanOpen ? "mb-4" : ""}`}
+          >
+            <span className="flex items-center gap-2 text-[14px] font-semibold text-[#0f172a]">
               <Scissors size={15} className="text-purple-600" />
               Cálculo de Cortes
               {cutPlan.materials.length > 1 && (
@@ -1191,22 +1196,31 @@ function Step3({
                   {cutPlan.materials.length} Materiales
                 </span>
               )}
-            </div>
-            <div className="flex items-center gap-2">
-              <label className="text-[11px] font-medium text-[#64748b]">Espacio entre cortes (cm)</label>
-              <input
-                type="number"
-                min={0}
-                max={20}
-                step={0.5}
-                value={gapCm}
-                onChange={(e) => setGapCm(Math.max(0, parseFloat(e.target.value) || 0))}
-                className="w-16 rounded-[8px] border border-[#dde4ee] bg-white px-2 py-1 text-[12px] font-medium text-[#0f172a] focus:border-purple-400 focus:outline-none text-center"
+            </span>
+            <span className="flex items-center gap-2">
+              <label
+                className="flex items-center gap-2 text-[11px] font-medium text-[#64748b]"
+                onClick={(e) => e.stopPropagation()}
+              >
+                Espacio entre cortes (cm)
+                <input
+                  type="number"
+                  min={0}
+                  max={20}
+                  step={0.5}
+                  value={gapCm}
+                  onChange={(e) => setGapCm(Math.max(0, parseFloat(e.target.value) || 0))}
+                  className="w-16 rounded-[8px] border border-[#dde4ee] bg-white px-2 py-1 text-[12px] font-medium text-[#0f172a] focus:border-purple-400 focus:outline-none text-center"
+                />
+              </label>
+              <ChevronDown
+                size={16}
+                className={`text-[#94a3b8] transition-transform ${cutPlanOpen ? "rotate-180" : ""}`}
               />
-            </div>
-          </div>
+            </span>
+          </button>
 
-          {cutPlan.materials.map((mat, mi) => {
+          {cutPlanOpen && cutPlan.materials.map((mat, mi) => {
             const matPaneIds = lines.find((l) => l.product_id === mat.product_id)?.glass_pane_ids ?? [];
             return (
               <div key={mat.product_id} className={mi > 0 ? "mt-5 border-t border-[#f1f5f9] pt-5" : ""}>
@@ -1241,7 +1255,7 @@ function Step3({
             );
           })}
 
-          {cutPlan.materials.some((m) => m.cuts.some((r) => r.pieces.some((p) => p.pano_total && p.pano_total > 1))) && (
+          {cutPlanOpen && cutPlan.materials.some((m) => m.cuts.some((r) => r.pieces.some((p) => p.pano_total && p.pano_total > 1))) && (
             <div className="mt-3 flex items-center gap-2 rounded-[8px] bg-amber-50 px-3 py-2 text-[12px] text-amber-700">
               <AlertTriangle size={13} />
               Algunos vidrios superan el ancho del rollo y serán divididos en paños.
@@ -1489,15 +1503,15 @@ export default function NewQuotePage() {
   return (
     <div className="flex min-h-screen flex-col bg-[#f0f4f8]">
       {/* Header */}
-      <header className="flex items-center gap-4 bg-white px-5 py-4 border-b border-[#e8ecf2]">
+      <header className="flex flex-wrap items-center gap-3 bg-white px-4 py-4 border-b border-[#e8ecf2] sm:gap-4 sm:px-5">
         <Link
           href="/orders"
-          className="flex h-8 w-8 items-center justify-center rounded-[8px] border border-[#e8ecf2] text-[#64748b] hover:bg-[#f1f5f9]"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] border border-[#e8ecf2] text-[#64748b] hover:bg-[#f1f5f9]"
         >
           <ArrowLeft size={15} />
         </Link>
-        <div>
-          <h1 className="text-[17px] font-bold text-[#0f172a]">Nuevo Presupuesto</h1>
+        <div className="min-w-0">
+          <h1 className="truncate text-[17px] font-bold text-[#0f172a]">Nuevo Presupuesto</h1>
           <p className="text-[12px] text-[#94a3b8]">Crear cotización de instalación</p>
         </div>
         <div className="ml-auto">

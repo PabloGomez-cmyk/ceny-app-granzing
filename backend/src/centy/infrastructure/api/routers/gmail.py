@@ -27,7 +27,6 @@ from centy.infrastructure.api.dependencies import (
     get_send_quote_email_handler,
     get_session,
 )
-from centy.infrastructure.config.settings import Settings, get_settings
 
 router = APIRouter(tags=["gmail"])
 
@@ -110,7 +109,6 @@ async def send_quote_email(
     body: SendQuoteEmailBody,
     current_user: CurrentUser = Depends(get_current_user),
     handler: SendQuoteEmailHandler = Depends(get_send_quote_email_handler),
-    settings: Settings = Depends(get_settings),
     session: AsyncSession = Depends(get_session),
 ) -> None:
     cmd = SendQuoteEmailCommand(
@@ -120,7 +118,6 @@ async def send_quote_email(
         recipient_email=str(body.recipient_email),
         recipient_name=body.recipient_name,
         custom_message=body.custom_message,
-        frontend_base_url=settings.frontend_base_url,
         pdf_base64=body.pdf_base64,
     )
     await handler.handle(cmd)

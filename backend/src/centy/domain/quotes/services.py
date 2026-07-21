@@ -68,8 +68,13 @@ class QuoteCalculator:
         """
         total = Decimal("0")
         for line in quote.lines:
-            cost = line.product_snapshot.get("purchase_price_per_m2")
-            if cost is None:
+            is_unit_line = line.quantity is not None
+            cost_key = (
+                "purchase_price_per_unit" if is_unit_line else "purchase_price_per_m2"
+            )
+            qty = line.quantity if is_unit_line else line.surface_m2
+            cost = line.product_snapshot.get(cost_key)
+            if cost is None or qty is None:
                 return None
-            total += (line.price_per_m2 - Decimal(str(cost))) * line.surface_m2
+            total += (line.price_per_m2 - Decimal(str(cost))) * qty
         return total.quantize(Decimal("0.01"))

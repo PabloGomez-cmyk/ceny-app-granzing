@@ -29,6 +29,12 @@ class EffectivePriceItemResult:
     effective_sale_price: Decimal
     has_purchase_override: bool
     has_sale_override: bool
+    catalog_purchase_price_per_unit: Decimal
+    catalog_sale_price_per_unit: Decimal
+    effective_purchase_price_per_unit: Decimal
+    effective_sale_price_per_unit: Decimal
+    has_purchase_override_per_unit: bool
+    has_sale_override_per_unit: bool
 
 
 @dataclass(frozen=True)
@@ -37,6 +43,8 @@ class PriceListItemResult:
     product_id: UUID
     purchase_price: Decimal | None
     sale_price: Decimal | None
+    purchase_price_per_unit: Decimal | None
+    sale_price_per_unit: Decimal | None
 
 
 def _assert_self_or_admin(
@@ -54,6 +62,12 @@ def _item_result(item: PriceListItem) -> PriceListItemResult:
         product_id=item.product_id,
         purchase_price=item.purchase_price.amount if item.purchase_price else None,
         sale_price=item.sale_price.amount if item.sale_price else None,
+        purchase_price_per_unit=item.purchase_price_per_unit.amount
+        if item.purchase_price_per_unit
+        else None,
+        sale_price_per_unit=item.sale_price_per_unit.amount
+        if item.sale_price_per_unit
+        else None,
     )
 
 
@@ -119,6 +133,24 @@ class GetEffectivePriceListHandler:
                     has_sale_override=bool(
                         override and override.sale_price is not None
                     ),
+                    catalog_purchase_price_per_unit=product.purchase_price_per_unit.amount,
+                    catalog_sale_price_per_unit=product.sale_price_per_unit.amount,
+                    effective_purchase_price_per_unit=(
+                        override.purchase_price_per_unit.amount
+                        if override and override.purchase_price_per_unit is not None
+                        else product.purchase_price_per_unit.amount
+                    ),
+                    effective_sale_price_per_unit=(
+                        override.sale_price_per_unit.amount
+                        if override and override.sale_price_per_unit is not None
+                        else product.sale_price_per_unit.amount
+                    ),
+                    has_purchase_override_per_unit=bool(
+                        override and override.purchase_price_per_unit is not None
+                    ),
+                    has_sale_override_per_unit=bool(
+                        override and override.sale_price_per_unit is not None
+                    ),
                 )
             )
         return results
@@ -151,6 +183,8 @@ class SetPriceOverrideHandler:
                     product_id=command.product_id,
                     purchase_price=command.purchase_price,
                     sale_price=command.sale_price,
+                    purchase_price_per_unit=command.purchase_price_per_unit,
+                    sale_price_per_unit=command.sale_price_per_unit,
                 )
             else:
                 item.update(
@@ -158,6 +192,10 @@ class SetPriceOverrideHandler:
                     sale_price=command.sale_price,
                     clear_purchase_price=command.clear_purchase_price,
                     clear_sale_price=command.clear_sale_price,
+                    purchase_price_per_unit=command.purchase_price_per_unit,
+                    sale_price_per_unit=command.sale_price_per_unit,
+                    clear_purchase_price_per_unit=command.clear_purchase_price_per_unit,
+                    clear_sale_price_per_unit=command.clear_sale_price_per_unit,
                 )
             await uow.price_list_items.save(item)
             await uow.commit()

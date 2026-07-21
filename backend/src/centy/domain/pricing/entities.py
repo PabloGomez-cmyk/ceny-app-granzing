@@ -23,6 +23,8 @@ class PriceListItem(Entity):
     product_id: UUID
     purchase_price: Money | None = None
     sale_price: Money | None = None
+    purchase_price_per_unit: Money | None = None
+    sale_price_per_unit: Money | None = None
 
     @classmethod
     def create(
@@ -33,6 +35,8 @@ class PriceListItem(Entity):
         product_id: UUID,
         purchase_price: Decimal | None = None,
         sale_price: Decimal | None = None,
+        purchase_price_per_unit: Decimal | None = None,
+        sale_price_per_unit: Decimal | None = None,
     ) -> "PriceListItem":
         return cls(
             tenant_id=tenant_id,
@@ -42,6 +46,12 @@ class PriceListItem(Entity):
             if purchase_price is not None
             else None,
             sale_price=Money(sale_price) if sale_price is not None else None,
+            purchase_price_per_unit=Money(purchase_price_per_unit)
+            if purchase_price_per_unit is not None
+            else None,
+            sale_price_per_unit=Money(sale_price_per_unit)
+            if sale_price_per_unit is not None
+            else None,
         )
 
     def update(
@@ -51,6 +61,10 @@ class PriceListItem(Entity):
         sale_price: Decimal | None = None,
         clear_purchase_price: bool = False,
         clear_sale_price: bool = False,
+        purchase_price_per_unit: Decimal | None = None,
+        sale_price_per_unit: Decimal | None = None,
+        clear_purchase_price_per_unit: bool = False,
+        clear_sale_price_per_unit: bool = False,
     ) -> None:
         if clear_purchase_price:
             self.purchase_price = None
@@ -60,3 +74,11 @@ class PriceListItem(Entity):
             self.sale_price = None
         elif sale_price is not None:
             self.sale_price = Money(sale_price)
+        if clear_purchase_price_per_unit:
+            self.purchase_price_per_unit = None
+        elif purchase_price_per_unit is not None:
+            self.purchase_price_per_unit = Money(purchase_price_per_unit)
+        if clear_sale_price_per_unit:
+            self.sale_price_per_unit = None
+        elif sale_price_per_unit is not None:
+            self.sale_price_per_unit = Money(sale_price_per_unit)

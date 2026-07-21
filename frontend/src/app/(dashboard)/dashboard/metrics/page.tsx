@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -21,6 +21,9 @@ import {
   Target,
   Activity,
   ChevronRight,
+  Building2,
+  Car,
+  LayoutGrid,
 } from "lucide-react";
 import {
   LineChart,
@@ -488,10 +491,27 @@ export default function MetricsDashboardPage() {
   const name = session?.user?.name ?? null;
   const role = session?.role;
 
-  const { data: quotes = [], isLoading: loadingQuotes } = useQuotes();
+  const { data: allQuotes = [], isLoading: loadingQuotes } = useQuotes();
   const { data: customers = [], isLoading: loadingCustomers } = useCustomers();
   const { data: products = [], isLoading: loadingProducts } = useProducts();
   const { data: categories = [] } = useCategories();
+
+  const [saleTypeFilter, setSaleTypeFilter] = useState<"ALL" | "ARCHITECTURE" | "AUTOMOTIVE">("ALL");
+  const quotes = useMemo(
+    () =>
+      saleTypeFilter === "ALL"
+        ? allQuotes
+        : allQuotes.filter((q) => q.sale_type === saleTypeFilter),
+    [allQuotes, saleTypeFilter]
+  );
+  const architectureCount = useMemo(
+    () => allQuotes.filter((q) => q.sale_type === "ARCHITECTURE").length,
+    [allQuotes]
+  );
+  const automotiveCount = useMemo(
+    () => allQuotes.filter((q) => q.sale_type === "AUTOMOTIVE").length,
+    [allQuotes]
+  );
 
   const now = new Date();
   const monthName = now.toLocaleDateString("es-AR", { month: "long", year: "numeric" });
@@ -628,7 +648,7 @@ export default function MetricsDashboardPage() {
 
       <main className="mx-auto max-w-[1200px] px-5 py-8">
         {/* Title */}
-        <div className="mb-6 flex items-center gap-3">
+        <div className="mb-4 flex flex-wrap items-center gap-3">
           <Link href="/dashboard" className="flex items-center gap-1.5 text-[13px] text-[#64748b] hover:text-[#0f172a]">
             <ArrowLeft size={14} />
             Volver
@@ -638,6 +658,33 @@ export default function MetricsDashboardPage() {
             <h1 className="text-[20px] font-bold text-[#0f172a]">Resumen de actividad</h1>
             <p className="text-[12px] text-[#94a3b8] capitalize">{monthName}</p>
           </div>
+        </div>
+
+        {/* Filtro por tipo de venta */}
+        <div className="mb-6 flex w-fit overflow-x-auto rounded-[10px] border border-[#dde4ee] bg-white p-1">
+          {(
+            [
+              { key: "ALL", label: "Todos", icon: LayoutGrid, count: allQuotes.length },
+              { key: "ARCHITECTURE", label: "Arquitectura", icon: Building2, count: architectureCount },
+              { key: "AUTOMOTIVE", label: "Automotriz", icon: Car, count: automotiveCount },
+            ] as const
+          ).map(({ key, label, icon: Icon, count }) => (
+            <button
+              key={key}
+              onClick={() => setSaleTypeFilter(key)}
+              className={`flex items-center gap-1.5 whitespace-nowrap rounded-[8px] px-3 py-1.5 text-[12px] font-semibold transition-colors ${
+                saleTypeFilter === key
+                  ? "bg-[#d9622c] text-white"
+                  : "text-[#64748b] hover:bg-[#f1f5f9]"
+              }`}
+            >
+              <Icon size={13} />
+              {label}
+              <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${saleTypeFilter === key ? "bg-white/20" : "bg-[#f1f5f9] text-[#94a3b8]"}`}>
+                {count}
+              </span>
+            </button>
+          ))}
         </div>
 
         {/* ── Fila 1: KPIs financieros ─────────────────────────────────────── */}

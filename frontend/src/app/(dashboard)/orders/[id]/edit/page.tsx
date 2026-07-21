@@ -121,9 +121,9 @@ function StepBar({ step }: { step: 1 | 2 | 3 }) {
         const active = step === n; const done = step > n;
         return (
           <div key={label} className="flex items-center gap-1">
-            <div className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold ${active ? "bg-[#d9622c] text-white" : done ? "bg-[#d9622c]/20 text-[#d9622c]" : "bg-[#f1f5f9] text-[#94a3b8]"}`}>{n}</div>
-            <span className={`text-[12px] font-medium ${active ? "text-[#0f172a]" : "text-[#94a3b8]"}`}>{label}</span>
-            {i < 2 && <div className="mx-1 h-px w-6 bg-[#e8ecf2]" />}
+            <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${active ? "bg-[#d9622c] text-white" : done ? "bg-[#d9622c]/20 text-[#d9622c]" : "bg-[#f1f5f9] text-[#94a3b8]"}`}>{n}</div>
+            <span className={`hidden text-[12px] font-medium sm:inline ${active ? "text-[#0f172a]" : "text-[#94a3b8]"}`}>{label}</span>
+            {i < 2 && <div className="mx-1 h-px w-4 bg-[#e8ecf2] sm:w-6" />}
           </div>
         );
       })}
@@ -365,15 +365,15 @@ export default function EditQuotePage({ params }: { params: Promise<{ id: string
   return (
     <div className="flex min-h-screen flex-col bg-[#f0f4f8]">
       {/* Header */}
-      <header className="flex items-center gap-4 border-b border-[#e8ecf2] bg-white px-5 py-4">
+      <header className="flex flex-wrap items-center gap-3 border-b border-[#e8ecf2] bg-white px-4 py-4 sm:gap-4 sm:px-5">
         <Link
           href={`/orders/${id}` as never}
-          className="flex h-8 w-8 items-center justify-center rounded-[8px] border border-[#e8ecf2] text-[#64748b] hover:bg-[#f1f5f9]"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] border border-[#e8ecf2] text-[#64748b] hover:bg-[#f1f5f9]"
         >
           <ArrowLeft size={15} />
         </Link>
-        <div>
-          <h1 className="text-[17px] font-bold text-[#0f172a]">Editar {quote.quote_number}</h1>
+        <div className="min-w-0">
+          <h1 className="truncate text-[17px] font-bold text-[#0f172a]">Editar {quote.quote_number}</h1>
           <p className="text-[12px] text-[#94a3b8]">Los cambios reemplazan el presupuesto actual</p>
         </div>
         <div className="ml-auto">
@@ -856,6 +856,7 @@ function EditStep3({
   const hasAltura = glassPanes.some((p) => p.location === "ALTURA");
   const totals = calcTotals(lines, glassPanes, heightSurchargePct, travelCost, discountPct, taxPct);
   const totalM2 = glassPanes.reduce((s, p) => s + (p.width_cm / 100) * (p.height_cm / 100), 0);
+  const [cutPlanOpen, setCutPlanOpen] = useState(false);
 
   function updatePrice(productId: string, newPrice: number) {
     setLines(lines.map((l) => l.product_id === productId ? { ...l, price_per_m2: newPrice, subtotal: Math.round(l.surface_m2 * newPrice * 100) / 100 } : l));
@@ -1038,26 +1039,39 @@ function EditStep3({
       {/* Plan de corte */}
       {cutPlan.materials.length > 0 && (
         <div className="rounded-[14px] border border-[#e8ecf2] bg-white p-5">
-          <div className="mb-4 flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 text-[14px] font-semibold text-[#0f172a]">
+          <button
+            type="button"
+            onClick={() => setCutPlanOpen((o) => !o)}
+            className={`flex w-full flex-wrap items-center justify-between gap-3 text-left ${cutPlanOpen ? "mb-4" : ""}`}
+          >
+            <span className="flex items-center gap-2 text-[14px] font-semibold text-[#0f172a]">
               <Scissors size={15} className="text-purple-600" />
               Cálculo de Cortes
               {cutPlan.materials.length > 1 && (
                 <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[11px] text-purple-700">{cutPlan.materials.length} Materiales</span>
               )}
-            </div>
-            <label className="ml-auto flex items-center gap-2 text-[12px] text-[#64748b]">
-              Espacio entre cortes
-              <input
-                type="number" min="0" step="0.5"
-                value={gapCm}
-                onChange={(e) => setGapCm(Number(e.target.value))}
-                className="w-16 rounded-[8px] border border-[#dde4ee] bg-[#f8fafc] px-2 py-1 text-center text-[12px] text-[#0f172a] focus:border-[#d9622c] focus:outline-none"
+            </span>
+            <span className="flex items-center gap-2">
+              <label
+                className="flex items-center gap-2 text-[12px] text-[#64748b]"
+                onClick={(e) => e.stopPropagation()}
+              >
+                Espacio entre cortes
+                <input
+                  type="number" min="0" step="0.5"
+                  value={gapCm}
+                  onChange={(e) => setGapCm(Number(e.target.value))}
+                  className="w-16 rounded-[8px] border border-[#dde4ee] bg-[#f8fafc] px-2 py-1 text-center text-[12px] text-[#0f172a] focus:border-[#d9622c] focus:outline-none"
+                />
+                <span className="text-[11px]">cm</span>
+              </label>
+              <ChevronDown
+                size={16}
+                className={`text-[#94a3b8] transition-transform ${cutPlanOpen ? "rotate-180" : ""}`}
               />
-              <span className="text-[11px]">cm</span>
-            </label>
-          </div>
-          {cutPlan.materials.map((m, mi) => {
+            </span>
+          </button>
+          {cutPlanOpen && cutPlan.materials.map((m, mi) => {
             const matPaneIds = lines.find((l) => l.product_id === m.product_id)?.glass_pane_ids ?? [];
             return (
               <div key={m.product_id} className={mi > 0 ? "mt-5 border-t border-[#f1f5f9] pt-5" : ""}>
@@ -1086,7 +1100,7 @@ function EditStep3({
               </div>
             );
           })}
-          {cutPlan.materials.some((m) => m.cuts.some((r) => r.pieces.some((p) => p.pano_total && p.pano_total > 1))) && (
+          {cutPlanOpen && cutPlan.materials.some((m) => m.cuts.some((r) => r.pieces.some((p) => p.pano_total && p.pano_total > 1))) && (
             <div className="mt-3 flex items-center gap-2 rounded-[8px] bg-amber-50 px-3 py-2 text-[12px] text-amber-700">
               <AlertTriangle size={13} />
               Algunos vidrios superan el ancho del rollo y serán divididos en paños.

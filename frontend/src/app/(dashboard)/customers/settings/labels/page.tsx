@@ -204,7 +204,7 @@ function LabelRow({
           ) : (
             <button
               onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
-              className="flex h-6 w-6 items-center justify-center rounded-[6px] text-[#cbd5e1] opacity-0 transition-opacity hover:bg-red-50 hover:text-red-400 group-hover:opacity-100"
+              className="flex h-6 w-6 items-center justify-center rounded-[6px] text-[#cbd5e1] opacity-100 transition-opacity hover:bg-red-50 hover:text-red-400 lg:opacity-0 lg:group-hover:opacity-100"
             >
               <Trash2 size={13} />
             </button>
@@ -431,7 +431,8 @@ export default function LabelsSettingsPage() {
       {/* ── Tabla ────────────────────────────────────────────────────────────── */}
       <div className="flex-1 p-5">
         <div className="overflow-hidden rounded-[12px] border border-[#e8ecf2] bg-white">
-          <table className="w-full">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[380px]">
             <thead>
               <tr className="border-b border-[#f1f5f9] bg-[#f8fafc]">
                 <th className="w-10 py-2.5 pl-4 pr-2">
@@ -487,6 +488,7 @@ export default function LabelsSettingsPage() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
 
         {/* Hint */}

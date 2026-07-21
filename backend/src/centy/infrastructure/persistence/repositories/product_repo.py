@@ -11,7 +11,7 @@ from centy.application.ports.repositories import (
     IProductRepository,
 )
 from centy.domain.catalog.entities import Brand, GlassType, Product, ProductCategory
-from centy.domain.catalog.value_objects import ApplicationType, Percentage
+from centy.domain.catalog.value_objects import ApplicationType, Percentage, SaleUnit
 from centy.domain.shared.value_objects import Money, TenantId
 from centy.infrastructure.persistence.models.product import (
     BrandModel,
@@ -246,6 +246,11 @@ class SQLAlchemyProductRepository(IProductRepository):
             existing.roll_width_cm = float(product.roll_width_cm)
             existing.roll_length_m = float(product.roll_length_m)
             existing.application_types = [t.value for t in product.application_types]
+            existing.sale_price_per_unit = float(product.sale_price_per_unit.amount)
+            existing.purchase_price_per_unit = float(
+                product.purchase_price_per_unit.amount
+            )
+            existing.default_sale_unit = product.default_sale_unit.value
             existing.technical_sheet_url = product.technical_sheet_url
             existing.is_active = product.is_active
         else:
@@ -265,6 +270,11 @@ class SQLAlchemyProductRepository(IProductRepository):
                     roll_width_cm=float(product.roll_width_cm),
                     roll_length_m=float(product.roll_length_m),
                     application_types=[t.value for t in product.application_types],
+                    sale_price_per_unit=float(product.sale_price_per_unit.amount),
+                    purchase_price_per_unit=float(
+                        product.purchase_price_per_unit.amount
+                    ),
+                    default_sale_unit=product.default_sale_unit.value,
                     technical_sheet_url=product.technical_sheet_url,
                     is_active=product.is_active,
                     created_at=product.created_at,
@@ -347,6 +357,9 @@ def _product_to_domain(row: ProductModel, glass_ids: list[UUID]) -> Product:
     p.roll_length_m = Decimal(str(row.roll_length_m))
     p.application_types = [ApplicationType(t) for t in row.application_types]
     p.compatible_glass_ids = glass_ids
+    p.sale_price_per_unit = Money(Decimal(str(row.sale_price_per_unit)))
+    p.purchase_price_per_unit = Money(Decimal(str(row.purchase_price_per_unit)))
+    p.default_sale_unit = SaleUnit(row.default_sale_unit)
     p.technical_sheet_url = row.technical_sheet_url
     p.is_active = row.is_active
     p.created_at = row.created_at
