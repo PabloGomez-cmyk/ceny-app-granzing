@@ -449,6 +449,9 @@ export default function NewProductPage() {
       if (next.length === 1) {
         setDefaultSaleUnit(next[0] === "AUTOMOTIVE" ? "UNIT" : "SQUARE_METER");
       }
+      if (!next.includes("WINDOW")) {
+        setGlassIds([]);
+      }
       return next;
     });
   }
@@ -662,7 +665,7 @@ export default function NewProductPage() {
             </div>
 
             {/* Glass types */}
-            <div>
+            <div className={!appTypes.includes("WINDOW") ? "pointer-events-none opacity-40" : undefined}>
               <div className="flex items-end justify-between">
                 <Label>Vidrios compatibles</Label>
                 {!showNewGlassType && (
@@ -675,7 +678,11 @@ export default function NewProductPage() {
                   </button>
                 )}
               </div>
-              {glassTypes.length === 0 && !showNewGlassType ? (
+              {!appTypes.includes("WINDOW") ? (
+                <p className="text-[12px] text-[#94a3b8]">
+                  Seleccioná &quot;Ventanas&quot; en Apta para, para elegir vidrios compatibles.
+                </p>
+              ) : glassTypes.length === 0 && !showNewGlassType ? (
                 <p className="text-[12px] text-[#94a3b8]">
                   No hay tipos de vidrio configurados.{" "}
                   <button type="button" onClick={() => setShowNewGlassType(true)} className="text-[#d9622c] underline">

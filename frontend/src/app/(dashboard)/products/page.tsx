@@ -14,8 +14,11 @@ import {
   Car,
   Building2,
   Settings2,
+  Archive,
+  ArchiveRestore,
+  Trash2,
 } from "lucide-react";
-import { useProducts, useBrands, useCategories } from "@/hooks/useProducts";
+import { useProducts, useBrands, useCategories, useUpdateProduct, useDeleteProduct } from "@/hooks/useProducts";
 import { useEffectivePriceList } from "@/hooks/usePriceLists";
 import UserMenu from "@/components/layout/UserMenu";
 import ProfileModal from "@/components/profile/ProfileModal";
@@ -126,6 +129,9 @@ function ProductRow({
   effectivePrice,
   effectivePricePerUnit,
   tourAnchor,
+  isAdmin,
+  onToggleActive,
+  onDelete,
 }: {
   product: Product;
   brand: Brand | undefined;
@@ -134,7 +140,11 @@ function ProductRow({
   effectivePrice?: number;
   effectivePricePerUnit?: number;
   tourAnchor?: boolean;
+  isAdmin: boolean;
+  onToggleActive: (product: Product) => void;
+  onDelete: (product: Product) => void;
 }) {
+  const [confirmDel, setConfirmDel] = useState(false);
   return (
     <tr
       onClick={onClick}
@@ -185,7 +195,56 @@ function ProductRow({
         <ActiveBadge active={product.is_active} />
       </td>
       <td className="py-3 pl-3 pr-5">
-        <ChevronRight size={16} className="text-[#94a3b8]" />
+        <div className="flex items-center justify-end gap-2">
+          {isAdmin && confirmDel ? (
+            <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={() => onDelete(product)}
+                className="rounded-[6px] bg-red-500 px-2 py-0.5 text-[11px] font-semibold text-white hover:bg-red-600"
+              >
+                Eliminar
+              </button>
+              <button
+                onClick={() => setConfirmDel(false)}
+                className="rounded-[6px] px-2 py-0.5 text-[11px] text-[#64748b] hover:bg-[#f1f5f9]"
+              >
+                No
+              </button>
+            </div>
+          ) : (
+            isAdmin && (
+              <>
+                {!product.is_active && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setConfirmDel(true);
+                    }}
+                    title="Eliminar definitivamente"
+                    className="flex h-7 w-7 items-center justify-center rounded-[6px] text-[#cbd5e1] hover:bg-red-50 hover:text-red-500"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleActive(product);
+                  }}
+                  title={product.is_active ? "Archivar producto" : "Reactivar producto"}
+                  className={`flex h-7 w-7 items-center justify-center rounded-[6px] ${
+                    product.is_active
+                      ? "text-[#cbd5e1] hover:bg-red-50 hover:text-red-500"
+                      : "text-[#cbd5e1] hover:bg-emerald-50 hover:text-emerald-600"
+                  }`}
+                >
+                  {product.is_active ? <Archive size={14} /> : <ArchiveRestore size={14} />}
+                </button>
+              </>
+            )
+          )}
+          <ChevronRight size={16} className="text-[#94a3b8]" />
+        </div>
       </td>
     </tr>
   );
@@ -201,6 +260,9 @@ function ProductCard({
   effectivePrice,
   effectivePricePerUnit,
   tourAnchor,
+  isAdmin,
+  onToggleActive,
+  onDelete,
 }: {
   product: Product;
   brand: Brand | undefined;
@@ -209,7 +271,11 @@ function ProductCard({
   effectivePrice?: number;
   effectivePricePerUnit?: number;
   tourAnchor?: boolean;
+  isAdmin: boolean;
+  onToggleActive: (product: Product) => void;
+  onDelete: (product: Product) => void;
 }) {
+  const [confirmDel, setConfirmDel] = useState(false);
   return (
     <div
       onClick={onClick}
@@ -220,8 +286,56 @@ function ProductCard({
           <p className="text-[13px] font-semibold text-[#0f172a]">{product.name}</p>
           <BrandChip brand={brand} />
         </div>
-        <ActiveBadge active={product.is_active} />
+        <div className="flex items-center gap-2">
+          <ActiveBadge active={product.is_active} />
+          {isAdmin && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleActive(product);
+              }}
+              title={product.is_active ? "Archivar producto" : "Reactivar producto"}
+              className={`flex h-7 w-7 items-center justify-center rounded-[6px] ${
+                product.is_active
+                  ? "text-[#cbd5e1] hover:bg-red-50 hover:text-red-500"
+                  : "text-[#cbd5e1] hover:bg-emerald-50 hover:text-emerald-600"
+              }`}
+            >
+              {product.is_active ? <Archive size={14} /> : <ArchiveRestore size={14} />}
+            </button>
+          )}
+        </div>
       </div>
+
+      {isAdmin && !product.is_active && (
+        <div className="mt-2 flex justify-end" onClick={(e) => e.stopPropagation()}>
+          {confirmDel ? (
+            <div className="flex items-center gap-1">
+              <span className="text-[11px] text-[#64748b]">¿Eliminar definitivamente?</span>
+              <button
+                onClick={() => onDelete(product)}
+                className="rounded-[6px] bg-red-500 px-2 py-0.5 text-[11px] font-semibold text-white hover:bg-red-600"
+              >
+                Eliminar
+              </button>
+              <button
+                onClick={() => setConfirmDel(false)}
+                className="rounded-[6px] px-2 py-0.5 text-[11px] text-[#64748b] hover:bg-[#f1f5f9]"
+              >
+                No
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmDel(true)}
+              className="flex items-center gap-1 text-[11px] font-medium text-[#94a3b8] hover:text-red-500"
+            >
+              <Trash2 size={12} />
+              Eliminar definitivamente
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="mt-3 flex flex-wrap gap-1">
         {product.application_types.map((t) => (
@@ -263,11 +377,21 @@ export default function ProductsPage() {
   const { data: products = [], isLoading } = useProducts();
   const { data: brands = [] } = useBrands();
   const { data: categories = [] } = useCategories();
+  const { mutate: updateProduct } = useUpdateProduct();
+  const { mutate: deleteProduct } = useDeleteProduct();
   const { data: priceList = [] } = useEffectivePriceList(userId);
   const priceByProduct = useMemo(
     () => Object.fromEntries(priceList.map((i) => [i.product_id, i.effective_sale_price])),
     [priceList]
   );
+  const handleToggleActive = (product: Product) => {
+    updateProduct({ id: product.id, data: { is_active: !product.is_active } });
+  };
+
+  const handleDelete = (product: Product) => {
+    deleteProduct(product.id);
+  };
+
   const priceByProductPerUnit = useMemo(
     () => Object.fromEntries(priceList.map((i) => [i.product_id, i.effective_sale_price_per_unit])),
     [priceList]
@@ -435,6 +559,9 @@ export default function ProductsPage() {
                       effectivePrice={priceByProduct[product.id]}
                       effectivePricePerUnit={priceByProductPerUnit[product.id]}
                       tourAnchor={i === 0}
+                      isAdmin={isAdmin}
+                      onToggleActive={handleToggleActive}
+                      onDelete={handleDelete}
                     />
                   ))
                 )}
@@ -461,6 +588,9 @@ export default function ProductsPage() {
                   effectivePrice={priceByProduct[product.id]}
                   effectivePricePerUnit={priceByProductPerUnit[product.id]}
                   tourAnchor={i === 0}
+                  isAdmin={isAdmin}
+                  onToggleActive={handleToggleActive}
+                  onDelete={handleDelete}
                 />
               ))
             )}

@@ -65,7 +65,7 @@ export function AutomotiveQuoteForm({
           quantity: String(l.quantity ?? ""),
           price_per_unit: String(l.price_per_m2),
         }))
-      : [{ key: makeKey(), product_id: "", quantity: "", price_per_unit: "" }]
+      : [{ key: makeKey(), product_id: "", quantity: "1", price_per_unit: "" }]
   );
   const [travelCost, setTravelCost] = useState(Number(initialQuote?.travel_cost ?? 0));
   const [discountPct, setDiscountPct] = useState(Number(initialQuote?.discount_pct ?? 0));
@@ -79,7 +79,7 @@ export function AutomotiveQuoteForm({
   }, [initialQuote, userData?.default_commercial_conditions]);
 
   function addLine() {
-    setLines((prev) => [...prev, { key: makeKey(), product_id: "", quantity: "", price_per_unit: "" }]);
+    setLines((prev) => [...prev, { key: makeKey(), product_id: "", quantity: "1", price_per_unit: "" }]);
   }
 
   function removeLine(key: string) {
@@ -119,6 +119,19 @@ export function AutomotiveQuoteForm({
   const taxableAmount = subtotal - discountAmount;
   const taxAmount = Math.round(taxableAmount * taxPct) / 100;
   const total = taxableAmount + taxAmount;
+
+  const margin = validLines.reduce((s, l) => {
+    const product = automotiveProducts.find((p) => p.id === l.product_id);
+    if (!product) return s;
+    const effective = priceByProduct[product.id];
+    const cost = Number(
+      effective ? effective.effective_purchase_price_per_unit : product.purchase_price_per_unit
+    );
+    const quantity = parseFloat(l.quantity) || 0;
+    const price = parseFloat(l.price_per_unit) || 0;
+    return s + (price - cost) * quantity;
+  }, 0);
+  const roundedMargin = Math.round(margin * 100) / 100;
 
   const canSave = validLines.length > 0 && validLines.length === lines.length;
   const saving = createQuote.isPending || updateQuote.isPending;
@@ -439,6 +452,21 @@ export function AutomotiveQuoteForm({
               )}
             </div>
           </div>
+
+          {/* Margen */}
+          {validLines.length > 0 && (
+            <div className="flex items-center justify-between rounded-[8px] bg-emerald-50 px-3 py-2">
+              <span className="text-[12px] font-medium text-emerald-700">
+                Margen
+                {materialsSub > 0 && (
+                  <span className="ml-1 text-[11px] text-emerald-600">
+                    ({((roundedMargin / materialsSub) * 100).toFixed(1)}%)
+                  </span>
+                )}
+              </span>
+              <span className="text-[13px] font-bold text-emerald-700">{fmt(roundedMargin)}</span>
+            </div>
+          )}
 
           {/* Total */}
           <div className="flex items-center justify-between rounded-[12px] bg-[#d9622c] px-5 py-4">
