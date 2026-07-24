@@ -34,6 +34,7 @@ import GenerateWarrantiesModal from "@/components/warranties/GenerateWarrantiesM
 import { CutDiagram, type CutRow } from "@/components/quotes/CutDiagram";
 
 const DownloadPDFButton = dynamic(() => import("@/components/pdf/DownloadPDFButton"), { ssr: false });
+const SharePDFButton = dynamic(() => import("@/components/pdf/SharePDFButton"), { ssr: false });
 
 const STATUS_CONFIG: Record<QuoteStatus, { label: string; color: string; dot: string }> = {
   DRAFT: { label: "En cotización", color: "bg-slate-100 text-slate-600", dot: "bg-slate-400" },
@@ -248,6 +249,9 @@ export default function QuoteDetailPage() {
             {statusCfg.label}
           </span>
           <DownloadPDFButton quote={quote} company={companyUser} />
+          <div className="sm:hidden">
+            <SharePDFButton quote={quote} company={companyUser} />
+          </div>
           <button
             onClick={() => setEmailModalOpen(true)}
             className="flex items-center gap-1.5 rounded-[10px] border border-[#dde4ee] px-3 py-2 text-[12px] font-semibold text-[#475569] hover:bg-[#f1f5f9]"

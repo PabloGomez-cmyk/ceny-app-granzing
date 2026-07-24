@@ -714,7 +714,7 @@ function Step2({
 }) {
   const { data: session } = useSession();
   const { data: products = [] } = useProducts();
-  const activeProducts = products.filter((p) => p.is_active);
+  const activeProducts = products.filter((p) => p.is_active && p.application_types.includes("WINDOW"));
   const { data: priceList = [] } = useEffectivePriceList(session?.userId);
   const priceByProduct = useMemo(
     () => Object.fromEntries(priceList.map((i) => [i.product_id, i.effective_sale_price])),
@@ -1325,7 +1325,7 @@ export default function NewQuotePage() {
 
   // Derived lines for step 3
   const lines = useMemo<QuoteLineLocal[]>(() => {
-    const activeProducts = products.filter((p) => p.is_active);
+    const activeProducts = products.filter((p) => p.is_active && p.application_types.includes("WINDOW"));
     if (filmMode === "SINGLE") {
       const product = activeProducts.find((p) => p.id === singleProductId);
       if (!product) return [];

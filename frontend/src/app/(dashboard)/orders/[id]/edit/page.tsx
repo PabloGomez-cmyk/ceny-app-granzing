@@ -217,7 +217,7 @@ export default function EditQuotePage({ params }: { params: Promise<{ id: string
   // ── Derived lines (igual que new/page) ───────────────────────────────────
 
   const derivedLines = useMemo<QuoteLineLocal[]>(() => {
-    const activeProducts = products.filter((p) => p.is_active);
+    const activeProducts = products.filter((p) => p.is_active && p.application_types.includes("WINDOW"));
     if (filmMode === "SINGLE") {
       const product = activeProducts.find((p) => p.id === singleProductId);
       if (!product) return [];
@@ -673,7 +673,7 @@ function EditStep2({
   products: Product[];
 }) {
   const { data: session } = useSession();
-  const activeProducts = products.filter((p) => p.is_active);
+  const activeProducts = products.filter((p) => p.is_active && p.application_types.includes("WINDOW"));
   const { data: priceList = [] } = useEffectivePriceList(session?.userId);
   const priceByProduct = useMemo(
     () => Object.fromEntries(priceList.map((i) => [i.product_id, i.effective_sale_price])),
