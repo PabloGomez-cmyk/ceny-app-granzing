@@ -16,12 +16,14 @@ import {
   Trash2,
   X,
   Mail,
+  Car,
+  Building2,
 } from "lucide-react";
 import UserMenu from "@/components/layout/UserMenu";
 import ProfileModal from "@/components/profile/ProfileModal";
 import { useQuotes, useDeleteQuote } from "@/hooks/useQuotes";
 import { useUser } from "@/hooks/useUsers";
-import type { Quote, QuoteStatus } from "@/lib/api/quotes";
+import type { Quote, QuoteStatus, SaleType } from "@/lib/api/quotes";
 import dynamic from "next/dynamic";
 import SendQuoteEmailModal from "@/components/email/SendQuoteEmailModal";
 
@@ -37,6 +39,22 @@ const STATUS_CONFIG = {
   COMPLETED: { label: "Terminado", color: "bg-teal-50 text-teal-700", dot: "bg-teal-500", icon: ShieldCheck },
   CANCELLED: { label: "Cancelado", color: "bg-red-50 text-red-600", dot: "bg-red-400", icon: XCircle },
 } as const;
+
+const SALE_TYPE_CONFIG: Record<SaleType, { label: string; color: string; icon: typeof Car }> = {
+  ARCHITECTURE: { label: "Arquitectura", color: "bg-amber-50 text-amber-700", icon: Building2 },
+  AUTOMOTIVE: { label: "Automotriz", color: "bg-blue-50 text-blue-700", icon: Car },
+};
+
+function SaleTypeBadge({ type }: { type: SaleType }) {
+  const cfg = SALE_TYPE_CONFIG[type];
+  const Icon = cfg.icon;
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${cfg.color}`}>
+      <Icon size={9} />
+      {cfg.label}
+    </span>
+  );
+}
 
 // ── Stat card ─────────────────────────────────────────────────────────────────
 
@@ -85,7 +103,10 @@ function OrderRow({
         onClick={() => (window.location.href = `/orders/${order.id}`)}
       >
         <p className="text-[13px] font-bold text-[#0f172a]">{order.quote_number}</p>
-        <p className="text-[11px] text-[#94a3b8]">{createdAt}</p>
+        <div className="mt-0.5 flex items-center gap-1.5">
+          <p className="text-[11px] text-[#94a3b8]">{createdAt}</p>
+          <SaleTypeBadge type={order.sale_type} />
+        </div>
       </td>
       <td className="cursor-pointer px-3 py-3 text-[13px] text-[#374151]" onClick={() => (window.location.href = `/orders/${order.id}`)}>{customerName}</td>
       <td className="cursor-pointer px-3 py-3" onClick={() => (window.location.href = `/orders/${order.id}`)}>
@@ -394,7 +415,10 @@ export default function OrdersPage() {
                     <Link href={`/orders/${order.id}` as never} className="flex-1">
                       <div className="flex items-start justify-between">
                         <div>
-                          <p className="text-[13px] font-bold text-[#0f172a]">{order.quote_number}</p>
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-[13px] font-bold text-[#0f172a]">{order.quote_number}</p>
+                            <SaleTypeBadge type={order.sale_type} />
+                          </div>
                           <p className="text-[12px] text-[#64748b]">{customerName}</p>
                         </div>
                         <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${cfg.color}`}>

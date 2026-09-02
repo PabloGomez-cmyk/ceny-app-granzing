@@ -144,7 +144,7 @@ function StatusChangeMenu({
         <ChevronDown size={12} className={`transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className="absolute right-0 z-10 mt-1 w-56 rounded-[10px] border border-[#e8ecf2] bg-white p-1.5 shadow-lg">
+        <div className="absolute left-0 z-10 mt-1 w-56 max-w-[calc(100vw-2rem)] rounded-[10px] border border-[#e8ecf2] bg-white p-1.5 shadow-lg sm:left-auto sm:right-0">
           <p className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#94a3b8]">
             Corregir estado manualmente
           </p>

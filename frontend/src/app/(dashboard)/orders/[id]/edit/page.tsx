@@ -7,7 +7,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { useQuote, useUpdateQuote } from "@/hooks/useQuotes";
 import { useCustomers } from "@/hooks/useCustomers";
-import { useProducts } from "@/hooks/useProducts";
+import { useProducts, useBrands } from "@/hooks/useProducts";
 import type { FilmMode, LocationType } from "@/lib/api/quotes";
 import type { Product } from "@/lib/api/products";
 import { CutDiagram, type CutPiece, type CutRow } from "@/components/quotes/CutDiagram";
@@ -673,6 +673,8 @@ function EditStep2({
   products: Product[];
 }) {
   const { data: session } = useSession();
+  const { data: brands = [] } = useBrands();
+  const brandById = useMemo(() => Object.fromEntries(brands.map((b) => [b.id, b])), [brands]);
   const activeProducts = products.filter((p) => p.is_active && p.application_types.includes("WINDOW"));
   const { data: priceList = [] } = useEffectivePriceList(session?.userId);
   const priceByProduct = useMemo(
@@ -728,6 +730,7 @@ function EditStep2({
           <p className="mb-3 text-[12px] text-[#94a3b8]">Vidrios: {glassTypeNames}</p>
           <div className="space-y-2">
             {activeProducts.map((p) => {
+              const brand = brandById[p.brand_id];
               const selected = p.id === singleProductId;
               return (
                 <button
@@ -739,7 +742,14 @@ function EditStep2({
                     <div className="flex items-center gap-3">
                       <Sun size={14} className="shrink-0 text-amber-500" />
                       <div>
-                        <p className="text-[13px] font-semibold text-[#0f172a]">{p.name}</p>
+                        <p className="flex items-center gap-1.5 text-[13px] font-semibold text-[#0f172a]">
+                          {p.name}
+                          {brand && (
+                            <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
+                              {brand.name}
+                            </span>
+                          )}
+                        </p>
                         <p className="text-[11px] text-[#94a3b8]">
                           ${effectiveSalePrice(p).toLocaleString("es-AR")}/m²&nbsp;&nbsp;UV {p.uv_percentage}%&nbsp;&nbsp;IRR {p.irr_percentage}%
                         </p>
@@ -785,7 +795,7 @@ function EditStep2({
                   <option value="">Seleccionar lámina...</option>
                   {activeProducts.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.name} — ${effectiveSalePrice(p).toLocaleString("es-AR")}
+                      {p.name}{brandById[p.brand_id] ? ` (${brandById[p.brand_id].name})` : ""} — ${effectiveSalePrice(p).toLocaleString("es-AR")}
                     </option>
                   ))}
                 </select>
