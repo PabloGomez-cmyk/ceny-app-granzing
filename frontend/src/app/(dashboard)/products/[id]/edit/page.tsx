@@ -646,7 +646,7 @@ export default function EditProductPage() {
               {errors.sale_price && <p className="mt-1 text-[11px] text-red-500">{errors.sale_price}</p>}
             </div>
             <div>
-              <Label>Costo de compra por m²</Label>
+              <Label>Costo de compra por m</Label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-[#94a3b8]">$</span>
                 <input type="number" min="0" step="0.01" placeholder="0.00" value={purchasePrice}

@@ -165,9 +165,10 @@ export default function ProductDetailPage() {
           <SpecItem label="Garantía" value={`${product.warranty_years} años`} icon={Calendar} />
         </div>
 
-        {/* ── Price ───────────────────────────────────────────────────────── */}
+        {/* ── Price (arquitectura / por m²) ──────────────────────────────── */}
+        {product.application_types.includes("WINDOW") && (
         <div className="rounded-[14px] border border-[#e8ecf2] bg-white p-6">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">
                 Precio de venta sugerido
@@ -193,7 +194,7 @@ export default function ProductDetailPage() {
               </p>
               <p className="mt-1 text-[28px] font-bold text-[#475569]">
                 ${Number(myPrice?.effective_purchase_price ?? product.purchase_price_per_m2).toLocaleString("es-AR", { minimumFractionDigits: 2 })}
-                <span className="ml-1 text-[14px] font-normal text-[#94a3b8]">/m²</span>
+                <span className="ml-1 text-[14px] font-normal text-[#94a3b8]">/m</span>
               </p>
               {Number(myPrice?.effective_purchase_price ?? product.purchase_price_per_m2) === 0 && (
                 <p className="mt-1 text-[11px] font-medium text-amber-600">Sin costo configurado</p>
@@ -206,6 +207,7 @@ export default function ProductDetailPage() {
               : "Valor por defecto de catálogo — el admin puede personalizarlo por operador en Listas de precios."}
           </p>
         </div>
+        )}
 
         {/* ── Price per unit (automotriz) ────────────────────────────────── */}
         {product.application_types.includes("AUTOMOTIVE") && (
@@ -214,7 +216,7 @@ export default function ProductDetailPage() {
               <Car size={13} className="text-[#d9622c]" />
               Precio por unidad (automotriz)
             </p>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">
                   Precio de venta sugerido
